@@ -59,41 +59,6 @@ NeumaticoRojo/
 └── README.md
 ```
 
-## 🚀 Ejecución local
-
-**Requisitos:** Node.js, npm y MySQL. La base de datos `neumaticorojo` debe estar creada y contar con las tablas y los datos que utiliza el backend.
-
-**1. Clonar el repositorio**
-
-```bash
-git clone https://github.com/FabriP11/NeumaticoRojo.git
-cd NeumaticoRojo
-```
-
-**2. Configurar e iniciar el backend**
-
-```bash
-cd backend
-npm install
-node --watch server.js
-```
-
-Antes de iniciarlo, configurá `backend/.env` con la conexión a MySQL, el secreto JWT y las demás variables requeridas por `db.js` y `config/`. **Nunca publiques el archivo `.env`.**
-
-Backend local: **http://localhost:3001**
-
-**3. Iniciar el frontend** (en otra terminal)
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-Frontend local: **http://localhost:5173**
-
-> La instalación desde cero requiere contar también con el esquema y los datos de MySQL; el repositorio está en preparación y puede que esos recursos todavía no estén publicados.
-
 ## 🔐 Seguridad y calidad
 
 El backend incorpora distintas medidas de protección:
