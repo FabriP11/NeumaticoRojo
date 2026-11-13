@@ -1,0 +1,29 @@
+/* Sin Preflight de Tailwind, conservamos el box-sizing uniforme. */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background-color: #f4f5f8;
+  color: #15151d;
+  font-family: "Rajdhani", Arial, sans-serif;
+}
+
+/* Respaldo para áreas exteriores al contenedor de la aplicación. */
+html.dark body {
+  background-color: #101116;
+  color: #ffffff;
+}
+
+#root {
+  width: 100%;
+  min-height: 100vh;
+}

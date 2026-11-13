@@ -1,0 +1,20 @@
+@import url("https://fonts.googleapis.com/css2?family=Oxanium:wght@400;500;600;700;800&family=Rajdhani:wght@400;500;600;700&display=swap");
+
+@layer theme, base, components, utilities;
+
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
+
+/* Modo oscuro controlado desde React */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Fuentes y colores personalizados */
+@theme {
+  --font-racing: "Oxanium", sans-serif;
+  --font-nav: "Rajdhani", sans-serif;
+
+  --color-f1-red: #e10600;
+  --color-f1-dark: #15151d;
+  --color-f1-panel: #20212b;
+  --color-f1-border: #3b3d48;
+}
