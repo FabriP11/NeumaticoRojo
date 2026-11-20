@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import {
   AlertCircle,
   ChevronDown,
@@ -13,6 +14,7 @@ import { useAuth } from "../context/AuthContext";
 
 function SesionMenu() {
   const { usuario, comprobandoSesion, cerrarSesion } = useAuth();
+  const reducirMovimiento = useReducedMotion();
   const navigate = useNavigate();
 
   const [abierto, setAbierto] = useState(false);
@@ -124,8 +126,14 @@ function SesionMenu() {
         />
       </button>
 
+      <AnimatePresence initial={false}>
       {abierto && (
-        <div
+        <motion.div
+          key="menu-cuenta"
+          initial={reducirMovimiento ? false : { opacity: 0, y: -8, scale: 0.98 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={reducirMovimiento ? { opacity: 0 } : { opacity: 0, y: -8, scale: 0.98 }}
+          transition={{ duration: reducirMovimiento ? 0 : 0.18 }}
           id="menu-cuenta"
           className="absolute right-0 top-full z-[100] mt-3 w-64 max-w-[calc(100vw-2rem)] overflow-hidden rounded-xl border border-slate-200 bg-white p-2 text-slate-900 shadow-2xl dark:border-white/15 dark:bg-[#20212b] dark:text-white"
         >
@@ -187,8 +195,9 @@ function SesionMenu() {
               {error}
             </p>
           )}
-        </div>
+        </motion.div>
       )}
+      </AnimatePresence>
     </div>
   );
 }

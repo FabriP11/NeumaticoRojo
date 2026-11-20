@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { motion, useReducedMotion } from "motion/react";
 import { Link } from "react-router";
 import {
   AlertCircle,
@@ -262,6 +263,7 @@ const claseMensaje =
   "flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-6 font-nav text-base text-slate-600 dark:border-white/10 dark:bg-[#1c1e27] dark:text-slate-300";
 
 function Calendario() {
+  const reducirMovimiento = useReducedMotion();
   const [carreras, setCarreras] = useState([]);
   const [temporadaSeleccionada, setTemporadaSeleccionada] = useState("2026");
   const [cargando, setCargando] = useState(true);
@@ -405,8 +407,14 @@ function Calendario() {
             </span>
           </div>
 
-          <div className="grid grid-cols-1 items-stretch gap-5 md:grid-cols-2 xl:grid-cols-3">
-            {carreras.map((carrera) => {
+          <motion.div
+            key={temporadaSeleccionada}
+            initial={reducirMovimiento ? false : { opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: reducirMovimiento ? 0 : 0.25 }}
+            className="grid grid-cols-1 items-stretch gap-5 md:grid-cols-2 xl:grid-cols-3"
+          >
+            {carreras.map((carrera, indice) => {
               const esProxima = carrera.round === proximaCarrera?.round;
               const fecha = obtenerFecha(carrera);
               const esPasada = Boolean(fecha && fecha < ahora);
@@ -418,9 +426,14 @@ function Calendario() {
               const destinoResultados = `/resultados?temporada=${temporadaSeleccionada}&ronda=${carrera.round}`;
 
               return (
-                <article
+                <motion.article
                   key={`${carrera.season}-${carrera.round}`}
-                  className={`group relative flex min-w-0 cursor-pointer flex-col overflow-hidden rounded-2xl border border-t-4 bg-white shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg dark:bg-[#1c1e27] dark:shadow-none dark:hover:bg-[#222531] ${
+                  initial={reducirMovimiento ? false : { opacity: 0, y: 16 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, amount: 0.08 }}
+                  whileHover={reducirMovimiento ? undefined : { y: -4 }}
+                  transition={{ duration: reducirMovimiento ? 0 : 0.34, delay: reducirMovimiento ? 0 : (indice % 6) * 0.045 }}
+                  className={`group relative flex min-w-0 cursor-pointer flex-col overflow-hidden rounded-2xl border border-t-4 bg-white shadow-sm transition-[background-color,border-color,box-shadow] duration-200 hover:shadow-lg dark:bg-[#1c1e27] dark:shadow-none dark:hover:bg-[#222531] ${
                     esProxima
                       ? "border-[#e8c7ca] border-t-[#e10600] dark:border-[#70383e] dark:border-t-[#e10600]"
                       : "border-slate-200 border-t-slate-300 dark:border-[#373944] dark:border-t-[#484c59]"
@@ -436,7 +449,7 @@ function Calendario() {
                         src={imagenFondoGP}
                         alt=""
                         loading="lazy"
-                        className="h-full w-full scale-[1.06] object-cover object-center opacity-85 blur-[1.00px] transition-transform duration-500 group-hover:scale-[1.11] dark:opacity-80"
+                        className="h-full w-full scale-[1.06] object-cover object-center opacity-85 blur-[1.00px] transition-transform duration-500 group-hover:scale-[1.11] motion-reduce:transform-none dark:opacity-80"
                         onError={(evento) => {
                           evento.currentTarget.style.display = "none";
                         }}
@@ -581,10 +594,10 @@ function Calendario() {
                       </div>
                     </details>
                   </div>
-                </article>
+                </motion.article>
               );
             })}
-          </div>
+          </motion.div>
         </>
       )}
     </main>

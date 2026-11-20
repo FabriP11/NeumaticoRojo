@@ -1,6 +1,6 @@
-// NeumaticoRojo — controlador favoritos.
 const model = require('../models/favoritos')
 
+// Guardar los favoritos del usuario
 const actualizarFavoritos = async (req, res) => {
   try {
     const { id_piloto_favorito, id_escuderia_favorita } = req.body || {}
@@ -22,7 +22,7 @@ const actualizarFavoritos = async (req, res) => {
       })
     }
 
-    // Verificar que la cuenta siga existiendo
+    // Verificar que el usuario exista
     const [usuarios] = await model.comprobarUsuario(req.idUsuario)
 
     if (usuarios.length === 0) {
@@ -31,19 +31,56 @@ const actualizarFavoritos = async (req, res) => {
       })
     }
 
-    // Guardar los favoritos en MySQL
-    await model.guardarFavoritos(id_piloto_favorito, id_escuderia_favorita, req.idUsuario)
+    // Obtener únicamente participantes de 2026
+    const [respuestaPilotos, respuestaEscuderias] = await Promise.all([
+      model.opcionesPilotos(),
+      model.opcionesEscuderias()
+    ])
 
-    // Consultar los datos actualizados
-    const [usuariosActualizados] = await model.consultarUsuarioFavoritos(req.idUsuario)
+    const pilotos2026 = respuestaPilotos[0]
+    const escuderias2026 = respuestaEscuderias[0]
+
+    // Comprobar que el piloto pertenezca a 2026
+    const pilotoValido =
+      id_piloto_favorito === null ||
+      pilotos2026.some(piloto => piloto.id_piloto === id_piloto_favorito)
+
+    if (!pilotoValido) {
+      return res.status(400).json({
+        mensaje: 'El piloto seleccionado no participa en 2026'
+      })
+    }
+
+    // Comprobar que la escudería pertenezca a 2026
+    const escuderiaValida =
+      id_escuderia_favorita === null ||
+      escuderias2026.some(
+        escuderia => escuderia.id_escuderia === id_escuderia_favorita
+      )
+
+    if (!escuderiaValida) {
+      return res.status(400).json({
+        mensaje: 'La escudería seleccionada no participa en 2026'
+      })
+    }
+
+    // Guardar favoritos en MySQL
+    await model.guardarFavoritos(
+      id_piloto_favorito,
+      id_escuderia_favorita,
+      req.idUsuario
+    )
+
+    // Obtener usuario actualizado
+    const [usuariosActualizados] = await model.consultarUsuarioFavoritos(
+      req.idUsuario
+    )
 
     res.json({
       mensaje: 'Favoritos guardados correctamente',
       usuario: usuariosActualizados[0]
     })
   } catch (error) {
-    // MySQL impide guardar pilotos o escuderías
-    // que no existen en sus tablas
     if (error.code === 'ER_NO_REFERENCED_ROW_2') {
       return res.status(400).json({
         mensaje: 'El piloto o la escudería seleccionados no existen'
@@ -58,21 +95,22 @@ const actualizarFavoritos = async (req, res) => {
   }
 }
 
+// Obtener estadísticas de los favoritos
 const obtenerResumenFavoritos = async (req, res) => {
   try {
     const temporada = req.query.temporada || '2026'
 
-    // Validar temporada
     if (!/^\d{4}$/.test(temporada)) {
       return res.status(400).json({
         mensaje: 'Temporada inválida'
       })
     }
 
-    // Consultar favoritos y sus estadísticas
-    const [filas] = await model.consultarResumenFavoritos(temporada, req.idUsuario)
+    const [filas] = await model.consultarResumenFavoritos(
+      temporada,
+      req.idUsuario
+    )
 
-    // Comprobar que existe el usuario
     if (filas.length === 0) {
       return res.status(404).json({
         mensaje: 'Usuario no encontrado'
@@ -81,16 +119,17 @@ const obtenerResumenFavoritos = async (req, res) => {
 
     const datos = filas[0]
 
-    // Buscar la participación del piloto favorito en la temporada seleccionada
     let participacionPiloto = null
 
     if (datos.id_piloto) {
-      const [participaciones] = await model.consultarParticipacion(temporada, datos.id_piloto)
+      const [participaciones] = await model.consultarParticipacion(
+        temporada,
+        datos.id_piloto
+      )
 
       participacionPiloto = participaciones[0] || null
     }
 
-    // Preparar información del piloto favorito
     const piloto = datos.id_piloto
       ? {
           id: datos.id_piloto,
@@ -104,7 +143,6 @@ const obtenerResumenFavoritos = async (req, res) => {
         }
       : null
 
-    // Preparar información de la escudería favorita
     const escuderia = datos.id_escuderia
       ? {
           id: datos.id_escuderia,
@@ -118,7 +156,6 @@ const obtenerResumenFavoritos = async (req, res) => {
         }
       : null
 
-    // Enviar información a React
     res.json({
       temporada,
       piloto,
@@ -133,17 +170,17 @@ const obtenerResumenFavoritos = async (req, res) => {
   }
 }
 
+// Opciones del selector: únicamente temporada 2026
 const opcionesFavoritos = async (req, res) => {
   try {
-    // Obtener pilotos desde MySQL
-    const [pilotos] = await model.opcionesPilotos()
-
-    // Obtener escuderías desde MySQL
-    const [escuderias] = await model.opcionesEscuderias()
+    const [respuestaPilotos, respuestaEscuderias] = await Promise.all([
+      model.opcionesPilotos(),
+      model.opcionesEscuderias()
+    ])
 
     res.json({
-      pilotos,
-      escuderias
+      pilotos: respuestaPilotos[0],
+      escuderias: respuestaEscuderias[0]
     })
   } catch (error) {
     console.error('Error al obtener favoritos:', error.message)
@@ -154,4 +191,8 @@ const opcionesFavoritos = async (req, res) => {
   }
 }
 
-module.exports = { actualizarFavoritos, obtenerResumenFavoritos, opcionesFavoritos }
+module.exports = {
+  actualizarFavoritos,
+  obtenerResumenFavoritos,
+  opcionesFavoritos
+}

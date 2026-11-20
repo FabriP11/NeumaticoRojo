@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { motion, useReducedMotion } from "motion/react";
 import { Link, useSearchParams } from "react-router";
 import {
   AlertCircle,
@@ -54,6 +55,21 @@ const nombresImagenEscuderia = {
   rb: "visarb",
   racing_bulls: "visarb",
   williams: "williams",
+};
+
+const nombresCompletos2026 = {
+  mercedes: "Mercedes-AMG PETRONAS F1 Team",
+  ferrari: "Scuderia Ferrari HP",
+  mclaren: "McLaren Mastercard F1 Team",
+  red_bull: "Oracle Red Bull Racing",
+  rb: "Visa Cash App Racing Bulls F1 Team",
+  racing_bulls: "Visa Cash App Racing Bulls F1 Team",
+  aston_martin: "Aston Martin Aramco F1 Team",
+  alpine: "BWT Alpine F1 Team",
+  williams: "Atlassian Williams Racing",
+  haas: "TGR Haas F1 Team",
+  audi: "Audi Revolut F1 Team",
+  cadillac: "Cadillac Formula 1 Team",
 };
 
 // Como Windows puede ocultar las extensiones, admitir formatos habituales.
@@ -123,7 +139,7 @@ function ImagenEscuderia({ id, nombre, color }) {
       <img
         src={`/escuderias/${archivo}.${EXTENSIONES[indiceExtension]}`}
         alt={`Imagen de ${nombre}`}
-        className="h-full w-full object-cover object-center scale-[1.00] transition-transform duration-500 group-hover:scale-[1.25]"
+        className="h-full w-full object-cover object-center scale-[1.00] transition-transform duration-500 group-hover:scale-[1.25] motion-reduce:transform-none"
         onError={() => setIndiceExtension((actual) => actual + 1)}
       />
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-black/25 to-transparent" />
@@ -132,6 +148,7 @@ function ImagenEscuderia({ id, nombre, color }) {
 }
 
 function Escuderias() {
+  const reducirMovimiento = useReducedMotion();
   const [searchParams] = useSearchParams();
   const [temporada, setTemporada] = useState(
     searchParams.get("temporada") || "2026",
@@ -267,8 +284,14 @@ function Escuderias() {
 
         {/* TARJETAS: imagen del equipo + estadísticas originales */}
         {!cargando && !error && escuderias.length > 0 && (
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-            {escuderias.map((equipo) => {
+          <motion.div
+            key={temporada}
+            initial={reducirMovimiento ? false : { opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: reducirMovimiento ? 0 : 0.24 }}
+            className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3"
+          >
+            {escuderias.map((equipo, indice) => {
               const idEscuderia = equipo.Constructor.constructorId;
               const colorEquipo = obtenerColorEscuderia(idEscuderia);
 
@@ -278,8 +301,16 @@ function Escuderias() {
                   to={`/escuderias/${idEscuderia}?temporada=${temporada}`}
                   className="group block min-w-0 rounded-2xl no-underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#e10600]"
                 >
-                  <article
-                    className="flex h-full flex-col overflow-hidden rounded-2xl border border-t-4 border-gray-200 bg-white text-[#15151d] shadow-sm transition-all duration-200 group-hover:-translate-y-1 group-hover:shadow-xl dark:border-white/10 dark:bg-[#20212b] dark:text-white dark:shadow-lg"
+                  <motion.article
+                    initial={reducirMovimiento ? false : { opacity: 0, y: 14 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    whileHover={reducirMovimiento ? undefined : { y: -4 }}
+                    viewport={{ once: true, amount: 0.1 }}
+                    transition={{
+                      duration: reducirMovimiento ? 0 : 0.33,
+                      delay: reducirMovimiento ? 0 : (indice % 6) * 0.055,
+                    }}
+                    className="flex h-full flex-col overflow-hidden rounded-2xl border border-t-4 border-gray-200 bg-white text-[#15151d] shadow-sm transition-[border-color,box-shadow] duration-200 group-hover:shadow-xl dark:border-white/10 dark:bg-[#20212b] dark:text-white dark:shadow-lg"
                     style={{ borderTopColor: colorEquipo }}
                   >
                     <ImagenEscuderia
@@ -288,10 +319,10 @@ function Escuderias() {
                       color={colorEquipo}
                     />
 
-                    <div className="flex flex-1 flex-col gap-4 p-5 sm:p-6">
+                    <div className="flex flex-col gap-2.5 p-4">
                       {/* POSICIÓN Y TEMPORADA */}
                       <div className="flex items-center justify-between gap-3">
-                        <span className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-gray-100 px-3 py-1.5 font-nav text-xs font-bold uppercase tracking-wide dark:border-white/10 dark:bg-[#15151d]">
+                        <span className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-gray-100 px-2.5 py-1 font-nav text-[11px] font-bold uppercase tracking-wide dark:border-white/10 dark:bg-[#15151d]">
                           <Medal
                             className="h-4 w-4 text-[#e10600]"
                             aria-hidden="true"
@@ -304,17 +335,21 @@ function Escuderias() {
                       </div>
 
                       {/* NOMBRE Y NACIONALIDAD */}
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2">
                         <span
                           className="h-3.5 w-3.5 shrink-0 rounded-full"
                           style={{ backgroundColor: colorEquipo }}
                           aria-hidden="true"
                         />
-                        <h2 className="min-w-0 font-racing text-xl font-extrabold uppercase italic leading-tight sm:text-2xl">
-                          {equipo.Constructor.name}
+
+                        <h2 className="min-w-0 font-racing text-base font-extrabold uppercase italic leading-tight sm:text-lg">
+                          {temporada === "2026"
+                            ? nombresCompletos2026[idEscuderia] ||
+                              equipo.Constructor.name
+                            : equipo.Constructor.name}
                         </h2>
                       </div>
-                      <p className="flex items-center gap-2 font-nav text-base text-gray-600 dark:text-gray-400">
+                      <p className="m-0 flex items-center gap-2 font-nav text-sm text-gray-600 dark:text-gray-400">
                         <BanderaCircular
                           nacionalidad={equipo.Constructor.nationality}
                         />
@@ -322,43 +357,43 @@ function Escuderias() {
                       </p>
 
                       {/* PUNTOS Y VICTORIAS */}
-                      <div className="mt-auto grid grid-cols-2 gap-3">
-                        <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-white/5 dark:bg-[#15151d]">
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-white/5 dark:bg-[#15151d]">
                           <span className="mb-2 block font-nav text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
                             Puntos
                           </span>
-                          <strong className="font-racing text-2xl font-extrabold tabular-nums">
+                          <strong className="font-racing text-xl font-extrabold tabular-nums">
                             {equipo.points}
                           </strong>
                         </div>
-                        <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-white/5 dark:bg-[#15151d]">
-                          <span className="mb-2 flex items-center gap-1.5 font-nav text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                        <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-white/5 dark:bg-[#15151d]">
+                          <span className="mb-1 flex items-center gap-1.5 font-nav text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
                             <Trophy
                               className="h-3.5 w-3.5 text-[#e10600]"
                               aria-hidden="true"
                             />
                             Victorias
                           </span>
-                          <strong className="font-racing text-2xl font-extrabold tabular-nums">
+                          <strong className="font-racing text-xl font-extrabold tabular-nums">
                             {equipo.wins}
                           </strong>
                         </div>
                       </div>
 
                       {/* ENLACE AL PERFIL */}
-                      <div className="flex items-center justify-between border-t border-gray-200 pt-4 font-nav text-base font-bold text-[#d50700] transition-colors group-hover:text-[#a60500] dark:border-white/10 dark:text-[#ff5757] dark:group-hover:text-white">
+                      <div className="mt-1 flex items-center justify-between border-t border-gray-200 pt-3 font-nav text-sm font-bold text-[#d50700] transition-colors group-hover:text-[#a60500] dark:border-white/10 dark:text-[#ff5757] dark:group-hover:text-white">
                         Ver perfil de escudería
                         <ArrowUpRight
-                          className="h-5 w-5 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+                          className="h-4 w-4 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
                           aria-hidden="true"
                         />
                       </div>
                     </div>
-                  </article>
+                  </motion.article>
                 </Link>
               );
             })}
-          </div>
+          </motion.div>
         )}
 
         {!cargando && !error && escuderias.length === 0 && (

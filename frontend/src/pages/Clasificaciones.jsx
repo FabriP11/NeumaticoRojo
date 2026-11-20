@@ -1,4 +1,6 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { motion, useReducedMotion } from "motion/react";
+import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router";
 import {
   AlertCircle,
@@ -118,79 +120,69 @@ const CLASE_CELDA =
   "border-b border-slate-100 px-4 py-4 align-middle dark:border-white/10 sm:px-6";
 
 function Clasificaciones() {
+  const reducirMovimiento = useReducedMotion();
   const [temporada, setTemporada] = useState("2026");
   const [tipo, setTipo] = useState("pilotos");
-  const [pilotos, setPilotos] = useState([]);
-  const [constructores, setConstructores] = useState([]);
-  const [detallesPilotos, setDetallesPilotos] = useState({});
-  const [cargando, setCargando] = useState(true);
-  const [error, setError] = useState("");
+  const esTemporadaActual = temporada === "2026";
 
-  // Consultar la clasificación y los dorsales registrados en MySQL.
-  useEffect(() => {
-    const controller = new AbortController();
+  // Una entrada de caché independiente para cada temporada.
+  const clasificaciones = useQuery({
+    queryKey: ["publico", "clasificaciones", temporada],
+    queryFn: async ({ signal }) => {
+      const respuesta = await fetch(
+        `http://localhost:3001/api/clasificaciones?temporada=${temporada}`,
+        { signal },
+      );
 
-    async function obtenerClasificaciones() {
-      setCargando(true);
-      setError("");
-
-      try {
-        const [respuestaClasificaciones, respuestaDorsales] = await Promise.all(
-          [
-            fetch(
-              `http://localhost:3001/api/clasificaciones?temporada=${temporada}`,
-              {
-                signal: controller.signal,
-              },
-            ),
-            fetch(
-              `http://localhost:3001/api/dorsales-temporada?temporada=${temporada}`,
-              {
-                signal: controller.signal,
-              },
-            ),
-          ],
-        );
-
-        if (!respuestaClasificaciones.ok) {
-          throw new Error("No se pudieron obtener las clasificaciones");
-        }
-
-        const datos = await respuestaClasificaciones.json();
-
-        if (
-          !Array.isArray(datos.pilotos) ||
-          !Array.isArray(datos.constructores)
-        ) {
-          throw new Error("Formato de datos incorrecto");
-        }
-
-        // Si la consulta de dorsales falla, igualmente mostramos la clasificación.
-        let informacionDorsales = {};
-        if (respuestaDorsales.ok) {
-          const datosDorsales = await respuestaDorsales.json();
-          informacionDorsales = datosDorsales.pilotos || {};
-        }
-
-        if (!controller.signal.aborted) {
-          setPilotos(datos.pilotos);
-          setConstructores(datos.constructores);
-          setDetallesPilotos(informacionDorsales);
-        }
-      } catch (errorConsulta) {
-        if (!controller.signal.aborted && errorConsulta.name !== "AbortError") {
-          setError(errorConsulta.message);
-        }
-      } finally {
-        if (!controller.signal.aborted) {
-          setCargando(false);
-        }
+      if (!respuesta.ok) {
+        throw new Error("No se pudieron obtener las clasificaciones");
       }
-    }
 
-    obtenerClasificaciones();
-    return () => controller.abort();
-  }, [temporada]);
+      const datos = await respuesta.json();
+      if (
+        !Array.isArray(datos?.pilotos) ||
+        !Array.isArray(datos?.constructores)
+      ) {
+        throw new Error("Formato de clasificaciones incorrecto");
+      }
+      return datos;
+    },
+    staleTime: esTemporadaActual ? 5 * 60 * 1000 : 24 * 60 * 60 * 1000,
+    gcTime: 24 * 60 * 60 * 1000,
+    refetchInterval: esTemporadaActual ? 5 * 60 * 1000 : false,
+    refetchIntervalInBackground: false,
+  });
+
+  // Los dorsales son complementarios: si fallan, conservamos la clasificación.
+  const dorsales = useQuery({
+    queryKey: ["publico", "dorsales-temporada", temporada],
+    queryFn: async ({ signal }) => {
+      const respuesta = await fetch(
+        `http://localhost:3001/api/dorsales-temporada?temporada=${temporada}`,
+        { signal },
+      );
+      if (!respuesta.ok) {
+        throw new Error("No se pudieron consultar los dorsales");
+      }
+      const datos = await respuesta.json();
+      if (!datos || typeof datos.pilotos !== "object" || !datos.pilotos || Array.isArray(datos.pilotos)) {
+        throw new Error("Formato de dorsales incorrecto");
+      }
+      return datos.pilotos;
+    },
+    staleTime: esTemporadaActual ? 30 * 60 * 1000 : 24 * 60 * 60 * 1000,
+    gcTime: 24 * 60 * 60 * 1000,
+    retry: 0,
+  });
+
+  const pilotos = clasificaciones.data?.pilotos ?? [];
+  const constructores = clasificaciones.data?.constructores ?? [];
+  const detallesPilotos = dorsales.data ?? {};
+  const cargando = !clasificaciones.data && clasificaciones.isPending;
+  // Si falla una actualización, seguimos mostrando los datos guardados.
+  const error = !clasificaciones.data && clasificaciones.isError
+    ? clasificaciones.error?.message || "No se pudieron cargar las clasificaciones"
+    : "";
 
   const elementos = tipo === "pilotos" ? pilotos : constructores;
 
@@ -308,7 +300,13 @@ function Clasificaciones() {
 
       {/* TABLA DE POSICIONES */}
       {!cargando && !error && (
-        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-[#373944] dark:bg-[#1c1e27] dark:shadow-none">
+        <motion.div
+          key={`${temporada}-${tipo}`}
+          initial={reducirMovimiento ? false : { opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: reducirMovimiento ? 0 : 0.27, ease: "easeOut" }}
+          className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-[#373944] dark:bg-[#1c1e27] dark:shadow-none"
+        >
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-4 py-4 dark:border-[#373944] sm:px-6">
             <div className="flex items-center gap-2">
               {tipo === "pilotos" ? (
@@ -361,7 +359,7 @@ function Clasificaciones() {
 
               <tbody>
                 {tipo === "pilotos" &&
-                  pilotos.map((piloto) => {
+                  pilotos.map((piloto, indice) => {
                     const idPiloto = piloto.Driver.driverId;
                     const detalles = detallesPilotos[idPiloto] || {};
                     const idEquipo =
@@ -372,9 +370,13 @@ function Clasificaciones() {
                     const colorEquipo = obtenerColorEscuderia(idEquipo);
 
                     return (
-                      <tr
+                      <motion.tr
                         key={idPiloto}
-                        className="transition-colors hover:bg-slate-50 dark:hover:bg-white/5"
+                        layout={!reducirMovimiento ? "position" : false}
+                        initial={reducirMovimiento ? false : { opacity: 0, x: -8 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: reducirMovimiento ? 0 : 0.2, delay: reducirMovimiento ? 0 : Math.min(indice, 10) * 0.025 }}
+                        className={`transition-colors hover:bg-slate-50 dark:hover:bg-white/5 ${Number(piloto.position) <= 3 ? "bg-red-50/50 dark:bg-red-950/10" : ""}`}
                       >
                         <td className={`${CLASE_CELDA} text-center`}>
                           <span className="font-racing text-base font-extrabold tabular-nums text-[#e10600]">
@@ -448,19 +450,23 @@ function Clasificaciones() {
                             {piloto.points}
                           </strong>
                         </td>
-                      </tr>
+                      </motion.tr>
                     );
                   })}
 
                 {tipo === "constructores" &&
-                  constructores.map((constructor) => {
+                  constructores.map((constructor, indice) => {
                     const equipo = constructor.Constructor;
                     const idEquipo = equipo.constructorId;
 
                     return (
-                      <tr
+                      <motion.tr
                         key={idEquipo}
-                        className="transition-colors hover:bg-slate-50 dark:hover:bg-white/5"
+                        layout={!reducirMovimiento ? "position" : false}
+                        initial={reducirMovimiento ? false : { opacity: 0, x: -8 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: reducirMovimiento ? 0 : 0.2, delay: reducirMovimiento ? 0 : Math.min(indice, 10) * 0.025 }}
+                        className={`transition-colors hover:bg-slate-50 dark:hover:bg-white/5 ${Number(constructor.position) <= 3 ? "bg-red-50/50 dark:bg-red-950/10" : ""}`}
                       >
                         <td className={`${CLASE_CELDA} text-center`}>
                           <span className="font-racing text-base font-extrabold tabular-nums text-[#e10600]">
@@ -506,7 +512,7 @@ function Clasificaciones() {
                             {constructor.points}
                           </strong>
                         </td>
-                      </tr>
+                      </motion.tr>
                     );
                   })}
               </tbody>
@@ -522,7 +528,7 @@ function Clasificaciones() {
               No hay clasificaciones disponibles.
             </div>
           )}
-        </div>
+        </motion.div>
       )}
     </main>
   );

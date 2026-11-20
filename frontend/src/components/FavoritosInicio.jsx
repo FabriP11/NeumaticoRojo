@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
+import { motion, useReducedMotion } from "motion/react";
 import {
   AlertCircle,
   ArrowRight,
@@ -11,11 +12,80 @@ import {
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { obtenerColorEscuderia } from "../utils/coloresF1";
+import FondoTarjetaInicio from "./FondoTarjetaInicio";
 
 const TEMPORADA = "2026";
 
+// Nombres de las fotografías dentro de public/images/inicio/favoritos/.
+// Los identificadores provienen de MySQL/Jolpica, no del nombre mostrado.
+const FOTOS_PILOTOS = {
+  norris: "lando_norris",
+  piastri: "oscar_piastri",
+  russell: "george_russell",
+  antonelli: "kimi_antonelli",
+  leclerc: "charles_leclerc",
+  hamilton: "lewis_hamilton",
+  verstappen: "max_verstappen",
+  hadjar: "isack_hadjar",
+  lawson: "liam_lawson",
+  lindblad: "arvid_lindblad",
+  sainz: "carlos_sainz",
+  albon: "alexander_albon",
+  alonso: "fernando_alonso",
+  stroll: "lance_stroll",
+  gasly: "pierre_gasly",
+  colapinto: "franco_colapinto",
+  ocon: "esteban_ocon",
+  bearman: "oliver_bearman",
+  hulkenberg: "nico_hulkenberg",
+  bortoleto: "gabriel_bortoleto",
+  perez: "sergio_perez",
+  bottas: "valtteri_bottas",
+};
+
+const FOTOS_ESCUDERIAS = {
+  mclaren: "mclaren",
+  mercedes: "mercedes",
+  ferrari: "ferrari",
+  red_bull: "red_bull",
+  red_bull_racing: "red_bull",
+  rb: "racing_bulls",
+  racing_bulls: "racing_bulls",
+  williams: "williams",
+  aston_martin: "aston_martin",
+  alpine: "alpine",
+  haas: "haas",
+  sauber: "audi",
+  audi: "audi",
+  cadillac: "cadillac",
+};
+
+function nombreArchivo(texto) {
+  return String(texto || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_|_$/g, "");
+}
+
+function fondoPiloto(piloto) {
+  if (!piloto?.id) return null;
+  const archivo = FOTOS_PILOTOS[piloto.id] || nombreArchivo(piloto.nombre);
+  return `/images/inicio/favoritos/pilotos/${archivo}.png`;
+}
+
+function fondoEscuderia(escuderia) {
+  if (!escuderia?.id) return null;
+  const archivo =
+    FOTOS_ESCUDERIAS[escuderia.id] || nombreArchivo(escuderia.nombre);
+  return `/images/inicio/favoritos/escuderias/${archivo}.jfif`;
+}
+
 function FavoritosInicio() {
   const { usuario, comprobandoSesion } = useAuth();
+  const reducirMovimiento = useReducedMotion();
 
   const [datos, setDatos] = useState(null);
   const [cargando, setCargando] = useState(true);
@@ -87,25 +157,25 @@ function FavoritosInicio() {
   }
 
   const claseTarjeta =
-    "flex min-w-0 flex-col rounded-xl border border-slate-200 border-t-4 bg-white p-4 shadow-sm transition-colors sm:p-5 dark:border-[#373944] dark:bg-[#1c1e27] dark:shadow-none";
+    "group relative isolate flex min-w-0 flex-col overflow-hidden rounded-2xl border border-white/20 border-t-4 bg-[#171923] p-4 text-white shadow-[0_12px_30px_rgba(0,0,0,0.20)] sm:p-5";
 
   const claseEtiqueta =
-    "inline-flex flex-wrap items-center gap-2 font-nav text-xs font-bold uppercase tracking-[0.12em] text-slate-600 dark:text-[#b8bdc9]";
+    "inline-flex flex-wrap items-center gap-2 font-nav text-xs font-bold uppercase tracking-[0.12em] text-white/85";
 
   const claseEstadisticas =
-    "mt-5 grid grid-cols-3 gap-2 border-t border-slate-200 pt-4 dark:border-white/10";
+    "mt-5 grid grid-cols-3 gap-2 border-t border-white/20 pt-4";
 
   const claseEstadistica =
-    "min-w-0 rounded-lg bg-slate-100 px-2 py-3 dark:bg-[#13151d]";
+    "min-w-0 rounded-lg border border-white/10 bg-black/35 px-2 py-3 backdrop-blur-[3px]";
 
   const claseTituloEstadistica =
-    "block font-nav text-[10px] font-bold uppercase tracking-wide text-slate-500 dark:text-[#a8afbc]";
+    "block font-nav text-[10px] font-bold uppercase tracking-wide text-white/70";
 
   const claseValorEstadistica =
-    "mt-1 block break-words font-racing text-xl font-bold tabular-nums text-[#15151d] sm:text-2xl dark:text-white";
+    "mt-1 block break-words font-racing text-xl font-bold tabular-nums text-white sm:text-2xl";
 
   const claseEnlace =
-    "mt-auto inline-flex w-fit items-center gap-2 pt-5 font-nav text-sm font-bold text-[#d10c16] no-underline transition-colors hover:text-[#ff3838] dark:text-[#ff5e65] dark:hover:text-[#ff898d]";
+    "group mt-auto inline-flex w-fit items-center gap-2 pt-5 font-nav text-sm font-bold text-[#ff8b86] no-underline transition-colors hover:text-white";
 
   return (
     <section className="@container w-full min-w-0">
@@ -134,9 +204,15 @@ function FavoritosInicio() {
           to="/mi-perfil"
           className="inline-flex items-center gap-2 rounded-lg border border-red-200 px-3 py-2 font-nav text-sm font-bold text-[#d10c16] no-underline transition-colors hover:bg-red-50 dark:border-[#623036] dark:text-[#ff6969] dark:hover:bg-[#302028]"
         >
-          <Pencil className="h-4 w-4 shrink-0" aria-hidden="true" />
+          <Pencil
+            className="h-4 w-4 shrink-0 transition-transform group-hover:translate-x-1 motion-reduce:transform-none"
+            aria-hidden="true"
+          />
           Editar favoritos
-          <ArrowRight className="h-4 w-4 shrink-0" aria-hidden="true" />
+          <ArrowRight
+            className="h-4 w-4 shrink-0 transition-transform group-hover:translate-x-1 motion-reduce:transform-none"
+            aria-hidden="true"
+          />
         </Link>
       </div>
 
@@ -168,148 +244,188 @@ function FavoritosInicio() {
       {!cargando && !error && datos && (
         <div className="grid grid-cols-1 gap-4 @min-[550px]:grid-cols-2">
           {/* PILOTO FAVORITO */}
-          <article
+          <motion.article
+            initial={reducirMovimiento ? false : { opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.12 }}
+            whileHover={reducirMovimiento ? undefined : { y: -3 }}
+            transition={{
+              duration: reducirMovimiento ? 0 : 0.42,
+              ease: "easeOut",
+            }}
             className={claseTarjeta}
             style={{ borderTopColor: colorPiloto }}
           >
-            <span className={claseEtiqueta}>
-              <UserRound className="h-4 w-4 shrink-0" aria-hidden="true" />
-              <span
-                className="h-2.5 w-2.5 shrink-0 rounded-full"
-                style={{ backgroundColor: colorPiloto }}
-                aria-hidden="true"
-              />
-              PILOTO FAVORITO
-            </span>
+            <FondoTarjetaInicio src={fondoPiloto(piloto)} />
+            <div className="relative z-10 flex h-full flex-col">
+              <span className={claseEtiqueta}>
+                <UserRound
+                  className="h-4 w-4 shrink-0 transition-transform group-hover:translate-x-1 motion-reduce:transform-none"
+                  aria-hidden="true"
+                />
+                <span
+                  className="h-2.5 w-2.5 shrink-0 rounded-full"
+                  style={{ backgroundColor: colorPiloto }}
+                  aria-hidden="true"
+                />
+                PILOTO FAVORITO
+              </span>
 
-            <h3 className="mt-5 flex min-h-12 flex-wrap items-center gap-3 font-racing text-lg font-bold leading-tight text-[#15151d] dark:text-white">
+              <h3 className="mt-5 flex min-h-12 flex-wrap items-center gap-3 font-racing text-lg font-bold leading-tight text-white">
+                {piloto ? (
+                  <>
+                    {piloto.numero != null && (
+                      <span
+                        className="inline-flex shrink-0 items-center justify-center rounded-lg border bg-[#161820] px-2.5 py-1.5 font-racing text-base font-extrabold"
+                        style={{ color: colorPiloto, borderColor: colorPiloto }}
+                      >
+                        #{piloto.numero}
+                      </span>
+                    )}
+                    <span className="min-w-0 break-words">{piloto.nombre}</span>
+                  </>
+                ) : (
+                  "Todavía no elegiste un piloto"
+                )}
+              </h3>
+
               {piloto ? (
                 <>
-                  {piloto.numero != null && (
-                    <span
-                      className="inline-flex shrink-0 items-center justify-center rounded-lg border bg-[#161820] px-2.5 py-1.5 font-racing text-base font-extrabold"
-                      style={{ color: colorPiloto, borderColor: colorPiloto }}
-                    >
-                      #{piloto.numero}
-                    </span>
+                  <div className={claseEstadisticas}>
+                    <div className={claseEstadistica}>
+                      <span className={claseTituloEstadistica}>POSICIÓN</span>
+                      <strong className={claseValorEstadistica}>
+                        {mostrarEstadistica(piloto.posicion)}
+                      </strong>
+                    </div>
+                    <div className={claseEstadistica}>
+                      <span className={claseTituloEstadistica}>PUNTOS</span>
+                      <strong className={claseValorEstadistica}>
+                        {mostrarEstadistica(piloto.puntos)}
+                      </strong>
+                    </div>
+                    <div className={claseEstadistica}>
+                      <span className={claseTituloEstadistica}>VICTORIAS</span>
+                      <strong className={claseValorEstadistica}>
+                        {mostrarEstadistica(piloto.victorias)}
+                      </strong>
+                    </div>
+                  </div>
+
+                  {piloto.posicion == null && (
+                    <p className="mt-3 font-nav text-xs text-white/70">
+                      Sin clasificación disponible en {TEMPORADA}.
+                    </p>
                   )}
-                  <span className="min-w-0 break-words">{piloto.nombre}</span>
+
+                  <Link
+                    to={`/pilotos/${piloto.id}?temporada=${TEMPORADA}`}
+                    className={claseEnlace}
+                  >
+                    Ver perfil del piloto
+                    <ArrowRight
+                      className="h-4 w-4 shrink-0 transition-transform group-hover:translate-x-1 motion-reduce:transform-none"
+                      aria-hidden="true"
+                    />
+                  </Link>
                 </>
               ) : (
-                "Todavía no elegiste un piloto"
-              )}
-            </h3>
-
-            {piloto ? (
-              <>
-                <div className={claseEstadisticas}>
-                  <div className={claseEstadistica}>
-                    <span className={claseTituloEstadistica}>POSICIÓN</span>
-                    <strong className={claseValorEstadistica}>
-                      {mostrarEstadistica(piloto.posicion)}
-                    </strong>
-                  </div>
-                  <div className={claseEstadistica}>
-                    <span className={claseTituloEstadistica}>PUNTOS</span>
-                    <strong className={claseValorEstadistica}>
-                      {mostrarEstadistica(piloto.puntos)}
-                    </strong>
-                  </div>
-                  <div className={claseEstadistica}>
-                    <span className={claseTituloEstadistica}>VICTORIAS</span>
-                    <strong className={claseValorEstadistica}>
-                      {mostrarEstadistica(piloto.victorias)}
-                    </strong>
-                  </div>
-                </div>
-
-                {piloto.posicion == null && (
-                  <p className="mt-3 font-nav text-xs text-slate-500 dark:text-[#a8afbc]">
-                    Sin clasificación disponible en {TEMPORADA}.
-                  </p>
-                )}
-
-                <Link
-                  to={`/pilotos/${piloto.id}?temporada=${TEMPORADA}`}
-                  className={claseEnlace}
-                >
-                  Ver perfil del piloto
-                  <ArrowRight className="h-4 w-4 shrink-0" aria-hidden="true" />
+                <Link to="/mi-perfil" className={claseEnlace}>
+                  Elegir mi piloto favorito
+                  <ArrowRight
+                    className="h-4 w-4 shrink-0 transition-transform group-hover:translate-x-1 motion-reduce:transform-none"
+                    aria-hidden="true"
+                  />
                 </Link>
-              </>
-            ) : (
-              <Link to="/mi-perfil" className={claseEnlace}>
-                Elegir mi piloto favorito
-                <ArrowRight className="h-4 w-4 shrink-0" aria-hidden="true" />
-              </Link>
-            )}
-          </article>
+              )}
+            </div>
+          </motion.article>
 
           {/* ESCUDERÍA FAVORITA */}
-          <article
+          <motion.article
+            initial={reducirMovimiento ? false : { opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.12 }}
+            whileHover={reducirMovimiento ? undefined : { y: -3 }}
+            transition={{
+              duration: reducirMovimiento ? 0 : 0.42,
+              ease: "easeOut",
+            }}
             className={claseTarjeta}
             style={{ borderTopColor: colorEscuderia }}
           >
-            <span className={claseEtiqueta}>
-              <Flag className="h-4 w-4 shrink-0" aria-hidden="true" />
-              <span
-                className="h-2.5 w-2.5 shrink-0 rounded-full"
-                style={{ backgroundColor: colorEscuderia }}
-                aria-hidden="true"
-              />
-              ESCUDERÍA FAVORITA
-            </span>
+            <FondoTarjetaInicio src={fondoEscuderia(escuderia)} />
+            <div className="relative z-10 flex h-full flex-col">
+              <span className={claseEtiqueta}>
+                <Flag
+                  className="h-4 w-4 shrink-0 transition-transform group-hover:translate-x-1 motion-reduce:transform-none"
+                  aria-hidden="true"
+                />
+                <span
+                  className="h-2.5 w-2.5 shrink-0 rounded-full"
+                  style={{ backgroundColor: colorEscuderia }}
+                  aria-hidden="true"
+                />
+                ESCUDERÍA FAVORITA
+              </span>
 
-            <h3 className="mt-5 flex min-h-12 items-center font-racing text-lg font-bold leading-tight text-[#15151d] dark:text-white">
-              {escuderia
-                ? escuderia.nombre
-                : "Todavía no elegiste una escudería"}
-            </h3>
+              <h3 className="mt-5 flex min-h-12 items-center font-racing text-lg font-bold leading-tight text-white">
+                {escuderia
+                  ? escuderia.nombre
+                  : "Todavía no elegiste una escudería"}
+              </h3>
 
-            {escuderia ? (
-              <>
-                <div className={claseEstadisticas}>
-                  <div className={claseEstadistica}>
-                    <span className={claseTituloEstadistica}>POSICIÓN</span>
-                    <strong className={claseValorEstadistica}>
-                      {mostrarEstadistica(escuderia.posicion)}
-                    </strong>
+              {escuderia ? (
+                <>
+                  <div className={claseEstadisticas}>
+                    <div className={claseEstadistica}>
+                      <span className={claseTituloEstadistica}>POSICIÓN</span>
+                      <strong className={claseValorEstadistica}>
+                        {mostrarEstadistica(escuderia.posicion)}
+                      </strong>
+                    </div>
+                    <div className={claseEstadistica}>
+                      <span className={claseTituloEstadistica}>PUNTOS</span>
+                      <strong className={claseValorEstadistica}>
+                        {mostrarEstadistica(escuderia.puntos)}
+                      </strong>
+                    </div>
+                    <div className={claseEstadistica}>
+                      <span className={claseTituloEstadistica}>VICTORIAS</span>
+                      <strong className={claseValorEstadistica}>
+                        {mostrarEstadistica(escuderia.victorias)}
+                      </strong>
+                    </div>
                   </div>
-                  <div className={claseEstadistica}>
-                    <span className={claseTituloEstadistica}>PUNTOS</span>
-                    <strong className={claseValorEstadistica}>
-                      {mostrarEstadistica(escuderia.puntos)}
-                    </strong>
-                  </div>
-                  <div className={claseEstadistica}>
-                    <span className={claseTituloEstadistica}>VICTORIAS</span>
-                    <strong className={claseValorEstadistica}>
-                      {mostrarEstadistica(escuderia.victorias)}
-                    </strong>
-                  </div>
-                </div>
 
-                {escuderia.posicion == null && (
-                  <p className="mt-3 font-nav text-xs text-slate-500 dark:text-[#a8afbc]">
-                    Sin clasificación disponible en {TEMPORADA}.
-                  </p>
-                )}
+                  {escuderia.posicion == null && (
+                    <p className="mt-3 font-nav text-xs text-white/70">
+                      Sin clasificación disponible en {TEMPORADA}.
+                    </p>
+                  )}
 
-                <Link
-                  to={`/escuderias/${escuderia.id}?temporada=${TEMPORADA}`}
-                  className={claseEnlace}
-                >
-                  Ver perfil de escudería
-                  <ArrowRight className="h-4 w-4 shrink-0" aria-hidden="true" />
+                  <Link
+                    to={`/escuderias/${escuderia.id}?temporada=${TEMPORADA}`}
+                    className={claseEnlace}
+                  >
+                    Ver perfil de escudería
+                    <ArrowRight
+                      className="h-4 w-4 shrink-0 transition-transform group-hover:translate-x-1 motion-reduce:transform-none"
+                      aria-hidden="true"
+                    />
+                  </Link>
+                </>
+              ) : (
+                <Link to="/mi-perfil" className={claseEnlace}>
+                  Elegir mi escudería favorita
+                  <ArrowRight
+                    className="h-4 w-4 shrink-0 transition-transform group-hover:translate-x-1 motion-reduce:transform-none"
+                    aria-hidden="true"
+                  />
                 </Link>
-              </>
-            ) : (
-              <Link to="/mi-perfil" className={claseEnlace}>
-                Elegir mi escudería favorita
-                <ArrowRight className="h-4 w-4 shrink-0" aria-hidden="true" />
-              </Link>
-            )}
-          </article>
+              )}
+            </div>
+          </motion.article>
         </div>
       )}
     </section>

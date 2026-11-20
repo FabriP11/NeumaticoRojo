@@ -77,8 +77,24 @@ function MiPerfil() {
 
         setPilotos(opciones.pilotos);
         setEscuderias(opciones.escuderias);
-        setPilotoSeleccionado(cuenta.usuario.id_piloto_favorito || "");
-        setEscuderiaSeleccionada(cuenta.usuario.id_escuderia_favorita || "");
+
+        setPilotoSeleccionado(
+          opciones.pilotos.some(
+            (piloto) => piloto.id_piloto === cuenta.usuario.id_piloto_favorito,
+          )
+            ? cuenta.usuario.id_piloto_favorito
+            : "",
+        );
+
+        setEscuderiaSeleccionada(
+          opciones.escuderias.some(
+            (equipo) =>
+              equipo.id_escuderia === cuenta.usuario.id_escuderia_favorita,
+          )
+            ? cuenta.usuario.id_escuderia_favorita
+            : "",
+        );
+
         iniciarSesion(cuenta.usuario);
       } catch (error) {
         if (error.name !== "AbortError" && !controller.signal.aborted) {

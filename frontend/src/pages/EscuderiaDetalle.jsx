@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { motion, useReducedMotion } from "motion/react";
 import { Link, useParams, useSearchParams } from "react-router";
 import {
   AlertCircle,
@@ -123,7 +124,7 @@ function LogoEscuderia({ id, nombre }) {
   if (!archivo || fallo) return null;
 
   return (
-    <div className="flex h-16 w-20 shrink-0 items-center justify-center rounded-2xl border border-white/15 bg-black/25 p-2 backdrop-blur-sm sm:h-20 sm:w-28">
+    <div className="flex h-14 w-16 shrink-0 items-center justify-center rounded-xl border border-white/15 bg-black/25 p-2 backdrop-blur-sm sm:h-16 sm:w-20">
       <img
         src={`/escuderias/${archivo}.${EXTENSIONES_LOGO[indice]}`}
         alt={`Logo de ${nombre}`}
@@ -142,6 +143,7 @@ function LogoEscuderia({ id, nombre }) {
 }
 
 function AutoEscuderia({ id, nombre }) {
+  const reducirMovimiento = useReducedMotion();
   const archivo = nombresAuto[id];
   const [fallo, setFallo] = useState(false);
 
@@ -150,10 +152,13 @@ function AutoEscuderia({ id, nombre }) {
   if (!archivo || fallo) return null;
 
   return (
-    <img
+    <motion.img
+      initial={reducirMovimiento ? false : { opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: reducirMovimiento ? 0 : 0.55, ease: "easeOut" }}
       src={`/escuderias/coches/${archivo}.avif`}
       alt={`Monoplaza 2026 de ${nombre}`}
-      className="pointer-events-none relative z-10 mx-auto block w-full max-w-[1000px] object-contain drop-shadow-[0_20px_16px_rgba(0,0,0,0.30)]"
+      className="pointer-events-none relative z-10 mx-auto block h-[155px] w-full max-w-[950px] object-contain drop-shadow-[0_15px_14px_rgba(0,0,0,0.30)] sm:h-[180px] lg:h-[205px]"
       loading="lazy"
       decoding="async"
       onError={() => setFallo(true)}
@@ -162,6 +167,7 @@ function AutoEscuderia({ id, nombre }) {
 }
 
 function EscuderiaDetalle() {
+  const reducirMovimiento = useReducedMotion();
   const { id } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
   const temporada = searchParams.get("temporada") || "2026";
@@ -240,18 +246,25 @@ function EscuderiaDetalle() {
     : [];
 
   return (
-    <main className="min-h-screen bg-[#f4f5f8] px-4 py-8 text-gray-900 sm:px-6 lg:py-12 dark:bg-[#15151d] dark:text-white">
-      <div className="mx-auto flex w-full max-w-[1500px] flex-col gap-7">
+    <main className="min-h-[calc(100dvh-76px)] bg-[#f4f5f8] px-4 py-4 text-gray-900 sm:px-6 dark:bg-[#15151d] dark:text-white">
+      <div className="mx-auto flex w-full max-w-[1500px] flex-col gap-3">
         <Link
           to={volver}
-          className="group inline-flex w-fit items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2.5 font-nav text-base font-bold text-gray-700 no-underline transition-colors hover:text-[#e10600] dark:border-white/10 dark:bg-white/5 dark:text-gray-300 dark:hover:text-white"
+          className="group inline-flex w-fit items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 font-nav text-sm font-bold text-gray-700 no-underline transition-colors hover:text-[#e10600] dark:border-white/10 dark:bg-white/5 dark:text-gray-300 dark:hover:text-white"
         >
           <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
           Volver a escuderías
         </Link>
 
         {/* Encabezado visual con logo, color y coche de la escudería. */}
-        <section
+        <motion.section
+          key={`${id}-${temporada}`}
+          initial={reducirMovimiento ? false : { opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{
+            duration: reducirMovimiento ? 0 : 0.42,
+            ease: "easeOut",
+          }}
           className="relative isolate overflow-hidden rounded-[26px] border border-black/10 text-white shadow-xl"
           style={{
             background: `linear-gradient(115deg, ${fondoInicio} 0%, ${fondoFin} 100%)`,
@@ -277,15 +290,15 @@ function EscuderiaDetalle() {
             aria-hidden="true"
           />
 
-          <div className="relative z-10 flex flex-col gap-6 p-6 sm:p-8 lg:flex-row lg:items-start lg:justify-between lg:p-10">
+          <div className="relative z-10 flex flex-col gap-3 p-4 sm:p-5 lg:flex-row lg:items-start lg:justify-between lg:px-7 lg:pt-5 lg:pb-0">
             <div className="min-w-0">
-              <p className="mb-3 flex items-center gap-2 font-nav text-sm font-bold uppercase tracking-[.22em] text-white/85">
+              <p className="mb-1 flex items-center gap-2 font-nav text-xs font-bold uppercase tracking-[.22em] text-white/85">
                 <Flag className="h-4 w-4" /> Perfil de escudería
               </p>
-              <h1 className="m-0 max-w-3xl font-racing text-3xl font-extrabold uppercase italic tracking-tight text-white sm:text-5xl">
+              <h1 className="m-0 max-w-3xl font-racing text-3xl font-extrabold uppercase italic tracking-tight text-white sm:text-4xl">
                 {escuderia.name}
               </h1>
-              <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 font-nav text-base font-semibold text-white/90">
+              <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 font-nav text-sm font-semibold text-white/90">
                 <span className="inline-flex items-center gap-2">
                   <Globe2 className="h-4 w-4" /> {escuderia.nationality}
                 </span>
@@ -295,11 +308,11 @@ function EscuderiaDetalle() {
               </div>
 
               {es2026 && pilotosTitulares2026.length > 0 && (
-                <div className="mt-5 flex flex-wrap gap-2.5">
+                <div className="mt-3 flex flex-wrap gap-2">
                   {pilotosTitulares2026.map((piloto) => (
                     <div
                       key={piloto.driverId}
-                      className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-black/30 py-1.5 pl-1.5 pr-3 backdrop-blur-sm"
+                      className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-black/30 py-1 pl-1 pr-2.5 backdrop-blur-sm"
                     >
                       <FotoPiloto
                         idPiloto={piloto.driverId}
@@ -308,7 +321,7 @@ function EscuderiaDetalle() {
                         temporada={temporada}
                         tamano="sm"
                       />
-                      <span className="font-nav text-sm font-bold text-white">
+                      <span className="font-nav text-xs font-bold text-white">
                         {piloto.givenName} {piloto.familyName}
                       </span>
                     </div>
@@ -317,15 +330,15 @@ function EscuderiaDetalle() {
               )}
             </div>
 
-            <div className="flex shrink-0 items-start gap-3 sm:justify-between lg:justify-end">
+            <div className="flex shrink-0 items-start gap-2 sm:justify-between lg:justify-end">
               {es2026 && (
                 <LogoEscuderia key={id} id={id} nombre={escuderia.name} />
               )}
 
-              <div className="w-48 rounded-xl border border-white/15 bg-black/30 p-3 backdrop-blur-sm sm:w-56">
+              <div className="w-44 rounded-xl border border-white/15 bg-black/30 p-2 backdrop-blur-sm sm:w-48">
                 <label
                   htmlFor="esc-temporada"
-                  className="mb-2 flex items-center gap-2 font-nav text-xs font-bold uppercase tracking-widest text-white/80"
+                  className="mb-1 flex items-center gap-2 font-nav text-[11px] font-bold uppercase tracking-widest text-white/80"
                 >
                   <CalendarDays className="h-4 w-4" /> Temporada
                 </label>
@@ -336,7 +349,7 @@ function EscuderiaDetalle() {
                     onChange={(e) =>
                       setSearchParams({ temporada: e.target.value })
                     }
-                    className="w-full appearance-none rounded-lg border border-white/20 bg-[#232530] px-3 py-2.5 pr-9 font-nav text-base font-bold text-white outline-none focus:border-white/60"
+                    className="w-full appearance-none rounded-lg border border-white/20 bg-[#232530] px-3 py-2 pr-9 font-nav text-sm font-bold text-white outline-none focus:border-white/60"
                   >
                     {[2026, 2025, 2024, 2023, 2022, 2021, 2020].map((anio) => (
                       <option key={anio} value={anio}>
@@ -351,16 +364,16 @@ function EscuderiaDetalle() {
           </div>
 
           {es2026 && (
-            <div className="relative z-10 px-4 pb-5 sm:px-8 sm:pb-7 lg:px-10">
+            <div className="relative z-10 px-3 pb-2 sm:px-5 lg:-mt-2 lg:px-7 lg:pb-3">
               <AutoEscuderia key={id} id={id} nombre={escuderia.name} />
             </div>
           )}
-        </section>
+        </motion.section>
 
         {/* Estadísticas originales, sin modificar sus valores. */}
         <section
           aria-label="Estadísticas de la escudería"
-          className="grid grid-cols-1 gap-4 sm:grid-cols-3"
+          className="grid grid-cols-1 gap-2 sm:grid-cols-3 sm:gap-3"
         >
           {[
             {
@@ -378,71 +391,90 @@ function EscuderiaDetalle() {
               Icono: Trophy,
               valor: clasificacion?.wins ?? "—",
             },
-          ].map(({ titulo, Icono, valor }) => (
-            <div
+          ].map(({ titulo, Icono, valor }, indice) => (
+            <motion.div
               key={titulo}
-              className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-[#20212b]"
+              initial={reducirMovimiento ? false : { opacity: 0, y: 12 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.12 }}
+              whileHover={reducirMovimiento ? undefined : { y: -3 }}
+              transition={{
+                duration: reducirMovimiento ? 0 : 0.3,
+                delay: reducirMovimiento ? 0 : indice * 0.075,
+              }}
+              className="rounded-xl border border-gray-200 bg-white p-3 shadow-sm dark:border-white/10 dark:bg-[#20212b]"
             >
-              <div className="mb-4 flex items-center gap-2 font-nav text-sm font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                <Icono className="h-5 w-5 text-[#e10600]" /> {titulo}
+              <div className="mb-1 flex items-center gap-1.5 font-nav text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                <Icono className="h-4 w-4 text-[#e10600]" /> {titulo}
               </div>
-              <strong className="block font-racing text-4xl font-extrabold tracking-tight text-gray-900 dark:text-white">
+              <strong className="block font-racing text-2xl font-extrabold tracking-tight text-gray-900 sm:text-3xl dark:text-white">
                 {valor}
               </strong>
-            </div>
+            </motion.div>
           ))}
         </section>
 
         {/* Lista de pilotos con fotografía real solo para la temporada 2026. */}
-        <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm sm:p-7 dark:border-white/10 dark:bg-[#20212b]">
-          <div className="mb-6 flex items-start gap-3 border-l-4 border-[#e10600] pl-4">
-            <UsersRound className="mt-1 h-6 w-6 shrink-0 text-[#e10600]" />
+        <section className="rounded-xl border border-gray-200 bg-white p-3 shadow-sm sm:p-4 dark:border-white/10 dark:bg-[#20212b]">
+          <div className="mb-3 flex items-center gap-2 border-l-4 border-[#e10600] pl-3">
+            <UsersRound className="h-5 w-5 shrink-0 text-[#e10600]" />
             <div>
-              <p className="mb-1 font-nav text-sm font-bold uppercase tracking-[.2em] text-[#e10600]">
+              <p className="mb-0 font-nav text-[10px] font-bold uppercase tracking-[.2em] text-[#e10600]">
                 Plantilla
               </p>
-              <h2 className="m-0 font-racing text-xl font-extrabold uppercase italic tracking-tight text-gray-900 sm:text-2xl dark:text-white">
+              <h2 className="m-0 font-racing text-base font-extrabold uppercase italic tracking-tight text-gray-900 sm:text-lg dark:text-white">
                 Pilotos de la temporada {temporada}
               </h2>
             </div>
           </div>
 
           {pilotos.length > 0 ? (
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-              {pilotos.map((piloto) => (
-                <Link
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3">
+              {pilotos.map((piloto, indice) => (
+                <motion.div
                   key={piloto.driverId}
-                  to={`/pilotos/${piloto.driverId}?temporada=${temporada}`}
-                  className="group flex items-center gap-4 rounded-xl border border-gray-200 bg-gray-50 p-4 text-gray-900 no-underline transition-all duration-200 hover:-translate-y-0.5 hover:border-gray-300 hover:shadow-md dark:border-white/10 dark:bg-[#15151d] dark:text-white dark:hover:border-white/25 dark:hover:bg-[#292b36]"
-                  style={{ borderLeftWidth: 4, borderLeftColor: color }}
+                  initial={reducirMovimiento ? false : { opacity: 0, y: 12 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, amount: 0.12 }}
+                  transition={{
+                    duration: reducirMovimiento ? 0 : 0.28,
+                    delay: reducirMovimiento ? 0 : (indice % 6) * 0.05,
+                  }}
+                  className="min-w-0"
                 >
-                  {es2026 ? (
-                    <FotoPiloto
-                      idPiloto={piloto.driverId}
-                      nombre={`${piloto.givenName} ${piloto.familyName}`}
-                      colorEquipo={color}
-                      temporada={temporada}
-                      tamano="lg"
-                    />
-                  ) : (
-                    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-gray-200 dark:bg-white/5">
-                      <UserRound
-                        className="h-7 w-7"
-                        style={{ color }}
-                        aria-hidden="true"
+                  <Link
+                    to={`/pilotos/${piloto.driverId}?temporada=${temporada}`}
+                    className="group flex items-center gap-2.5 rounded-lg border border-gray-200 bg-gray-50 p-2.5 text-gray-900 no-underline transition-all duration-200 hover:-translate-y-0.5 motion-reduce:transform-none hover:border-gray-300 hover:shadow-md dark:border-white/10 dark:bg-[#15151d] dark:text-white dark:hover:border-white/25 dark:hover:bg-[#292b36]"
+                    style={{ borderLeftWidth: 4, borderLeftColor: color }}
+                  >
+                    {es2026 ? (
+                      <FotoPiloto
+                        idPiloto={piloto.driverId}
+                        nombre={`${piloto.givenName} ${piloto.familyName}`}
+                        colorEquipo={color}
+                        temporada={temporada}
+                        tamano="md"
                       />
+                    ) : (
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gray-200 dark:bg-white/5">
+                        <UserRound
+                          className="h-6 w-6"
+                          style={{ color }}
+                          aria-hidden="true"
+                        />
+                      </div>
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <h3 className="m-0 font-racing text-sm font-bold text-gray-900 sm:text-base dark:text-white">
+                        {piloto.givenName} {piloto.familyName}
+                      </h3>
+                      <p className="mt-0.5 font-nav text-xs text-gray-600 dark:text-gray-400">
+                        {piloto.nationality}
+                      </p>
                     </div>
-                  )}
-                  <div className="min-w-0 flex-1">
-                    <h3 className="m-0 font-racing text-base font-bold text-gray-900 sm:text-lg dark:text-white">
-                      {piloto.givenName} {piloto.familyName}
-                    </h3>
-                    <p className="mt-1 font-nav text-sm text-gray-600 dark:text-gray-400">
-                      {piloto.nationality}
-                    </p>
-                  </div>
-                  <ArrowUpRight className="h-5 w-5 shrink-0 text-gray-500 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-[#e10600] dark:text-gray-400" />
-                </Link>
+                    <ArrowUpRight className="h-4 w-4 shrink-0 text-gray-500 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-[#e10600] dark:text-gray-400" />
+                  </Link>
+                </motion.div>
               ))}
             </div>
           ) : (

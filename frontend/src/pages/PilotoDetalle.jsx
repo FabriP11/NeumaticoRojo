@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { motion, useReducedMotion } from "motion/react";
 import { Link, useParams, useSearchParams } from "react-router";
 import {
   AlertCircle,
@@ -47,7 +48,7 @@ function obtenerFondoEquipo(idEquipo, color) {
 
 // Los retratos 2026 se encuentran en frontend/public/pilotos/2026/*.avif.
 // No se muestran fotos de 2026 al consultar temporadas anteriores.
-function RetratoPiloto({ idPiloto, nombre, temporada }) {
+function RetratoPiloto({ idPiloto, nombre, temporada, reducirMovimiento }) {
   const archivo =
     String(temporada) === "2026"
       ? obtenerArchivoPiloto(idPiloto, nombre)
@@ -67,8 +68,11 @@ function RetratoPiloto({ idPiloto, nombre, temporada }) {
         aria-hidden="true"
       />
       {archivo && !falloImagen ? (
-        <img
+        <motion.img
           key={archivo}
+          initial={reducirMovimiento ? false : { opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: reducirMovimiento ? 0 : 0.6, ease: "easeOut" }}
           src={`/pilotos/2026/${archivo}.avif`}
           alt={`Fotografía de ${nombre} en la temporada 2026`}
           className="pointer-events-none relative z-10 block h-full w-full max-w-[480px] translate-y-[5px] origin-bottom scale-[1.00] object-contain object-bottom drop-shadow-[0_12px_18px_rgba(0,0,0,.35)]"
@@ -90,6 +94,7 @@ function RetratoPiloto({ idPiloto, nombre, temporada }) {
 }
 
 function PilotoDetalle() {
+  const reducirMovimiento = useReducedMotion();
   const { id } = useParams();
   const [searchParams] = useSearchParams();
   const temporada = searchParams.get("temporada") || "2026";
@@ -217,7 +222,11 @@ function PilotoDetalle() {
         </Link>
 
         {/* Cabecera deportiva: cambia según la escudería de la temporada seleccionada. */}
-        <section
+        <motion.section
+          key={`${id}-${temporada}`}
+          initial={reducirMovimiento ? false : { opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: reducirMovimiento ? 0 : 0.42, ease: "easeOut" }}
           className="relative isolate overflow-hidden rounded-[26px] border border-black/10 text-white shadow-xl"
           style={{ background: fondoEquipo }}
           aria-label={`Perfil de ${nombre}`}
@@ -311,19 +320,25 @@ function PilotoDetalle() {
                 idPiloto={id}
                 nombre={nombre}
                 temporada={temporada}
+                reducirMovimiento={reducirMovimiento}
               />
             )}
           </div>
-        </section>
+        </motion.section>
 
         {/* Estadísticas: mantenemos los datos existentes. */}
         <section
           aria-label="Estadísticas del piloto"
           className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4"
         >
-          {estadisticas.map(({ titulo, valor, Icono }) => (
-            <article
+          {estadisticas.map(({ titulo, valor, Icono }, indice) => (
+            <motion.article
               key={titulo}
+              initial={reducirMovimiento ? false : { opacity: 0, y: 14 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.1 }}
+              whileHover={reducirMovimiento ? undefined : { y: -3 }}
+              transition={{ duration: reducirMovimiento ? 0 : 0.32, delay: reducirMovimiento ? 0 : indice * 0.055 }}
               className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition-colors hover:border-slate-300 dark:border-white/10 dark:bg-[#20212b] dark:shadow-md dark:hover:border-white/20"
             >
               <div className="mb-4 flex items-center gap-2 font-nav text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-gray-400">
@@ -336,7 +351,7 @@ function PilotoDetalle() {
               <strong className="block font-racing text-3xl font-extrabold tracking-tight text-[#15151d] sm:text-4xl dark:text-white">
                 {valor}
               </strong>
-            </article>
+            </motion.article>
           ))}
         </section>
 
@@ -379,11 +394,15 @@ function PilotoDetalle() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200 dark:divide-white/10">
-                {carreras.map((carrera) => {
+                {carreras.map((carrera, indice) => {
                   const resultado = carrera.Results?.[0];
                   return (
-                    <tr
+                    <motion.tr
                       key={carrera.round}
+                      initial={reducirMovimiento ? false : { opacity: 0, x: -6 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      viewport={{ once: true, amount: 0.1 }}
+                      transition={{ duration: reducirMovimiento ? 0 : 0.22, delay: reducirMovimiento ? 0 : (indice % 8) * 0.025 }}
                       className="transition-colors hover:bg-slate-50 dark:hover:bg-white/5"
                     >
                       <td className="px-4 py-4 font-bold text-slate-600 sm:px-5 dark:text-gray-300">
@@ -403,7 +422,7 @@ function PilotoDetalle() {
                           {resultado?.points ?? "—"}
                         </span>
                       </td>
-                    </tr>
+                    </motion.tr>
                   );
                 })}
               </tbody>

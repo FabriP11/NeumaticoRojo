@@ -1,8 +1,10 @@
 import { createContext, useContext, useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
+  const queryClient = useQueryClient();
   const [usuario, setUsuario] = useState(null);
   const [comprobandoSesion, setComprobandoSesion] = useState(true);
 
@@ -49,6 +51,8 @@ export function AuthProvider({ children }) {
 
   // Actualizar el usuario cuando hace login
   function iniciarSesion(datosUsuario) {
+    // Evitar compartir cachés privados entre cuentas distintas.
+    queryClient.removeQueries({ queryKey: ["privado"] });
     setUsuario(datosUsuario);
     setComprobandoSesion(false);
   }
@@ -64,6 +68,7 @@ export function AuthProvider({ children }) {
       throw new Error("No se pudo cerrar la sesión");
     }
 
+    queryClient.removeQueries({ queryKey: ["privado"] });
     setUsuario(null);
   }
 

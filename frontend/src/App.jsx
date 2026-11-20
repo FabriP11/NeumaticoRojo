@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { Routes, Route, Link, NavLink, useLocation } from "react-router";
 import {
   ArrowRight,
@@ -55,17 +56,23 @@ function ScrollArriba() {
 
 function Inicio() {
   const { usuario } = useAuth();
+  const reducirMovimiento = useReducedMotion();
   // Recibimos del banner si hay un Gran Premio esta semana (hora argentina).
   const [esSemanaCarrera, setEsSemanaCarrera] = useState(null);
 
   return (
     <main
       id="inicio"
-      className="mx-auto w-full max-w-[1500px] px-4 pb-16 pt-8 sm:px-6 lg:px-8 lg:pt-10"
+      className="mx-auto w-full max-w-[1500px] px-3 pb-14 pt-5 sm:px-6 sm:pt-7 lg:px-8 lg:pt-8"
     >
       {/* FIN DE SEMANA DE CARRERA */}
       <section>
-        <div className="mb-6 flex flex-col gap-4 border-l-4 border-[#e10600] pl-4 sm:flex-row sm:items-end sm:justify-between">
+        <motion.div
+          initial={reducirMovimiento ? false : { opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: reducirMovimiento ? 0 : 0.4 }}
+          className="mb-4 flex flex-col gap-3 border-l-4 border-[#e10600] pl-4 sm:mb-5 sm:flex-row sm:items-end sm:justify-between"
+        >
           <div>
             <p className="mb-1 font-nav text-xs font-bold uppercase tracking-[0.2em] text-[#e10600]">
               {esSemanaCarrera === true
@@ -88,7 +95,7 @@ function Inicio() {
             />
             Horarios de Argentina
           </span>
-        </div>
+        </motion.div>
 
         <div className="w-full overflow-hidden rounded-2xl border border-[#d9dce3] bg-white shadow-[0_18px_60px_rgba(0,0,0,0.08)] dark:border-white/10 dark:bg-[#20212b] dark:shadow-[0_18px_60px_rgba(0,0,0,0.3)]">
           <RaceWeekBanner onEstadoSemana={setEsSemanaCarrera} />
@@ -109,7 +116,11 @@ function Inicio() {
 }
 
 function App() {
+  const location = useLocation();
+  const reducirMovimiento = useReducedMotion();
+  const lateralRef = useRef(null);
   const [menuAbierto, setMenuAbierto] = useState(false);
+  const [headerConSombra, setHeaderConSombra] = useState(false);
 
   // Modo oscuro predeterminado, con preferencia guardada en el navegador.
   const [modoOscuro, setModoOscuro] = useState(() => {
@@ -131,22 +142,57 @@ function App() {
     }
   }, [modoOscuro]);
 
-  // Cerrar el menú con Escape y bloquear el desplazamiento cuando está abierto.
+  // La sombra aparece cuando el usuario comienza a desplazarse.
+  useEffect(() => {
+    const actualizar = () => setHeaderConSombra(window.scrollY > 16);
+    actualizar();
+    window.addEventListener("scroll", actualizar, { passive: true });
+    return () => window.removeEventListener("scroll", actualizar);
+  }, []);
+
+  // Cerrar el menú al navegar (también mediante Atrás/Adelante).
+  useEffect(() => {
+    setMenuAbierto(false);
+  }, [location.pathname]);
+
+  // Cerrar el menú con Escape, atrapar Tab y bloquear el scroll del fondo.
   useEffect(() => {
     if (!menuAbierto) return;
 
     const overflowAnterior = document.body.style.overflow;
     document.body.style.overflow = "hidden";
 
-    function cerrarConEscape(evento) {
-      if (evento.key === "Escape") setMenuAbierto(false);
+    const focoAnterior = document.activeElement;
+    const panel = lateralRef.current;
+    panel?.querySelector("button")?.focus();
+
+    function manejarTeclado(evento) {
+      if (evento.key === "Escape") {
+        setMenuAbierto(false);
+        return;
+      }
+      if (evento.key !== "Tab" || !panel) return;
+
+      const elementos = [...panel.querySelectorAll('a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])')]
+        .filter((elemento) => elemento.getClientRects().length > 0);
+      if (!elementos.length) return;
+      const primero = elementos[0];
+      const ultimo = elementos[elementos.length - 1];
+      if (evento.shiftKey && document.activeElement === primero) {
+        evento.preventDefault();
+        ultimo.focus();
+      } else if (!evento.shiftKey && document.activeElement === ultimo) {
+        evento.preventDefault();
+        primero.focus();
+      }
     }
 
-    document.addEventListener("keydown", cerrarConEscape);
+    document.addEventListener("keydown", manejarTeclado);
 
     return () => {
       document.body.style.overflow = overflowAnterior;
-      document.removeEventListener("keydown", cerrarConEscape);
+      document.removeEventListener("keydown", manejarTeclado);
+      if (focoAnterior && typeof focoAnterior.focus === "function") focoAnterior.focus();
     };
   }, [menuAbierto]);
 
@@ -154,14 +200,18 @@ function App() {
     <div className="min-h-screen bg-[#f4f5f8] text-[#15151d] transition-colors duration-300 dark:bg-[#101116] dark:text-white">
       <ScrollArriba />
       {/* BARRA SUPERIOR */}
-      <header className="sticky top-0 z-40 border-b border-[#dedfe5] bg-white/95 shadow-sm backdrop-blur-md dark:border-white/10 dark:bg-[#15151d]/95 dark:shadow-xl">
+      <header className={`sticky top-0 z-40 border-b border-[#dedfe5] backdrop-blur-xl transition-[background-color,box-shadow] duration-300 dark:border-white/10 ${
+        headerConSombra
+          ? "bg-white/90 shadow-[0_12px_30px_rgba(0,0,0,0.10)] dark:bg-[#15151d]/90 dark:shadow-[0_12px_30px_rgba(0,0,0,0.35)]"
+          : "bg-white/95 shadow-sm dark:bg-[#15151d]/95"
+      }`}>
         <div className="h-1 w-full bg-[#e10600]" />
 
         <div className="mx-auto flex min-h-[76px] w-full max-w-[1500px] items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
           {/* IDENTIDAD VISUAL */}
           <Link
             to="/"
-            className="group flex min-w-0 shrink-0 flex-col no-underline"
+            className="group flex min-w-0 shrink-0 flex-col no-underline transition-transform duration-200 hover:scale-[1.015] motion-reduce:transform-none"
           >
             <span className="font-racing text-xl font-extrabold uppercase italic tracking-tight text-[#15151d] sm:text-2xl dark:text-white">
               NEUMATICO
@@ -192,7 +242,18 @@ function App() {
                   }`
                 }
               >
-                {enlace.nombre}
+                {({ isActive }) => (
+                  <>
+                    <span className="relative z-10">{enlace.nombre}</span>
+                    {isActive && (
+                      <motion.span
+                        layoutId="indicador-navegacion"
+                        className="absolute inset-x-3 bottom-1 h-[2px] rounded-full bg-[#e10600]"
+                        transition={{ duration: reducirMovimiento ? 0 : 0.22 }}
+                      />
+                    )}
+                  </>
+                )}
               </NavLink>
             ))}
           </nav>
@@ -202,7 +263,7 @@ function App() {
             <button
               type="button"
               onClick={() => setModoOscuro((anterior) => !anterior)}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[#dedfe5] bg-[#f6f7fa] text-[#282a34] transition-colors hover:border-[#e10600] hover:text-[#e10600] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e10600] dark:border-white/15 dark:bg-[#292b35] dark:text-white dark:hover:text-[#ff5c56]"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[#dedfe5] bg-[#f6f7fa] text-[#282a34] shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-[#e10600] hover:text-[#e10600] hover:shadow-md active:scale-95 motion-reduce:transform-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e10600] dark:border-white/15 dark:bg-[#292b35] dark:text-white dark:hover:text-[#ff5c56]"
               aria-label={
                 modoOscuro ? "Activar modo claro" : "Activar modo oscuro"
               }
@@ -222,7 +283,7 @@ function App() {
             <button
               type="button"
               onClick={() => setMenuAbierto(true)}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[#dedfe5] bg-[#f6f7fa] text-[#282a34] transition-colors hover:border-[#e10600] hover:text-[#e10600] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e10600] dark:border-white/15 dark:bg-[#292b35] dark:text-white dark:hover:text-[#ff5c56]"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[#dedfe5] bg-[#f6f7fa] text-[#282a34] shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-[#e10600] hover:text-[#e10600] hover:shadow-md active:scale-95 motion-reduce:transform-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e10600] dark:border-white/15 dark:bg-[#292b35] dark:text-white dark:hover:text-[#ff5c56]"
               aria-label="Abrir menú de navegación"
               aria-expanded={menuAbierto}
               aria-controls="nr-menu-lateral"
@@ -234,16 +295,26 @@ function App() {
       </header>
 
       {/* MENÚ LATERAL - MÓVILES Y ESCRITORIO */}
-      {menuAbierto && (
-        <>
-          <button
+      <AnimatePresence>
+        {menuAbierto && (
+          <>
+          <motion.button
             type="button"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: reducirMovimiento ? 0 : 0.2 }}
             aria-label="Cerrar menú"
             onClick={() => setMenuAbierto(false)}
             className="fixed inset-0 z-[90] cursor-default bg-black/65 backdrop-blur-[2px]"
           />
 
-          <aside
+          <motion.aside
+            ref={lateralRef}
+            initial={reducirMovimiento ? false : { x: "100%" }}
+            animate={{ x: 0 }}
+            exit={reducirMovimiento ? { opacity: 0 } : { x: "100%" }}
+            transition={{ duration: reducirMovimiento ? 0 : 0.32, ease: [0.22, 1, 0.36, 1] }}
             id="nr-menu-lateral"
             role="dialog"
             aria-modal="true"
@@ -316,12 +387,21 @@ function App() {
                 Resultados, calendario y estadísticas de Fórmula 1.
               </p>
             </div>
-          </aside>
-        </>
-      )}
+          </motion.aside>
+          </>
+        )}
+      </AnimatePresence>
 
-      {/* RUTAS EXISTENTES: SIN CAMBIOS DE FUNCIONALIDAD */}
-      <Routes>
+      {/* RUTAS EXISTENTES: mismas URLs y componentes, entrada/salida suave. */}
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div
+          key={location.pathname}
+          initial={reducirMovimiento ? false : { opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={reducirMovimiento ? undefined : { opacity: 0, y: -6 }}
+          transition={{ duration: reducirMovimiento ? 0 : 0.18 }}
+        >
+      <Routes location={location}>
         <Route path="/" element={<Inicio />} />
         <Route path="/calendario" element={<Calendario />} />
         <Route path="/clasificaciones" element={<Clasificaciones />} />
@@ -333,6 +413,8 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/mi-perfil" element={<MiPerfil />} />
       </Routes>
+        </motion.div>
+      </AnimatePresence>
     </div>
   );
 }

@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { obtenerImagenCircuito } from "../utils/imagenesCircuitos";
 import { Link } from "react-router";
 import { obtenerColorEscuderia } from "../utils/coloresF1";
+import FondoVideoGP from "./FondoVideoGP";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import {
   AlertCircle,
   ArrowRight,
@@ -202,6 +204,8 @@ function columnasSesion(cantidad, indice) {
 }
 
 function RaceWeekBanner({ onEstadoSemana }) {
+  const reducirMovimiento = useReducedMotion();
+  // El reloj sigue actualizado cada segundo sin reiniciar las animaciones.
   const [carreras, setCarreras] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState(false);
@@ -387,7 +391,7 @@ function RaceWeekBanner({ onEstadoSemana }) {
   // Obtener resultados de FP1, FP2, FP3
   // y clasificación Sprint desde OpenF1
   useEffect(() => {
-    if (!fechaGP) {
+    if (!fechaGP || !carrera) {
       setResumenPracticas(null);
       return;
     }
@@ -397,10 +401,24 @@ function RaceWeekBanner({ onEstadoSemana }) {
     setResumenPracticas(null);
 
     async function consultarPracticas() {
-      // Las prácticas ocurren antes de la carrera.
-      // Evitamos consultar carreras demasiado futuras.
-      const inicioConsulta =
-        Date.parse(`${fechaGP}T00:00:00Z`) - 4 * 24 * 60 * 60 * 1000;
+      // Esperar a que los resultados puedan estar disponibles.
+      const tiposPractica = [
+        "FirstPractice",
+        "SecondPractice",
+        "ThirdPractice",
+        "SprintQualifying",
+        "SprintShootout",
+      ];
+
+      const momentosConsulta = obtenerSesiones(carrera)
+        .filter((sesion) => tiposPractica.includes(sesion.id) && sesion.inicio)
+        .map((sesion) => sesion.inicio.getTime() + 105 * 60 * 1000);
+
+      if (momentosConsulta.length === 0) {
+        return;
+      }
+
+      const inicioConsulta = Math.min(...momentosConsulta);
 
       if (Date.now() < inicioConsulta) {
         return;
@@ -432,14 +450,14 @@ function RaceWeekBanner({ onEstadoSemana }) {
 
     consultarPracticas();
 
-    // Actualizar cada dos minutos
+    // Actualizar cada dos minutos.
     const intervalo = setInterval(consultarPracticas, 120000);
 
     return () => {
       controller.abort();
       clearInterval(intervalo);
     };
-  }, [temporadaCarrera, fechaGP]);
+  }, [temporadaCarrera, fechaGP, carrera]);
 
   // La lógica de fechas, resultados y consultas permanece igual.
   if (cargando) {
@@ -491,119 +509,142 @@ function RaceWeekBanner({ onEstadoSemana }) {
   const pais = carrera.Circuit?.Location?.country;
   const codigoBandera = BANDERAS[pais];
 
+  // Duraciones ORIENTATIVAS: solo identifican visualmente una sesión posiblemente en curso.
+  // No representan telemetría ni confirmación de actividad en directo.
+  const minutosEstimados = {
+    FirstPractice: 60, SecondPractice: 60, ThirdPractice: 60,
+    SprintQualifying: 45, SprintShootout: 45,
+    Qualifying: 60, Sprint: 45, Carrera: 120,
+  };
+
   return (
-    <section className="w-full min-w-0 bg-white p-4 text-[#15151d] sm:p-6 xl:p-8 dark:bg-[#15151d] dark:text-white">
-      <div className="grid min-w-0 grid-cols-1 gap-7 xl:grid-cols-[minmax(0,0.85fr)_minmax(0,1.7fr)] xl:gap-8">
+    <section className="relative isolate w-full min-w-0 overflow-hidden rounded-2xl bg-[#0c0e16] p-3 text-white sm:p-4 xl:p-5">
+      {/* El video cubre todo el banner; el contenido queda por encima. */}
+      <FondoVideoGP esSemanaCarrera={esSemanaCarrera} />
+      <div className="relative z-10 grid min-w-0 grid-cols-1 gap-5 xl:grid-cols-[minmax(0,0.85fr)_minmax(0,1.7fr)] xl:gap-6">
         {/* INFORMACIÓN DEL GRAN PREMIO */}
-        <div className="flex min-w-0 flex-col">
-          <span
-            className={`inline-flex w-fit max-w-full items-center gap-2 rounded-full px-4 py-2 font-nav text-sm font-bold uppercase tracking-wider ${
-              esSemanaCarrera
-                ? "bg-[#e10600] text-white"
-                : "border border-[#f2b3b1] bg-[#fff0ef] text-[#c50600] dark:border-[#762b2e] dark:bg-[#3c2025] dark:text-[#ff8580]"
-            }`}
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div
+            key={`${temporadaCarrera}-${rondaCarrera}`}
+            initial={reducirMovimiento ? false : { opacity: 0, x: -14 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={reducirMovimiento ? undefined : { opacity: 0, x: -10 }}
+            transition={{ duration: reducirMovimiento ? 0 : 0.36, ease: "easeOut" }}
+            className="flex min-w-0 flex-col"
           >
-            {esSemanaCarrera ? (
-              <Flag className="h-4 w-4 shrink-0" aria-hidden="true" />
-            ) : (
-              <CalendarDays className="h-4 w-4 shrink-0" aria-hidden="true" />
-            )}
-            {esSemanaCarrera ? "¡SEMANA DE CARRERA!" : "PRÓXIMO GRAN PREMIO"}
-          </span>
+          <div className="rounded-xl border border-white/15 bg-black/45 p-4 backdrop-blur-[3px] sm:p-5">
+            <span
+              className={`inline-flex w-fit max-w-full items-center gap-2 rounded-full px-4 py-2 font-nav text-sm font-bold uppercase tracking-wider ${
+                esSemanaCarrera
+                  ? "bg-[#e10600] text-white"
+                  : "border border-white/20 bg-white/10 text-white"
+              }`}
+            >
+              {esSemanaCarrera ? (
+                <Flag className="h-4 w-4 shrink-0" aria-hidden="true" />
+              ) : (
+                <CalendarDays className="h-4 w-4 shrink-0" aria-hidden="true" />
+              )}
+              {esSemanaCarrera ? "¡SEMANA DE CARRERA!" : "PRÓXIMO GRAN PREMIO"}
+            </span>
 
-          <h2 className="mb-5 mt-6 font-racing text-3xl font-extrabold uppercase italic leading-tight tracking-tight sm:text-4xl xl:text-[2.3rem]">
-            {carrera.raceName}
-          </h2>
+            <h2 className="mb-4 mt-4 font-racing text-3xl font-extrabold uppercase italic leading-tight tracking-tight sm:text-4xl xl:text-[2.3rem]">
+              {carrera.raceName}
+            </h2>
 
-          <div className="flex flex-col gap-3 font-nav text-base font-semibold text-[#555b68] dark:text-[#c7cad3]">
-            <p className="m-0 flex items-start gap-2">
-              <MapPin
-                className="mt-0.5 h-[18px] w-[18px] shrink-0 text-[#e10600]"
-                aria-hidden="true"
-              />
-              <span>
-                {carrera.Circuit?.circuitName || "Circuito por confirmar"}
-              </span>
-            </p>
+            <div className="flex flex-col gap-3 font-nav text-base font-semibold text-white/85">
+              <p className="m-0 flex items-start gap-2">
+                <MapPin
+                  className="mt-0.5 h-[18px] w-[18px] shrink-0 text-[#e10600]"
+                  aria-hidden="true"
+                />
+                <span>
+                  {carrera.Circuit?.circuitName || "Circuito por confirmar"}
+                </span>
+              </p>
 
-            {pais && (
-              <div className="flex items-center gap-2.5">
-                {codigoBandera ? (
-                  <span className="inline-flex h-6 w-6 shrink-0 overflow-hidden rounded-full border border-black/10 dark:border-white/20">
-                    <img
-                      src={`https://flagcdn.com/w40/${codigoBandera}.png`}
-                      alt=""
-                      className="h-full w-full object-cover"
-                      loading="lazy"
+              {pais && (
+                <div className="flex items-center gap-2.5">
+                  {codigoBandera ? (
+                    <span className="inline-flex h-6 w-6 shrink-0 overflow-hidden rounded-full border border-black/10 dark:border-white/20">
+                      <img
+                        src={`https://flagcdn.com/w40/${codigoBandera}.png`}
+                        alt=""
+                        className="h-full w-full object-cover"
+                        loading="lazy"
+                      />
+                    </span>
+                  ) : (
+                    <MapPin
+                      className="h-[18px] w-[18px] shrink-0 text-[#e10600]"
+                      aria-hidden="true"
                     />
-                  </span>
-                ) : (
-                  <MapPin
-                    className="h-[18px] w-[18px] shrink-0 text-[#e10600]"
-                    aria-hidden="true"
-                  />
-                )}
-                <span>{pais}</span>
-              </div>
-            )}
+                  )}
+                  <span>{pais}</span>
+                </div>
+              )}
 
-            <p className="m-0 flex items-center gap-2">
-              <CalendarDays
-                className="h-[18px] w-[18px] shrink-0 text-[#e10600]"
-                aria-hidden="true"
-              />
-              {fechaCarrera.toLocaleDateString("es-AR", {
-                timeZone: ZONA_ARGENTINA,
-                day: "numeric",
-                month: "long",
-                year: "numeric",
-              })}
-            </p>
+              <p className="m-0 flex items-center gap-2">
+                <CalendarDays
+                  className="h-[18px] w-[18px] shrink-0 text-[#e10600]"
+                  aria-hidden="true"
+                />
+                {fechaCarrera.toLocaleDateString("es-AR", {
+                  timeZone: ZONA_ARGENTINA,
+                  day: "numeric",
+                  month: "long",
+                  year: "numeric",
+                })}
+              </p>
 
-            <p className="m-0 flex items-center gap-2">
-              <Clock3
-                className="h-[18px] w-[18px] shrink-0 text-[#e10600]"
-                aria-hidden="true"
-              />
-              <span>
-                {carrera.time
-                  ? formatearHora(fechaCarrera)
-                  : "Hora por confirmar"}
-                {carrera.time ? " (Argentina)" : ""}
-              </span>
-            </p>
+              <p className="m-0 flex items-center gap-2">
+                <Clock3
+                  className="h-[18px] w-[18px] shrink-0 text-[#e10600]"
+                  aria-hidden="true"
+                />
+                <span>
+                  {carrera.time
+                    ? formatearHora(fechaCarrera)
+                    : "Hora por confirmar"}
+                  {carrera.time ? " (Argentina)" : ""}
+                </span>
+              </p>
+            </div>
           </div>
 
           {imagenCircuito && (
-            <div className="mt-6 overflow-hidden rounded-xl border border-[#e0e2e8] bg-[#121218] shadow-sm dark:border-white/15">
-              <img
-                src={imagenCircuito}
-                alt={`Circuito ${carrera.Circuit?.circuitName}`}
-                className="block h-auto w-full object-contain"
-              />
+            <div className="mt-3 flex justify-center">
+              <div className="w-fit max-w-full overflow-hidden rounded-xl border border-white/20 bg-[#121218]/85 shadow-lg">
+                <img
+                  src={imagenCircuito}
+                  alt={`Circuito ${carrera.Circuit?.circuitName}`}
+                  className="block h-[190px] w-auto max-w-full object-contain sm:h-[215px]"
+                />
+              </div>
             </div>
           )}
-        </div>
+          </motion.div>
+        </AnimatePresence>
 
         {/* PROGRAMA DEL FIN DE SEMANA */}
         <div className="min-w-0">
-          <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
+          <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
             <div className="min-w-0">
               <h3 className="m-0 font-racing text-xl font-bold uppercase leading-tight sm:text-2xl">
                 Programa del fin de semana
               </h3>
-              <p className="mb-0 mt-2 font-nav text-sm font-semibold text-[#616775] dark:text-[#aeb3c0]">
+              <p className="mb-0 mt-2 font-nav text-sm font-semibold text-white/75">
                 Horarios de Argentina (ART · UTC-3)
               </p>
             </div>
 
-            <span className="inline-flex shrink-0 rounded-full border border-[#dde0e8] bg-[#f1f2f6] px-3 py-1 font-nav text-sm font-semibold text-[#4c5160] dark:border-white/10 dark:bg-[#2a2c37] dark:text-[#d3d5dd]">
+            <span className="inline-flex shrink-0 rounded-full border border-white/20 bg-black/40 px-3 py-1 font-nav text-sm font-semibold text-white/90 backdrop-blur-sm">
               {sesiones.length} sesiones
             </span>
           </div>
 
           {sesiones.length === 0 ? (
-            <div className="rounded-xl border border-[#e0e2e8] bg-[#f6f7fa] p-5 font-nav text-[#5c6170] dark:border-white/10 dark:bg-[#21232d] dark:text-[#bfc1cc]">
+            <div className="rounded-xl border border-white/15 bg-[#151720]/75 p-5 font-nav text-white/75 backdrop-blur-md">
               Todavía no hay horarios de sesiones disponibles.
             </div>
           ) : (
@@ -639,32 +680,69 @@ function RaceWeekBanner({ onEstadoSemana }) {
                 const hayResultados = Boolean(
                   yaComenzo && Array.isArray(podio) && podio.length > 0,
                 );
+                const esEnCursoEstimado = Boolean(
+                  sesion.inicio && !hayResultados && yaComenzo &&
+                  ahora < sesion.inicio.getTime() +
+                    (minutosEstimados[sesion.id] || 60) * 60 * 1000,
+                );
 
                 return (
-                  <article
+                  <motion.article
                     key={sesion.id}
-                    className={`flex min-w-0 flex-col rounded-xl border p-4 transition-colors duration-200 ${columnasSesion(sesiones.length, indice)} ${
+                    initial={reducirMovimiento ? false : { opacity: 0, y: 14 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    whileHover={reducirMovimiento ? undefined : { y: -3 }}
+                    transition={{
+                      duration: reducirMovimiento ? 0 : 0.35,
+                      delay: reducirMovimiento ? 0 : indice * 0.055,
+                      ease: "easeOut",
+                    }}
+                    className={`relative isolate flex min-w-0 flex-col overflow-hidden rounded-xl border p-3.5 sm:p-4 transition-[border-color,background-color,box-shadow] duration-200 ${columnasSesion(sesiones.length, indice)} ${
                       esProxima
-                        ? "border-[#e10600] bg-[#fff2f1] shadow-[0_0_0_1px_rgba(225,6,0,0.10)] dark:bg-[#321e24]"
-                        : "border-[#e0e2e8] bg-[#f5f6f9] hover:border-[#e10600]/50 dark:border-white/10 dark:bg-[#22232c] dark:hover:border-[#e10600]/50"
+                        ? "border-[#e10600] bg-[#34171f]/85 shadow-[0_0_0_1px_rgba(225,6,0,0.25)] backdrop-blur-[8px]"
+                        : "border-white/20 bg-[#181b26]/75 backdrop-blur-[8px] hover:border-[#e10600]/70 hover:bg-[#202431]/85"
                     }`}
                   >
-                    <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                      <span className="inline-flex rounded-md bg-[#e6e8ee] px-2.5 py-1 font-racing text-xs font-extrabold text-[#2a2b33] dark:bg-[#343640] dark:text-white">
+                    {/* Brillo de contorno solo para la próxima sesión, sin tapar el texto. */}
+                    {esProxima && !reducirMovimiento && (
+                      <motion.span
+                        aria-hidden="true"
+                        className="pointer-events-none absolute inset-0 z-0 rounded-xl border-2 border-[#ff655d]"
+                        animate={{ opacity: [0.2, 0.75, 0.2] }}
+                        transition={{ duration: 2.8, repeat: Infinity, ease: "easeInOut" }}
+                      />
+                    )}
+                    <div className="relative z-10 mb-3 flex flex-wrap items-center justify-between gap-2">
+                      <span className="inline-flex rounded-md bg-white/15 px-2.5 py-1 font-racing text-xs font-extrabold text-white">
                         {sesion.abreviatura}
                       </span>
-                      {esProxima && (
-                        <span className="font-nav text-xs font-extrabold uppercase tracking-wider text-[#e10600] dark:text-[#ff6660]">
-                          PRÓXIMA
+                      {esEnCursoEstimado && (
+                        <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/30 bg-emerald-500/10 px-2 py-1 font-nav text-[10px] font-bold uppercase tracking-wide text-emerald-300" title="Estimación basada en el horario programado; no es transmisión en directo">
+                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" aria-hidden="true" />
+                          EN CURSO · estimado
                         </span>
+                      )}
+                      {esProxima && (
+                        <motion.span
+                          initial={
+                            reducirMovimiento
+                              ? false
+                              : { opacity: 0, scale: 0.92 }
+                          }
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ duration: reducirMovimiento ? 0 : 0.2 }}
+                          className="font-nav text-xs font-extrabold uppercase tracking-wider text-[#ff6762]"
+                        >
+                          PRÓXIMA
+                        </motion.span>
                       )}
                     </div>
 
-                    <h4 className="mb-3 mt-0 font-racing text-sm font-extrabold uppercase leading-snug sm:text-base">
+                    <h4 className="relative z-10 mb-3 mt-0 font-racing text-sm font-extrabold uppercase leading-snug sm:text-base">
                       {sesion.nombre}
                     </h4>
 
-                    <div className="flex flex-col gap-2 font-nav text-sm font-semibold text-[#555b68] dark:text-[#c5c8d3]">
+                    <div className="relative z-10 flex flex-col gap-2 font-nav text-sm font-semibold text-white/85">
                       <span className="flex items-center gap-2">
                         <CalendarDays
                           className="h-4 w-4 shrink-0 text-[#e10600]"
@@ -683,78 +761,109 @@ function RaceWeekBanner({ onEstadoSemana }) {
                       </span>
                     </div>
 
-                    {hayResultados ? (
-                      <div className="mt-4 border-t border-[#dce0e7] pt-3 dark:border-white/15">
-                        <p className="m-0 font-nav text-[11px] font-bold uppercase tracking-wider text-[#6a7080] dark:text-[#abb0bf]">
-                          Resultados disponibles
-                        </p>
-                        <div className="mt-3 flex flex-col gap-2">
-                          {podio.map((piloto) => {
-                            const color =
-                              piloto.color ||
-                              obtenerColorEscuderia(piloto.id_escuderia);
+                    <div className="relative z-10">
+                    <AnimatePresence mode="wait" initial={false}>
+                      <motion.div
+                        key={
+                          hayResultados
+                            ? "resultados"
+                            : !sesion.inicio
+                              ? "sin-hora"
+                              : esEnCursoEstimado
+                                ? "en-curso-estimado"
+                                : yaComenzo
+                                  ? "pendiente"
+                                  : "cuenta"
+                        }
+                        initial={
+                          reducirMovimiento ? false : { opacity: 0, y: 5 }
+                        }
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={
+                          reducirMovimiento ? undefined : { opacity: 0, y: -5 }
+                        }
+                        transition={{ duration: reducirMovimiento ? 0 : 0.18 }}
+                      >
+                        {hayResultados ? (
+                          <div className="mt-4 border-t border-white/20 pt-3">
+                            <p className="m-0 font-nav text-[11px] font-bold uppercase tracking-wider text-white/65">
+                              Resultados disponibles
+                            </p>
+                            <div className="mt-3 flex flex-col gap-2">
+                              {podio.map((piloto, puestoIndice) => {
+                                const color =
+                                  piloto.color ||
+                                  obtenerColorEscuderia(piloto.id_escuderia);
 
-                            return (
-                              <div
-                                key={piloto.id_piloto || piloto.posicion}
-                                className="flex min-w-0 items-center gap-2 font-nav text-sm"
-                              >
-                                <span className="w-5 shrink-0 font-bold text-[#4c5260] dark:text-[#c6c8d0]">
-                                  {piloto.posicion}°
-                                </span>
-                                {piloto.numero != null && (
-                                  <span
-                                    className="shrink-0 font-extrabold"
-                                    style={{ color }}
+                                return (
+                                  <motion.div
+                                    key={piloto.id_piloto || piloto.numero || piloto.posicion}
+                                    initial={reducirMovimiento ? false : { opacity: 0, x: -8 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ duration: reducirMovimiento ? 0 : 0.22, delay: reducirMovimiento ? 0 : puestoIndice * 0.075 }}
+                                    className="flex min-w-0 items-center gap-2 font-nav text-sm"
                                   >
-                                    #{piloto.numero}
-                                  </span>
-                                )}
-                                <span className="min-w-0 truncate font-bold">
-                                  {piloto.nombre}
-                                </span>
-                              </div>
-                            );
-                          })}
-                        </div>
-                        <Link
-                          to="/resultados"
-                          className="mt-4 inline-flex items-center gap-1.5 font-nav text-sm font-bold text-[#c50500] no-underline hover:underline dark:text-[#ff6760]"
-                        >
-                          Ver resultados completos
-                          <ArrowRight
-                            className="h-4 w-4 shrink-0"
-                            aria-hidden="true"
-                          />
-                        </Link>
-                      </div>
-                    ) : (
-                      <div className="mt-4 border-t border-[#dce0e7] pt-3 dark:border-white/15">
-                        {!sesion.inicio ? (
-                          <span className="font-nav text-sm text-[#555b68] dark:text-[#bfc1cc]">
-                            Horario por confirmar
-                          </span>
-                        ) : yaComenzo ? (
-                          <span className="font-nav text-sm text-[#555b68] dark:text-[#bfc1cc]">
-                            {tipoResultado
-                              ? "Resultados pendientes"
-                              : "Inicio transcurrido"}
-                          </span>
+                                    <span className="w-5 shrink-0 font-bold text-white/75">
+                                      {piloto.posicion}°
+                                    </span>
+                                    {piloto.numero != null && (
+                                      <span
+                                        className="shrink-0 font-extrabold"
+                                        style={{ color }}
+                                      >
+                                        #{piloto.numero}
+                                      </span>
+                                    )}
+                                    <span className="min-w-0 truncate font-bold">
+                                      {piloto.nombre}
+                                    </span>
+                                  </motion.div>
+                                );
+                              })}
+                            </div>
+                            <Link
+                              to="/resultados"
+                              className="mt-4 inline-flex items-center gap-1.5 font-nav text-sm font-bold text-[#ff7772] no-underline hover:underline"
+                            >
+                              Ver resultados completos
+                              <ArrowRight
+                                className="h-4 w-4 shrink-0"
+                                aria-hidden="true"
+                              />
+                            </Link>
+                          </div>
                         ) : (
-                          <>
-                            <span className="block font-nav text-[11px] font-bold uppercase tracking-wider text-[#6a7080] dark:text-[#abb0bf]">
-                              Comienza en
-                            </span>
-                            <strong className="mt-1 block font-racing text-base font-extrabold text-[#e10600] sm:text-lg">
-                              {calcularCuentaRegresiva(
-                                sesion.inicio.getTime() - ahora,
-                              )}
-                            </strong>
-                          </>
+                          <div className="mt-4 border-t border-white/20 pt-3">
+                            {!sesion.inicio ? (
+                              <span className="font-nav text-sm text-white/75">
+                                Horario por confirmar
+                              </span>
+                            ) : yaComenzo ? (
+                              <span className="font-nav text-sm text-white/75">
+                                {esEnCursoEstimado
+                                  ? "Sesión en curso (estimado)"
+                                  : tipoResultado
+                                    ? "Resultados pendientes"
+                                    : "Inicio transcurrido"}
+                              </span>
+                            ) : (
+                              <>
+                                <span className="block font-nav text-[11px] font-bold uppercase tracking-wider text-white/65">
+                                  Comienza en
+                                </span>
+                                <strong className="mt-1 block font-racing text-base font-extrabold text-[#ff4545] sm:text-lg">
+                                  {calcularCuentaRegresiva(
+                                    sesion.inicio.getTime() - ahora,
+                                  )}
+                                </strong>
+                              </>
+                            )}
+                          </div>
                         )}
-                      </div>
-                    )}
-                  </article>
+                      </motion.div>
+                    </AnimatePresence>
+                    </div>
+                  </motion.article>
                 );
               })}
             </div>
