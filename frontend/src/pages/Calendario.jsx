@@ -279,7 +279,7 @@ function Calendario() {
 
       try {
         const respuesta = await fetch(
-          `http://localhost:3001/api/carreras?temporada=${temporadaSeleccionada}`,
+          `/api/carreras?temporada=${temporadaSeleccionada}`,
           { signal: controller.signal },
         );
 
@@ -432,7 +432,10 @@ function Calendario() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, amount: 0.08 }}
                   whileHover={reducirMovimiento ? undefined : { y: -4 }}
-                  transition={{ duration: reducirMovimiento ? 0 : 0.34, delay: reducirMovimiento ? 0 : (indice % 6) * 0.045 }}
+                  transition={{
+                    duration: reducirMovimiento ? 0 : 0.34,
+                    delay: reducirMovimiento ? 0 : (indice % 6) * 0.045,
+                  }}
                   className={`group relative flex min-w-0 cursor-pointer flex-col overflow-hidden rounded-2xl border border-t-4 bg-white shadow-sm transition-[background-color,border-color,box-shadow] duration-200 hover:shadow-lg dark:bg-[#1c1e27] dark:shadow-none dark:hover:bg-[#222531] ${
                     esProxima
                       ? "border-[#e8c7ca] border-t-[#e10600] dark:border-[#70383e] dark:border-t-[#e10600]"

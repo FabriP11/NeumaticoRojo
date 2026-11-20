@@ -186,7 +186,7 @@ function EscuderiaDetalle() {
 
       try {
         const respuesta = await fetch(
-          `http://localhost:3001/api/escuderias/${encodeURIComponent(id)}?temporada=${temporada}`,
+          `/api/escuderias/${encodeURIComponent(id)}?temporada=${temporada}`,
           { signal: controller.signal },
         );
         const resultado = await respuesta.json();

@@ -168,7 +168,7 @@ function Escuderias() {
 
       try {
         const respuesta = await fetch(
-          `http://localhost:3001/api/clasificaciones?temporada=${temporada}`,
+          `/api/clasificaciones?temporada=${temporada}`,
           { signal: controller.signal },
         );
 

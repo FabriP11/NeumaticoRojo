@@ -109,7 +109,7 @@ function FavoritosInicio() {
 
       try {
         const respuesta = await fetch(
-          `http://localhost:3001/api/resumen-favoritos?temporada=${TEMPORADA}`,
+          `/api/resumen-favoritos?temporada=${TEMPORADA}`,
           {
             credentials: "include",
             signal: controller.signal,

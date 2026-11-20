@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import {
   AlertCircle,
@@ -10,6 +10,7 @@ import {
   Flag,
   LoaderCircle,
   LockKeyhole,
+  KeyRound,
   Mail,
   ShieldCheck,
   UserPlus,
@@ -22,6 +23,7 @@ function Registro() {
     correo: "",
     contrasena: "",
     confirmarContrasena: "",
+    codigo_invitacion: "",
   });
 
   const [mostrarContrasena, setMostrarContrasena] = useState(false);
@@ -29,6 +31,31 @@ function Registro() {
   const [error, setError] = useState("");
   const [exito, setExito] = useState("");
   const [cargando, setCargando] = useState(false);
+  // En una beta privada el campo aparece por defecto, incluso si falla la consulta.
+  const [requiereInvitacion, setRequiereInvitacion] = useState(true);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    async function consultarModoRegistro() {
+      try {
+        const respuesta = await fetch("/api/registro/configuracion", {
+          signal: controller.signal,
+        });
+        if (!respuesta.ok) return;
+        const datos = await respuesta.json();
+        if (!controller.signal.aborted && typeof datos.requiereInvitacion === "boolean") {
+          setRequiereInvitacion(datos.requiereInvitacion);
+        }
+      } catch {
+        // Conservar el campo de invitacion cuando no hay conexion.
+      }
+    }
+
+    consultarModoRegistro();
+    return () => controller.abort();
+  }, []);
+
 
   // Actualizar los campos del formulario
   function manejarCambio(evento) {
@@ -56,7 +83,7 @@ function Registro() {
     setCargando(true);
 
     try {
-      const respuesta = await fetch("http://localhost:3001/api/registro", {
+      const respuesta = await fetch("/api/registro", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -65,6 +92,7 @@ function Registro() {
           nombre_usuario: formulario.nombre_usuario,
           correo: formulario.correo,
           contrasena: formulario.contrasena,
+          codigo_invitacion: requiereInvitacion ? formulario.codigo_invitacion.trim() : "",
         }),
       });
 
@@ -82,6 +110,7 @@ function Registro() {
         correo: "",
         contrasena: "",
         confirmarContrasena: "",
+    codigo_invitacion: "",
       });
       setMostrarContrasena(false);
       setMostrarConfirmacion(false);
@@ -315,6 +344,37 @@ function Registro() {
                   </button>
                 </div>
               </div>
+
+              {/* ACCESO POR INVITACION - BETA */}
+              {requiereInvitacion && (
+                <div>
+                  <label htmlFor="codigo_invitacion" className={claseLabel}>
+                    Código de invitación
+                  </label>
+                  <div className="relative">
+                    <KeyRound
+                      className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#888894]"
+                      aria-hidden="true"
+                    />
+                    <input
+                      id="codigo_invitacion"
+                      type="text"
+                      name="codigo_invitacion"
+                      placeholder="Código de acceso a la beta"
+                      value={formulario.codigo_invitacion}
+                      onChange={manejarCambio}
+                      autoComplete="off"
+                      maxLength={256}
+                      disabled={cargando}
+                      required
+                      className={claseInput}
+                    />
+                  </div>
+                  <p className="mt-2 text-xs text-[#a9a9b4]">
+                    Necesitás el código que te compartió el creador de NeumaticoRojo.
+                  </p>
+                </div>
+              )}
 
               {/* ERROR */}
               {error && (

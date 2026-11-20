@@ -72,7 +72,10 @@ function RetratoPiloto({ idPiloto, nombre, temporada, reducirMovimiento }) {
           key={archivo}
           initial={reducirMovimiento ? false : { opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: reducirMovimiento ? 0 : 0.6, ease: "easeOut" }}
+          transition={{
+            duration: reducirMovimiento ? 0 : 0.6,
+            ease: "easeOut",
+          }}
           src={`/pilotos/2026/${archivo}.avif`}
           alt={`Fotografía de ${nombre} en la temporada 2026`}
           className="pointer-events-none relative z-10 block h-full w-full max-w-[480px] translate-y-[5px] origin-bottom scale-[1.00] object-contain object-bottom drop-shadow-[0_12px_18px_rgba(0,0,0,.35)]"
@@ -113,7 +116,7 @@ function PilotoDetalle() {
 
       try {
         const respuesta = await fetch(
-          `http://localhost:3001/api/pilotos/${encodeURIComponent(id)}?temporada=${temporada}`,
+          `/api/pilotos/${encodeURIComponent(id)}?temporada=${temporada}`,
           { signal: controller.signal },
         );
 
@@ -226,7 +229,10 @@ function PilotoDetalle() {
           key={`${id}-${temporada}`}
           initial={reducirMovimiento ? false : { opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: reducirMovimiento ? 0 : 0.42, ease: "easeOut" }}
+          transition={{
+            duration: reducirMovimiento ? 0 : 0.42,
+            ease: "easeOut",
+          }}
           className="relative isolate overflow-hidden rounded-[26px] border border-black/10 text-white shadow-xl"
           style={{ background: fondoEquipo }}
           aria-label={`Perfil de ${nombre}`}
@@ -338,7 +344,10 @@ function PilotoDetalle() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.1 }}
               whileHover={reducirMovimiento ? undefined : { y: -3 }}
-              transition={{ duration: reducirMovimiento ? 0 : 0.32, delay: reducirMovimiento ? 0 : indice * 0.055 }}
+              transition={{
+                duration: reducirMovimiento ? 0 : 0.32,
+                delay: reducirMovimiento ? 0 : indice * 0.055,
+              }}
               className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition-colors hover:border-slate-300 dark:border-white/10 dark:bg-[#20212b] dark:shadow-md dark:hover:border-white/20"
             >
               <div className="mb-4 flex items-center gap-2 font-nav text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-gray-400">
@@ -399,10 +408,15 @@ function PilotoDetalle() {
                   return (
                     <motion.tr
                       key={carrera.round}
-                      initial={reducirMovimiento ? false : { opacity: 0, x: -6 }}
+                      initial={
+                        reducirMovimiento ? false : { opacity: 0, x: -6 }
+                      }
                       whileInView={{ opacity: 1, x: 0 }}
                       viewport={{ once: true, amount: 0.1 }}
-                      transition={{ duration: reducirMovimiento ? 0 : 0.22, delay: reducirMovimiento ? 0 : (indice % 8) * 0.025 }}
+                      transition={{
+                        duration: reducirMovimiento ? 0 : 0.22,
+                        delay: reducirMovimiento ? 0 : (indice % 8) * 0.025,
+                      }}
                       className="transition-colors hover:bg-slate-50 dark:hover:bg-white/5"
                     >
                       <td className="px-4 py-4 font-bold text-slate-600 sm:px-5 dark:text-gray-300">

@@ -36,7 +36,7 @@ function Login() {
     setCargando(true);
 
     try {
-      const respuesta = await fetch("http://localhost:3001/api/login", {
+      const respuesta = await fetch("/api/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -222,7 +222,7 @@ function TablasInicio() {
     queryKey: ["publico", "tablas-inicio", TEMPORADA],
     queryFn: async ({ signal }) => {
       const respuesta = await fetch(
-        `http://localhost:3001/api/tablas-inicio?temporada=${TEMPORADA}`,
+        `/api/tablas-inicio?temporada=${TEMPORADA}`,
         { signal },
       );
 

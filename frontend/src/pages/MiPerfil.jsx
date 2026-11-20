@@ -47,10 +47,10 @@ function MiPerfil() {
 
       try {
         const [respuestaOpciones, respuestaCuenta] = await Promise.all([
-          fetch("http://localhost:3001/api/opciones-favoritos", {
+          fetch("/api/opciones-favoritos", {
             signal: controller.signal,
           }),
-          fetch("http://localhost:3001/api/usuario-actual", {
+          fetch("/api/usuario-actual", {
             credentials: "include",
             signal: controller.signal,
           }),
@@ -119,7 +119,7 @@ function MiPerfil() {
     setGuardando(true);
 
     try {
-      const respuesta = await fetch("http://localhost:3001/api/mis-favoritos", {
+      const respuesta = await fetch("/api/mis-favoritos", {
         method: "PUT",
         credentials: "include",
         headers: { "Content-Type": "application/json" },

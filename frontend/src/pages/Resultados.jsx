@@ -53,10 +53,9 @@ function Resultados() {
       setCarreras([]);
 
       try {
-        const respuesta = await fetch(
-          `http://localhost:3001/api/carreras?temporada=${temporada}`,
-          { signal: controller.signal },
-        );
+        const respuesta = await fetch(`/api/carreras?temporada=${temporada}`, {
+          signal: controller.signal,
+        });
 
         if (!respuesta.ok) {
           throw new Error("No se pudo cargar el calendario");
@@ -98,8 +97,8 @@ function Resultados() {
       // Elegir el endpoint según la pestaña
       const url =
         tipoSesion === "carrera"
-          ? `http://localhost:3001/api/resultados?temporada=${temporada}&ronda=${ronda}`
-          : `http://localhost:3001/api/resultados-sesion?temporada=${temporada}&ronda=${ronda}&tipo=${tipoSesion}`;
+          ? `/api/resultados?temporada=${temporada}&ronda=${ronda}`
+          : `/api/resultados-sesion?temporada=${temporada}&ronda=${ronda}&tipo=${tipoSesion}`;
 
       try {
         const respuesta = await fetch(url, {
@@ -341,7 +340,10 @@ function Resultados() {
             key={`${temporada}-${ronda}-${tipoSesion}`}
             initial={reducirMovimiento ? false : { opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: reducirMovimiento ? 0 : 0.3, ease: "easeOut" }}
+            transition={{
+              duration: reducirMovimiento ? 0 : 0.3,
+              ease: "easeOut",
+            }}
             className="space-y-3"
           >
             {/* GRAN PREMIO: FRANJA PEQUEÑA SOBRE LA TABLA */}
@@ -450,9 +452,16 @@ function Resultados() {
                       return (
                         <motion.tr
                           key={idPiloto}
-                          initial={reducirMovimiento ? false : { opacity: 0, x: -8 }}
+                          initial={
+                            reducirMovimiento ? false : { opacity: 0, x: -8 }
+                          }
                           animate={{ opacity: 1, x: 0 }}
-                          transition={{ duration: reducirMovimiento ? 0 : 0.24, delay: reducirMovimiento ? 0 : Math.min(indice, 10) * 0.025 }}
+                          transition={{
+                            duration: reducirMovimiento ? 0 : 0.24,
+                            delay: reducirMovimiento
+                              ? 0
+                              : Math.min(indice, 10) * 0.025,
+                          }}
                           className={`transition-colors hover:bg-white/5 ${podio ? "bg-[#e10600]/[0.055]" : ""}`}
                         >
                           <td className="px-4 py-4 text-center sm:px-6">

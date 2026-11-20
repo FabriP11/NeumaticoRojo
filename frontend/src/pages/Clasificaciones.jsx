@@ -130,7 +130,7 @@ function Clasificaciones() {
     queryKey: ["publico", "clasificaciones", temporada],
     queryFn: async ({ signal }) => {
       const respuesta = await fetch(
-        `http://localhost:3001/api/clasificaciones?temporada=${temporada}`,
+        `/api/clasificaciones?temporada=${temporada}`,
         { signal },
       );
 
@@ -158,14 +158,19 @@ function Clasificaciones() {
     queryKey: ["publico", "dorsales-temporada", temporada],
     queryFn: async ({ signal }) => {
       const respuesta = await fetch(
-        `http://localhost:3001/api/dorsales-temporada?temporada=${temporada}`,
+        `/api/dorsales-temporada?temporada=${temporada}`,
         { signal },
       );
       if (!respuesta.ok) {
         throw new Error("No se pudieron consultar los dorsales");
       }
       const datos = await respuesta.json();
-      if (!datos || typeof datos.pilotos !== "object" || !datos.pilotos || Array.isArray(datos.pilotos)) {
+      if (
+        !datos ||
+        typeof datos.pilotos !== "object" ||
+        !datos.pilotos ||
+        Array.isArray(datos.pilotos)
+      ) {
         throw new Error("Formato de dorsales incorrecto");
       }
       return datos.pilotos;
@@ -180,9 +185,11 @@ function Clasificaciones() {
   const detallesPilotos = dorsales.data ?? {};
   const cargando = !clasificaciones.data && clasificaciones.isPending;
   // Si falla una actualización, seguimos mostrando los datos guardados.
-  const error = !clasificaciones.data && clasificaciones.isError
-    ? clasificaciones.error?.message || "No se pudieron cargar las clasificaciones"
-    : "";
+  const error =
+    !clasificaciones.data && clasificaciones.isError
+      ? clasificaciones.error?.message ||
+        "No se pudieron cargar las clasificaciones"
+      : "";
 
   const elementos = tipo === "pilotos" ? pilotos : constructores;
 
@@ -304,7 +311,10 @@ function Clasificaciones() {
           key={`${temporada}-${tipo}`}
           initial={reducirMovimiento ? false : { opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: reducirMovimiento ? 0 : 0.27, ease: "easeOut" }}
+          transition={{
+            duration: reducirMovimiento ? 0 : 0.27,
+            ease: "easeOut",
+          }}
           className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-[#373944] dark:bg-[#1c1e27] dark:shadow-none"
         >
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-4 py-4 dark:border-[#373944] sm:px-6">
@@ -373,9 +383,16 @@ function Clasificaciones() {
                       <motion.tr
                         key={idPiloto}
                         layout={!reducirMovimiento ? "position" : false}
-                        initial={reducirMovimiento ? false : { opacity: 0, x: -8 }}
+                        initial={
+                          reducirMovimiento ? false : { opacity: 0, x: -8 }
+                        }
                         animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: reducirMovimiento ? 0 : 0.2, delay: reducirMovimiento ? 0 : Math.min(indice, 10) * 0.025 }}
+                        transition={{
+                          duration: reducirMovimiento ? 0 : 0.2,
+                          delay: reducirMovimiento
+                            ? 0
+                            : Math.min(indice, 10) * 0.025,
+                        }}
                         className={`transition-colors hover:bg-slate-50 dark:hover:bg-white/5 ${Number(piloto.position) <= 3 ? "bg-red-50/50 dark:bg-red-950/10" : ""}`}
                       >
                         <td className={`${CLASE_CELDA} text-center`}>
@@ -463,9 +480,16 @@ function Clasificaciones() {
                       <motion.tr
                         key={idEquipo}
                         layout={!reducirMovimiento ? "position" : false}
-                        initial={reducirMovimiento ? false : { opacity: 0, x: -8 }}
+                        initial={
+                          reducirMovimiento ? false : { opacity: 0, x: -8 }
+                        }
                         animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: reducirMovimiento ? 0 : 0.2, delay: reducirMovimiento ? 0 : Math.min(indice, 10) * 0.025 }}
+                        transition={{
+                          duration: reducirMovimiento ? 0 : 0.2,
+                          delay: reducirMovimiento
+                            ? 0
+                            : Math.min(indice, 10) * 0.025,
+                        }}
                         className={`transition-colors hover:bg-slate-50 dark:hover:bg-white/5 ${Number(constructor.position) <= 3 ? "bg-red-50/50 dark:bg-red-950/10" : ""}`}
                       >
                         <td className={`${CLASE_CELDA} text-center`}>

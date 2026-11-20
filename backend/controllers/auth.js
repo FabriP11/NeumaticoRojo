@@ -2,11 +2,53 @@
 const model = require('../models/auth')
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
+const { createHash, timingSafeEqual } = require('node:crypto')
+
+// Por defecto el registro es privado. Solo se abre expresamente en el lanzamiento.
+const registroAbierto = () => process.env.REGISTRO_ABIERTO === 'true'
+
+// Respuesta publica para que React muestre u oculte el campo de invitacion.
+const configuracionRegistro = (req, res) => {
+  res.json({ requiereInvitacion: !registroAbierto() })
+}
+
+// Comparar de forma segura el codigo compartido de la beta.
+// El codigo se guarda exclusivamente en las variables de entorno del backend.
+function validarInvitacion (codigoRecibido) {
+  if (registroAbierto()) return null
+
+  const codigoConfigurado = process.env.CODIGO_INVITACION_BETA?.trim()
+
+  // Fallar de forma cerrada: sin codigo valido no permitir registros.
+  if (!codigoConfigurado || codigoConfigurado.length < 16) {
+    return {
+      estado: 503,
+      mensaje: 'El registro por invitacion no esta configurado. Contacta al administrador.'
+    }
+  }
+
+  if (
+    typeof codigoRecibido !== 'string' ||
+    codigoRecibido.length > 256 ||
+    !codigoRecibido.trim()
+  ) {
+    return { estado: 403, mensaje: 'Codigo de invitacion incorrecto' }
+  }
+
+  const hashRecibido = createHash('sha256').update(codigoRecibido.trim()).digest()
+  const hashEsperado = createHash('sha256').update(codigoConfigurado).digest()
+
+  if (!timingSafeEqual(hashRecibido, hashEsperado)) {
+    return { estado: 403, mensaje: 'Codigo de invitacion incorrecto' }
+  }
+
+  return null
+}
 
 const registrar = async (req, res) => {
   try {
     // 1. Obtener los datos enviados por el usuario
-    const { nombre_usuario, correo, contrasena } = req.body || {}
+    const { nombre_usuario, correo, contrasena, codigo_invitacion } = req.body || {}
 
     // 2. Validar los campos
     if (
@@ -43,6 +85,12 @@ const registrar = async (req, res) => {
         mensaje:
           'La contraseña debe tener al menos 8 caracteres y no superar 72 bytes'
       })
+    }
+
+    // Verificar invitacion antes de ejecutar bcrypt o escribir en MySQL.
+    const errorInvitacion = validarInvitacion(codigo_invitacion)
+    if (errorInvitacion) {
+      return res.status(errorInvitacion.estado).json({ mensaje: errorInvitacion.mensaje })
     }
 
     // 3. Proteger la contraseña
@@ -238,4 +286,4 @@ const cerrarSesion = (req, res) => {
   })
 }
 
-module.exports = { registrar, iniciarSesion, usuarioActual, cerrarSesion }
+module.exports = { registrar, iniciarSesion, usuarioActual, cerrarSesion, configuracionRegistro }

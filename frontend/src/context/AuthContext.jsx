@@ -14,13 +14,10 @@ export function AuthProvider({ children }) {
 
     async function verificarSesion() {
       try {
-        const respuesta = await fetch(
-          "http://localhost:3001/api/usuario-actual",
-          {
-            credentials: "include",
-            signal: controller.signal,
-          },
-        );
+        const respuesta = await fetch("/api/usuario-actual", {
+          credentials: "include",
+          signal: controller.signal,
+        });
 
         if (respuesta.status === 401) {
           setUsuario(null);
@@ -59,7 +56,7 @@ export function AuthProvider({ children }) {
 
   // Cerrar sesión en el backend
   async function cerrarSesion() {
-    const respuesta = await fetch("http://localhost:3001/api/logout", {
+    const respuesta = await fetch("/api/logout", {
       method: "POST",
       credentials: "include",
     });
