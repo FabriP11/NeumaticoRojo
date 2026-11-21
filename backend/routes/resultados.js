@@ -5,5 +5,6 @@ const { validarTemporada, validarRonda, validarTipoSesion } = require('../middle
 
 router.get('/api/resultados', validarTemporada(), validarRonda(), ctrl.obtenerResultados)
 router.get('/api/resultados-sesion', validarTemporada(), validarRonda(), validarTipoSesion, ctrl.obtenerResultadosSesion)
+router.get('/api/resultados-practica', validarTemporada(), validarRonda(), ctrl.obtenerResultadosPractica)
 
 module.exports = router
