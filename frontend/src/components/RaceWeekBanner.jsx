@@ -864,7 +864,7 @@ function RaceWeekBanner({ onEstadoSemana }) {
                                 })}
                               </div>
                               <Link
-                                to="/resultados"
+                                to={`/resultados?temporada=${temporadaCarrera}&ronda=${rondaCarrera}&tipo=${tipoResultado}`}
                                 className="mt-4 inline-flex items-center gap-1.5 font-nav text-sm font-bold text-[#ff7772] no-underline hover:underline"
                               >
                                 Ver resultados completos
