@@ -535,7 +535,11 @@ function RaceWeekBanner({ onEstadoSemana }) {
               duration: reducirMovimiento ? 0 : 0.36,
               ease: "easeOut",
             }}
-            className="flex min-w-0 flex-col"
+            className={
+              imagenCircuito
+                ? "grid min-w-0 grid-rows-2 gap-3"
+                : "flex min-w-0 flex-col"
+            }
           >
             <div className="rounded-xl border border-white/15 bg-black/45 p-4 backdrop-blur-[3px] sm:p-5">
               <span
@@ -623,14 +627,12 @@ function RaceWeekBanner({ onEstadoSemana }) {
             </div>
 
             {imagenCircuito && (
-              <div className="mt-3 flex justify-center">
-                <div className="w-fit max-w-full overflow-hidden rounded-xl border border-white/20 bg-[#121218]/85 shadow-lg">
-                  <img
-                    src={imagenCircuito}
-                    alt={`Circuito ${carrera.Circuit?.circuitName}`}
-                    className="block h-[190px] w-auto max-w-full object-contain sm:h-[215px]"
-                  />
-                </div>
+              <div className="relative min-h-0 w-full overflow-hidden rounded-xl border border-white/20 bg-[#121218]/85 shadow-lg">
+                <img
+                  src={imagenCircuito}
+                  alt={`Circuito ${carrera.Circuit?.circuitName}`}
+                  className="absolute inset-0 h-full w-full object-contain"
+                />
               </div>
             )}
           </motion.div>
