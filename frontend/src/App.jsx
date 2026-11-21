@@ -28,6 +28,7 @@ import SesionMenu from "./components/SesionMenu";
 import MiPerfil from "./pages/MiPerfil";
 import FavoritosInicio from "./components/FavoritosInicio";
 import TablasInicio from "./components/TablasInicio";
+import Footer from "./components/Footer";
 
 import "./tailwind.css";
 import "./App.css";
@@ -173,8 +174,11 @@ function App() {
       }
       if (evento.key !== "Tab" || !panel) return;
 
-      const elementos = [...panel.querySelectorAll('a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])')]
-        .filter((elemento) => elemento.getClientRects().length > 0);
+      const elementos = [
+        ...panel.querySelectorAll(
+          'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        ),
+      ].filter((elemento) => elemento.getClientRects().length > 0);
       if (!elementos.length) return;
       const primero = elementos[0];
       const ultimo = elementos[elementos.length - 1];
@@ -192,19 +196,22 @@ function App() {
     return () => {
       document.body.style.overflow = overflowAnterior;
       document.removeEventListener("keydown", manejarTeclado);
-      if (focoAnterior && typeof focoAnterior.focus === "function") focoAnterior.focus();
+      if (focoAnterior && typeof focoAnterior.focus === "function")
+        focoAnterior.focus();
     };
   }, [menuAbierto]);
 
   return (
-    <div className="min-h-screen bg-[#f4f5f8] text-[#15151d] transition-colors duration-300 dark:bg-[#101116] dark:text-white">
+    <div className="flex min-h-screen flex-col bg-[#f4f5f8] text-[#15151d] transition-colors duration-300 dark:bg-[#101116] dark:text-white">
       <ScrollArriba />
       {/* BARRA SUPERIOR */}
-      <header className={`sticky top-0 z-40 border-b border-[#dedfe5] backdrop-blur-xl transition-[background-color,box-shadow] duration-300 dark:border-white/10 ${
-        headerConSombra
-          ? "bg-white/90 shadow-[0_12px_30px_rgba(0,0,0,0.10)] dark:bg-[#15151d]/90 dark:shadow-[0_12px_30px_rgba(0,0,0,0.35)]"
-          : "bg-white/95 shadow-sm dark:bg-[#15151d]/95"
-      }`}>
+      <header
+        className={`sticky top-0 z-40 border-b border-[#dedfe5] backdrop-blur-xl transition-[background-color,box-shadow] duration-300 dark:border-white/10 ${
+          headerConSombra
+            ? "bg-white/90 shadow-[0_12px_30px_rgba(0,0,0,0.10)] dark:bg-[#15151d]/90 dark:shadow-[0_12px_30px_rgba(0,0,0,0.35)]"
+            : "bg-white/95 shadow-sm dark:bg-[#15151d]/95"
+        }`}
+      >
         <div className="h-1 w-full bg-[#e10600]" />
 
         <div className="mx-auto flex min-h-[76px] w-full max-w-[1500px] items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
@@ -298,96 +305,99 @@ function App() {
       <AnimatePresence>
         {menuAbierto && (
           <>
-          <motion.button
-            type="button"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: reducirMovimiento ? 0 : 0.2 }}
-            aria-label="Cerrar menú"
-            onClick={() => setMenuAbierto(false)}
-            className="fixed inset-0 z-[90] cursor-default bg-black/65 backdrop-blur-[2px]"
-          />
+            <motion.button
+              type="button"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: reducirMovimiento ? 0 : 0.2 }}
+              aria-label="Cerrar menú"
+              onClick={() => setMenuAbierto(false)}
+              className="fixed inset-0 z-[90] cursor-default bg-black/65 backdrop-blur-[2px]"
+            />
 
-          <motion.aside
-            ref={lateralRef}
-            initial={reducirMovimiento ? false : { x: "100%" }}
-            animate={{ x: 0 }}
-            exit={reducirMovimiento ? { opacity: 0 } : { x: "100%" }}
-            transition={{ duration: reducirMovimiento ? 0 : 0.32, ease: [0.22, 1, 0.36, 1] }}
-            id="nr-menu-lateral"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Menú de navegación"
-            className="fixed inset-y-0 right-0 z-[100] flex w-[min(88vw,390px)] flex-col overflow-y-auto border-l border-[#dedfe5] bg-[#fafbfc] p-5 shadow-2xl sm:p-7 dark:border-white/10 dark:bg-[#16171e]"
-          >
-            <div className="mb-7 flex items-center justify-between border-b border-[#dfe1e6] pb-5 dark:border-white/15">
-              <div>
-                <span className="font-racing text-xl font-extrabold uppercase italic text-[#15151d] dark:text-white">
-                  NEUMATICO<span className="text-[#e10600]">ROJO</span>
-                </span>
-                <p className="mt-1 font-nav text-xs font-semibold uppercase tracking-widest text-[#777b86] dark:text-[#a5a8b4]">
-                  MENÚ PRINCIPAL
-                </p>
+            <motion.aside
+              ref={lateralRef}
+              initial={reducirMovimiento ? false : { x: "100%" }}
+              animate={{ x: 0 }}
+              exit={reducirMovimiento ? { opacity: 0 } : { x: "100%" }}
+              transition={{
+                duration: reducirMovimiento ? 0 : 0.32,
+                ease: [0.22, 1, 0.36, 1],
+              }}
+              id="nr-menu-lateral"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Menú de navegación"
+              className="fixed inset-y-0 right-0 z-[100] flex w-[min(88vw,390px)] flex-col overflow-y-auto border-l border-[#dedfe5] bg-[#fafbfc] p-5 shadow-2xl sm:p-7 dark:border-white/10 dark:bg-[#16171e]"
+            >
+              <div className="mb-7 flex items-center justify-between border-b border-[#dfe1e6] pb-5 dark:border-white/15">
+                <div>
+                  <span className="font-racing text-xl font-extrabold uppercase italic text-[#15151d] dark:text-white">
+                    NEUMATICO<span className="text-[#e10600]">ROJO</span>
+                  </span>
+                  <p className="mt-1 font-nav text-xs font-semibold uppercase tracking-widest text-[#777b86] dark:text-[#a5a8b4]">
+                    MENÚ PRINCIPAL
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setMenuAbierto(false)}
+                  className="flex h-10 w-10 items-center justify-center rounded-lg text-[#292b34] hover:bg-[#eceef2] dark:text-white dark:hover:bg-white/10"
+                  aria-label="Cerrar menú lateral"
+                >
+                  <X className="h-6 w-6" />
+                </button>
               </div>
 
-              <button
-                type="button"
-                onClick={() => setMenuAbierto(false)}
-                className="flex h-10 w-10 items-center justify-center rounded-lg text-[#292b34] hover:bg-[#eceef2] dark:text-white dark:hover:bg-white/10"
-                aria-label="Cerrar menú lateral"
+              <nav
+                aria-label="Navegación lateral"
+                className="flex flex-col gap-1"
               >
-                <X className="h-6 w-6" />
-              </button>
-            </div>
-
-            <nav
-              aria-label="Navegación lateral"
-              className="flex flex-col gap-1"
-            >
-              {enlacesNavegacion.map(({ ruta, nombre, Icono }) => (
-                <NavLink
-                  key={ruta}
-                  to={ruta}
-                  end={ruta === "/"}
-                  onClick={() => setMenuAbierto(false)}
-                  className={({ isActive }) =>
-                    `group flex items-center justify-between gap-3 rounded-xl border-l-[3px] px-4 py-3.5 font-nav text-lg font-bold no-underline transition-colors ${
-                      isActive
-                        ? "border-[#e10600] bg-[#e10600]/10 text-[#c50500] dark:bg-[#e10600]/15 dark:text-[#ff5b55]"
-                        : "border-transparent text-[#262831] hover:border-[#e10600] hover:bg-[#f0f1f4] dark:text-[#f1f1f3] dark:hover:bg-white/10"
-                    }`
-                  }
-                >
-                  <span className="flex items-center gap-3">
-                    <Icono
-                      className="h-5 w-5 shrink-0 text-[#e10600]"
+                {enlacesNavegacion.map(({ ruta, nombre, Icono }) => (
+                  <NavLink
+                    key={ruta}
+                    to={ruta}
+                    end={ruta === "/"}
+                    onClick={() => setMenuAbierto(false)}
+                    className={({ isActive }) =>
+                      `group flex items-center justify-between gap-3 rounded-xl border-l-[3px] px-4 py-3.5 font-nav text-lg font-bold no-underline transition-colors ${
+                        isActive
+                          ? "border-[#e10600] bg-[#e10600]/10 text-[#c50500] dark:bg-[#e10600]/15 dark:text-[#ff5b55]"
+                          : "border-transparent text-[#262831] hover:border-[#e10600] hover:bg-[#f0f1f4] dark:text-[#f1f1f3] dark:hover:bg-white/10"
+                      }`
+                    }
+                  >
+                    <span className="flex items-center gap-3">
+                      <Icono
+                        className="h-5 w-5 shrink-0 text-[#e10600]"
+                        aria-hidden="true"
+                      />
+                      {nombre}
+                    </span>
+                    <ArrowRight
+                      className="h-4 w-4 opacity-50 transition-transform group-hover:translate-x-1"
                       aria-hidden="true"
                     />
-                    {nombre}
-                  </span>
-                  <ArrowRight
-                    className="h-4 w-4 opacity-50 transition-transform group-hover:translate-x-1"
-                    aria-hidden="true"
-                  />
-                </NavLink>
-              ))}
-            </nav>
+                  </NavLink>
+                ))}
+              </nav>
 
-            {/* CUENTA: VISIBLE AQUÍ CUANDO NO APARECE EN LA CABECERA */}
-            <div className="mt-8 border-t border-[#dfe1e6] pt-5 xl:hidden dark:border-white/15">
-              <p className="mb-3 font-nav text-xs font-bold uppercase tracking-widest text-[#777b86] dark:text-[#a5a8b4]">
-                MI CUENTA
-              </p>
-              <SesionMenu />
-            </div>
+              {/* CUENTA: VISIBLE AQUÍ CUANDO NO APARECE EN LA CABECERA */}
+              <div className="mt-8 border-t border-[#dfe1e6] pt-5 xl:hidden dark:border-white/15">
+                <p className="mb-3 font-nav text-xs font-bold uppercase tracking-widest text-[#777b86] dark:text-[#a5a8b4]">
+                  MI CUENTA
+                </p>
+                <SesionMenu />
+              </div>
 
-            <div className="mt-auto pt-10">
-              <p className="border-t border-[#dfe1e6] pt-4 font-nav text-xs text-[#777b86] dark:border-white/15 dark:text-[#9da0ab]">
-                Resultados, calendario y estadísticas de Fórmula 1.
-              </p>
-            </div>
-          </motion.aside>
+              <div className="mt-auto pt-10">
+                <p className="border-t border-[#dfe1e6] pt-4 font-nav text-xs text-[#777b86] dark:border-white/15 dark:text-[#9da0ab]">
+                  Resultados, calendario y estadísticas de Fórmula 1.
+                </p>
+              </div>
+            </motion.aside>
           </>
         )}
       </AnimatePresence>
@@ -401,20 +411,21 @@ function App() {
           exit={reducirMovimiento ? undefined : { opacity: 0, y: -6 }}
           transition={{ duration: reducirMovimiento ? 0 : 0.18 }}
         >
-      <Routes location={location}>
-        <Route path="/" element={<Inicio />} />
-        <Route path="/calendario" element={<Calendario />} />
-        <Route path="/clasificaciones" element={<Clasificaciones />} />
-        <Route path="/pilotos/:id" element={<PilotoDetalle />} />
-        <Route path="/resultados" element={<Resultados />} />
-        <Route path="/escuderias" element={<Escuderias />} />
-        <Route path="/escuderias/:id" element={<EscuderiaDetalle />} />
-        <Route path="/registro" element={<Registro />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/mi-perfil" element={<MiPerfil />} />
-      </Routes>
+          <Routes location={location}>
+            <Route path="/" element={<Inicio />} />
+            <Route path="/calendario" element={<Calendario />} />
+            <Route path="/clasificaciones" element={<Clasificaciones />} />
+            <Route path="/pilotos/:id" element={<PilotoDetalle />} />
+            <Route path="/resultados" element={<Resultados />} />
+            <Route path="/escuderias" element={<Escuderias />} />
+            <Route path="/escuderias/:id" element={<EscuderiaDetalle />} />
+            <Route path="/registro" element={<Registro />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/mi-perfil" element={<MiPerfil />} />
+          </Routes>
         </motion.div>
       </AnimatePresence>
+      <Footer />
     </div>
   );
 }
