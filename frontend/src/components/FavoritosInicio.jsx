@@ -91,7 +91,7 @@ function FavoritosInicio() {
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState("");
 
-  // Obtener los favoritos y sus estadísticas desde MySQL.
+  // Consultar los favoritos al entrar y refrescar sus estadísticas cada 5 minutos.
   useEffect(() => {
     if (!usuario) {
       setDatos(null);
@@ -101,19 +101,13 @@ function FavoritosInicio() {
     }
 
     const controller = new AbortController();
+    let primeraCarga = true;
 
     async function obtenerFavoritos() {
-      setCargando(true);
-      setError("");
-      setDatos(null);
-
       try {
         const respuesta = await fetch(
           `/api/resumen-favoritos?temporada=${TEMPORADA}`,
-          {
-            credentials: "include",
-            signal: controller.signal,
-          },
+          { credentials: "include", signal: controller.signal },
         );
 
         if (!respuesta.ok) {
@@ -121,24 +115,43 @@ function FavoritosInicio() {
         }
 
         const resultado = await respuesta.json();
-
         if (!controller.signal.aborted) {
           setDatos(resultado);
+          setError("");
         }
       } catch (error) {
         if (error.name !== "AbortError" && !controller.signal.aborted) {
-          setError(error.message);
+          // En actualizaciones posteriores, conservar las estadísticas anteriores.
+          if (primeraCarga) setError(error.message);
+          else console.warn("No se pudieron actualizar los favoritos:", error.message);
         }
       } finally {
-        if (!controller.signal.aborted) {
+        if (!controller.signal.aborted && primeraCarga) {
+          primeraCarga = false;
           setCargando(false);
         }
       }
     }
 
+    setCargando(true);
+    setError("");
+    setDatos(null);
     obtenerFavoritos();
 
-    return () => controller.abort();
+    const intervalo = setInterval(() => {
+      if (document.visibilityState === "visible") obtenerFavoritos();
+    }, 5 * 60 * 1000);
+
+    function alVolver() {
+      if (document.visibilityState === "visible") obtenerFavoritos();
+    }
+    document.addEventListener("visibilitychange", alVolver);
+
+    return () => {
+      controller.abort();
+      clearInterval(intervalo);
+      document.removeEventListener("visibilitychange", alVolver);
+    };
   }, [usuario?.id_usuario]);
 
   // No mostrar favoritos si no hay sesión iniciada.
