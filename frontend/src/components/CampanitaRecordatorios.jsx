@@ -4,8 +4,8 @@ import { Link } from "react-router";
 import { Bell, BellRing, Check, LoaderCircle, Mail, X } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
-// Estas preferencias se aplican a futuros Grandes Premios, aunque el usuario
-// esté consultando una carrera anterior mediante las flechas de Race Week.
+// Las preferencias siguen siendo globales: se aplican a próximos GP que
+// incluyan esas sesiones. El menú solo muestra las del GP actual/próximo.
 const OPCIONES = [
   { id: "fp1", nombre: "Práctica libre 1" },
   { id: "fp2", nombre: "Práctica libre 2" },
@@ -16,7 +16,26 @@ const OPCIONES = [
   { id: "carrera", nombre: "Carrera" },
 ];
 
-export default function CampanitaRecordatorios() {
+// Claves que llegan desde el mismo calendario Jolpica usado por Race Week.
+// En fines de semana Sprint no siempre hay FP2 ni FP3.
+const CLAVES_CALENDARIO = {
+  fp1: ["FirstPractice"],
+  fp2: ["SecondPractice"],
+  fp3: ["ThirdPractice"],
+  clasificacion_sprint: ["SprintQualifying", "SprintShootout"],
+  sprint: ["Sprint"],
+  clasificacion: ["Qualifying"],
+};
+
+function estaProgramada(carrera, tipo) {
+  if (!carrera) return false;
+  if (tipo === "carrera") return Boolean(carrera.date);
+  return (CLAVES_CALENDARIO[tipo] || []).some(
+    (clave) => Boolean(carrera[clave]?.date),
+  );
+}
+
+export default function CampanitaRecordatorios({ carrera }) {
   const { usuario } = useAuth();
   const botonRef = useRef(null);
   const menuRef = useRef(null);
@@ -29,6 +48,13 @@ export default function CampanitaRecordatorios() {
   const [guardando, setGuardando] = useState(false);
   const [mensaje, setMensaje] = useState("");
   const [error, setError] = useState("");
+
+  const opcionesDisponibles = OPCIONES.filter((opcion) =>
+    estaProgramada(carrera, opcion.id),
+  );
+  const seleccionadasDisponibles = opcionesDisponibles.filter((opcion) =>
+    sesiones.includes(opcion.id),
+  );
 
   function abrirOCerrar() {
     if (!abierto && botonRef.current) {
@@ -212,11 +238,13 @@ export default function CampanitaRecordatorios() {
             ) : (
               <div className="mt-3 font-nav text-sm">
                 <p className="text-xs leading-5 text-white/70">
-                  Elegí las sesiones de próximos Grandes Premios para recibir un aviso por correo.
+                  {carrera
+                    ? `Sesiones programadas para ${carrera.raceName}. Elegí cuáles querés seguir por correo.`
+                    : "Todavía no hay un próximo Gran Premio con horarios disponibles."}
                 </p>
 
                 <div className="mt-3 space-y-2">
-                  {OPCIONES.map((opcion) => (
+                  {opcionesDisponibles.map((opcion) => (
                     <label key={opcion.id} className="flex cursor-pointer items-center gap-2.5 rounded-md px-1 py-0.5 hover:bg-white/5">
                       <input
                         type="checkbox"
@@ -227,6 +255,11 @@ export default function CampanitaRecordatorios() {
                       <span>{opcion.nombre}</span>
                     </label>
                   ))}
+                  {opcionesDisponibles.length === 0 && (
+                    <p className="text-xs text-white/60">
+                      No hay sesiones futuras configurables en este momento.
+                    </p>
+                  )}
                 </div>
 
                 <div className="mt-4 border-t border-white/15 pt-3">
@@ -259,7 +292,7 @@ export default function CampanitaRecordatorios() {
                 <button
                   type="button"
                   onClick={() => guardar(true)}
-                  disabled={guardando || sesiones.length === 0}
+                  disabled={guardando || seleccionadasDisponibles.length === 0}
                   className="mt-3 w-full rounded-lg bg-[#e10600] px-3 py-2.5 text-xs font-bold text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   {guardando ? "Guardando..." : "Guardar recordatorios"}
@@ -274,8 +307,9 @@ export default function CampanitaRecordatorios() {
                     Desactivar recordatorios
                   </button>
                 )}
-                <p className="mt-3 text-[11px] leading-4 text-amber-200/85">
-                  Beta: por ahora se guardan las preferencias. El envío automático todavía no está habilitado.
+                <p className="mt-3 text-[11px] leading-4 text-white/60">
+                  Las preferencias se mantienen para futuros Grandes Premios que tengan esas mismas sesiones.
+                  Las opciones de otros formatos no se borran al cambiar de GP.
                 </p>
               </div>
             )}

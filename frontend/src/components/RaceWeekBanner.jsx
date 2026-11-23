@@ -335,6 +335,15 @@ function RaceWeekBanner({ onEstadoSemana }) {
     carreraSemana && carrera && String(carreraSemana.round) === String(carrera.round),
   );
 
+  // La campanita sigue el GP real de esta semana (o el siguiente), no el GP
+  // histórico elegido con las flechas. No ofrecer sesiones de una carrera terminada.
+  const quedanSesionesSemana = Boolean(
+    carreraSemana && obtenerSesiones(carreraSemana).some(
+      (sesion) => sesion.inicio && sesion.inicio.getTime() > ahora,
+    ),
+  );
+  const carreraRecordatorios = quedanSesionesSemana ? carreraSemana : proximaCarrera;
+
   function navegarCarrera(desplazamiento) {
     const siguienteIndice = indiceActual + desplazamiento;
     if (siguienteIndice < 0 || siguienteIndice >= carrerasOrdenadas.length) return;
@@ -620,7 +629,7 @@ function RaceWeekBanner({ onEstadoSemana }) {
           <span className="hidden sm:inline">Siguiente</span>
           <ChevronRight className="h-4 w-4" aria-hidden="true" />
         </button>
-        <CampanitaRecordatorios />
+        <CampanitaRecordatorios carrera={carreraRecordatorios} />
         </div>
       </nav>
 
