@@ -1,6 +1,7 @@
 // NeumaticoRojo — controlador clasificaciones.
 const model = require('../models/clasificaciones')
 const consultarJolpica = require('../services/jolpicaCache')
+const { sincronizarClasificaciones } = require('./importaciones/clasificaciones')
 
 const obtenerClasificaciones = async (req, res) => {
   try {
@@ -70,8 +71,17 @@ const tablasInicio = async (req, res) => {
       })
     }
 
-    // Top 10 de pilotos
+    // Solo la temporada actual se sincroniza automáticamente.
+    // Si Jolpica falla, mostramos las últimas clasificaciones guardadas en MySQL.
+    if (temporada === String(new Date().getUTCFullYear())) {
+      try {
+        await sincronizarClasificaciones(temporada)
+      } catch (error) {
+        console.warn('Clasificaciones: se usarán los últimos datos guardados:', error.message)
+      }
+    }
 
+    // Top 10 de pilotos
     const [pilotos] = await model.topPilotos(temporada)
 
     // Top 10 de escuderías

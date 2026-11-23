@@ -1,3 +1,4 @@
+const { sincronizarClasificaciones } = require('./importaciones/clasificaciones')
 const model = require('../models/favoritos')
 
 // Guardar los favoritos del usuario
@@ -104,6 +105,16 @@ const obtenerResumenFavoritos = async (req, res) => {
       return res.status(400).json({
         mensaje: 'Temporada inválida'
       })
+    }
+
+    // Sincronizar la temporada actual antes de leer posiciones, puntos y victorias.
+    // Ante un fallo externo, conservar los datos ya guardados en MySQL.
+    if (temporada === String(new Date().getUTCFullYear())) {
+      try {
+        await sincronizarClasificaciones(temporada)
+      } catch (error) {
+        console.warn('Favoritos: se usarán los últimos datos guardados:', error.message)
+      }
     }
 
     const [filas] = await model.consultarResumenFavoritos(
