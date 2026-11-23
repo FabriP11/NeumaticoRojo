@@ -44,6 +44,7 @@ app.use(require('./routes/escuderias'));
 app.use(require('./routes/importaciones'));
 app.use(require('./routes/auth'));
 app.use(require('./routes/resumenes'));
+app.use(require('./routes/notificaciones'));
 
 if (esProduccion) {
   // Permite abrir directamente /resultados, /escuderias/..., etc.

@@ -3,6 +3,7 @@ import { obtenerImagenCircuito } from "../utils/imagenesCircuitos";
 import { Link } from "react-router";
 import { obtenerColorEscuderia } from "../utils/coloresF1";
 import FondoVideoGP from "./FondoVideoGP";
+import CampanitaRecordatorios from "./CampanitaRecordatorios";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import {
   AlertCircle,
@@ -602,11 +603,12 @@ function RaceWeekBanner({ onEstadoSemana }) {
           className="inline-flex items-center gap-1 rounded-lg border border-white/20 bg-black/55 px-3 py-2 font-nav text-xs font-bold text-white transition-colors hover:border-[#e10600] hover:bg-[#e10600] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:border-white/20 disabled:hover:bg-black/55 sm:text-sm"
         >
           <ChevronLeft className="h-4 w-4" aria-hidden="true" />
-          Anterior
+          <span className="hidden sm:inline">Anterior</span>
         </button>
         <span className="rounded-full border border-white/15 bg-black/45 px-3 py-1.5 font-nav text-xs font-semibold text-white/85 backdrop-blur-sm">
           GP {indiceActual + 1} de {carrerasOrdenadas.length}
         </span>
+        <div className="flex items-center gap-2">
         <button
           type="button"
           onClick={() => navegarCarrera(1)}
@@ -615,9 +617,11 @@ function RaceWeekBanner({ onEstadoSemana }) {
           title={haySiguiente ? carrerasOrdenadas[indiceActual + 1].raceName : "Último Gran Premio"}
           className="inline-flex items-center gap-1 rounded-lg border border-white/20 bg-black/55 px-3 py-2 font-nav text-xs font-bold text-white transition-colors hover:border-[#e10600] hover:bg-[#e10600] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:border-white/20 disabled:hover:bg-black/55 sm:text-sm"
         >
-          Siguiente
+          <span className="hidden sm:inline">Siguiente</span>
           <ChevronRight className="h-4 w-4" aria-hidden="true" />
         </button>
+        <CampanitaRecordatorios />
+        </div>
       </nav>
 
       <div className={`relative z-10 grid min-w-0 grid-cols-1 xl:grid-cols-[minmax(0,0.85fr)_minmax(0,1.7fr)] ${disenoCompacto ? "gap-3 xl:gap-4" : "gap-5 xl:gap-6"}`}>
