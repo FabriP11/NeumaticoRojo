@@ -9,3 +9,10 @@ const { puerto } = require('./config');
 app.listen(puerto, '0.0.0.0', () => {
   console.log(`NeumaticoRojo escuchando en el puerto ${puerto}`);
 });
+
+// Apagado por defecto; activar solo cuando el envío esté probado y autorizado.
+if (process.env.RECORDATORIOS_HABILITADOS === 'true') {
+  const { iniciarRecordatorios } = require('./services/recordatoriosWorker');
+  iniciarRecordatorios();
+  console.log('Recordatorios por correo habilitados');
+}
