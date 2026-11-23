@@ -61,6 +61,23 @@ function Inicio() {
   // Recibimos del banner si hay un Gran Premio esta semana (hora argentina).
   const [esSemanaCarrera, setEsSemanaCarrera] = useState(null);
 
+  const [ahora, setAhora] = useState(Date.now());
+
+  useEffect(() => {
+    const intervalo = setInterval(() => {
+      setAhora(Date.now());
+    }, 10000);
+
+    return () => clearInterval(intervalo);
+  }, []);
+
+  const diaArgentina = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/Argentina/Buenos_Aires",
+    weekday: "long",
+  }).format(new Date(ahora));
+
+  const esFinDeSemana = ["Friday", "Saturday", "Sunday"].includes(diaArgentina);
+
   return (
     <main
       id="inicio"
@@ -84,7 +101,9 @@ function Inicio() {
               {esSemanaCarrera === null
                 ? "Calendario de Fórmula 1"
                 : esSemanaCarrera
-                  ? "Fin de semana de carrera"
+                  ? esFinDeSemana
+                    ? "Fin de semana de carrera"
+                    : "Semana de carrera"
                   : "Semana de descanso"}
             </h2>
           </div>
