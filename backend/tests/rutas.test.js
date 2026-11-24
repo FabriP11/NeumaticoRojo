@@ -13,9 +13,12 @@ const esperado = [
   ['GET', '/api/dorsales-temporada'],
   ['GET', '/api/escuderias/:id'],
   ['GET', '/api/health'],
+  ['GET', '/api/notificaciones/preferencias'],
   ['GET', '/api/opciones-favoritos'],
   ['GET', '/api/pilotos/:id'],
+  ['GET', '/api/registro/configuracion'],
   ['GET', '/api/resultados'],
+  ['GET', '/api/resultados-practica'],
   ['GET', '/api/resultados-sesion'],
   ['GET', '/api/resumen-favoritos'],
   ['GET', '/api/resumen-practicas'],
@@ -32,10 +35,12 @@ const esperado = [
   ['POST', '/api/login'],
   ['POST', '/api/logout'],
   ['POST', '/api/registro'],
-  ['PUT', '/api/mis-favoritos']
+  ['PUT', '/api/mi-avatar'],
+  ['PUT', '/api/mis-favoritos'],
+  ['PUT', '/api/notificaciones/preferencias']
 ]
 
-test('se mantienen los 27 endpoints del servidor original', () => {
+test('se mantienen los 32 endpoints actuales del servidor', () => {
   const obtenido = fs
     .readdirSync(rutas)
     .filter(x => x.endsWith('.js'))

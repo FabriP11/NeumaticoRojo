@@ -10,9 +10,15 @@ const jwt = require('jsonwebtoken')
 // Las variables de entorno aqui solo afectan al proceso de pruebas.
 const jwtSecretAnterior = process.env.JWT_SECRET
 const nodeEnvAnterior = process.env.NODE_ENV
+const registroAbiertoAnterior = process.env.REGISTRO_ABIERTO
+const codigoInvitacionAnterior = process.env.CODIGO_INVITACION_BETA
 const SECRET_PRUEBAS = 'solo-para-pruebas-automaticas-neumaticorojo-2026'
+const CODIGO_INVITACION_PRUEBA = 'invitacion-ficticia-solo-para-pruebas-2026'
 process.env.JWT_SECRET = SECRET_PRUEBAS
 process.env.NODE_ENV = 'test'
+// Simular la beta con registro privado, sin usar el código real de Railway.
+process.env.REGISTRO_ABIERTO = 'false'
+process.env.CODIGO_INVITACION_BETA = CODIGO_INVITACION_PRUEBA
 
 let usuarios = []
 let siguienteId = 1
@@ -88,6 +94,10 @@ after(() => {
   else process.env.JWT_SECRET = jwtSecretAnterior
   if (nodeEnvAnterior === undefined) delete process.env.NODE_ENV
   else process.env.NODE_ENV = nodeEnvAnterior
+  if (registroAbiertoAnterior === undefined) delete process.env.REGISTRO_ABIERTO
+  else process.env.REGISTRO_ABIERTO = registroAbiertoAnterior
+  if (codigoInvitacionAnterior === undefined) delete process.env.CODIGO_INVITACION_BETA
+  else process.env.CODIGO_INVITACION_BETA = codigoInvitacionAnterior
 })
 
 beforeEach(() => {
@@ -201,7 +211,8 @@ test('registro: crea usuario, normaliza correo y almacena hash', async () => {
       body: {
         nombre_usuario: ' piloto_prueba ',
         correo: ' PILOTO@EJEMPLO.TEST ',
-        contrasena: 'ClaveSegura123'
+        contrasena: 'ClaveSegura123',
+        codigo_invitacion: CODIGO_INVITACION_PRUEBA
       }
     },
     res
@@ -226,13 +237,30 @@ test('registro: responde 409 si el usuario ya existe', async () => {
       body: {
         nombre_usuario: 'piloto_prueba',
         correo: 'otro@ejemplo.test',
-        contrasena: 'ClaveSegura123'
+        contrasena: 'ClaveSegura123',
+        codigo_invitacion: CODIGO_INVITACION_PRUEBA
       }
     },
     res
   )
   assert.equal(res.statusCode, 409)
   assert.equal(usuarios.length, 1)
+})
+
+test('registro: bloquea un registro sin codigo de invitacion', async () => {
+  const res = crearRespuesta()
+  await auth.registrar(
+    {
+      body: {
+        nombre_usuario: 'sin_invitacion',
+        correo: 'sin-invitacion@ejemplo.test',
+        contrasena: 'ClaveSegura123'
+      }
+    },
+    res
+  )
+  assert.equal(res.statusCode, 403)
+  assert.equal(usuarios.length, 0)
 })
 
 // LOGIN Y JWT.
