@@ -44,6 +44,9 @@ const ARCHIVOS_PILOTOS = {
   oscar: "oscar",
   sainz: "sainz",
   carlos: "sainz",
+  ocon: "ocon",
+  hirakawa: "hirakawa",
+  tsunoda: "tsunoda",
 };
 
 function normalizar(texto) {
@@ -104,9 +107,6 @@ function FotoPiloto({
       style={{ backgroundColor: colorEquipo || "#475569" }}
       aria-hidden="true"
     >
-      {(!archivo || imagenFallida) && (
-        <UserRound className="h-1/2 w-1/2 text-white/85" strokeWidth={2} />
-      )}
       {archivo && !imagenFallida && (
         <img
           key={archivo}
@@ -114,7 +114,13 @@ function FotoPiloto({
           alt=""
           loading="lazy"
           decoding="async"
-          className="absolute inset-0 h-full w-full scale-[2] object-cover object-[center_-13%]"
+          className={`absolute inset-0 h-full w-full object-cover ${
+            archivo === "hirakawa"
+              ? "scale-[3.3] object-[center_-66%]"
+              : archivo === "tsunoda"
+                ? "scale-[1.9] object-[center_-16%]"
+                : "scale-[2] object-[center_-13%]"
+          }`}
           onError={() => setImagenFallida(true)}
         />
       )}

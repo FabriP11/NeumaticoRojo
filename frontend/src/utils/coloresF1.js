@@ -3,6 +3,7 @@ const coloresEscuderias = {
   mclaren: '#FF8700',
   mercedes: '#27F4D2',
   red_bull: '#3671C6',
+  red_bull_racing: '#3671C6',
   aston_martin: '#229971',
   alpine: '#FF87BC',
   alpine_f1: '#FF87BC',

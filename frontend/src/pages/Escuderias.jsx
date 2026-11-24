@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import { Link, useSearchParams } from "react-router";
+import { obtenerColorEscuderia } from "../utils/coloresF1";
 import {
   AlertCircle,
   ArrowUpRight,
@@ -12,33 +13,6 @@ import {
   Medal,
   Trophy,
 } from "lucide-react";
-
-// Mantener los colores identificativos de las escuderías.
-const coloresEscuderias = {
-  red_bull: "#3671C6",
-  ferrari: "#E8002D",
-  mercedes: "#27F4D2",
-  mclaren: "#FF8700",
-  aston_martin: "#229971",
-  alpine: "#FF87BC",
-  williams: "#64C4FF",
-  haas: "#B6BABD",
-  sauber: "#52E252",
-  rb: "#6692FF",
-  racing_bulls: "#6692FF",
-  alphatauri: "#6692FF",
-  toro_rosso: "#469BFF",
-  renault: "#FFF500",
-  racing_point: "#F596C8",
-  force_india: "#F596C8",
-  alfa: "#900000",
-  audi: "#D13B46",
-  cadillac: "#D8DCE5",
-};
-
-function obtenerColorEscuderia(id) {
-  return coloresEscuderias[id] || "#888B98";
-}
 
 // Nombres de los archivos guardados en frontend/public/escuderias/.
 // El ID del backend puede diferir del nombre del archivo de imagen.
