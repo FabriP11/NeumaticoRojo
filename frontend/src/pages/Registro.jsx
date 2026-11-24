@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
+import { useAuth } from "../context/AuthContext";
 import {
   AlertCircle,
   ArrowLeft,
@@ -31,6 +32,9 @@ function Registro() {
   const [error, setError] = useState("");
   const [exito, setExito] = useState("");
   const [cargando, setCargando] = useState(false);
+  const [registroCreado, setRegistroCreado] = useState(false);
+  const navigate = useNavigate();
+  const { iniciarSesion } = useAuth();
   // En una beta privada el campo aparece por defecto, incluso si falla la consulta.
   const [requiereInvitacion, setRequiereInvitacion] = useState(true);
 
@@ -44,7 +48,10 @@ function Registro() {
         });
         if (!respuesta.ok) return;
         const datos = await respuesta.json();
-        if (!controller.signal.aborted && typeof datos.requiereInvitacion === "boolean") {
+        if (
+          !controller.signal.aborted &&
+          typeof datos.requiereInvitacion === "boolean"
+        ) {
           setRequiereInvitacion(datos.requiereInvitacion);
         }
       } catch {
@@ -56,7 +63,6 @@ function Registro() {
     return () => controller.abort();
   }, []);
 
-
   // Actualizar los campos del formulario
   function manejarCambio(evento) {
     const { name, value } = evento.target;
@@ -67,14 +73,15 @@ function Registro() {
     }));
   }
 
-  // Enviar el registro al backend
   async function manejarRegistro(evento) {
     evento.preventDefault();
+
+    // Evitar registros duplicados
+    if (cargando || registroCreado) return;
 
     setError("");
     setExito("");
 
-    // Comprobar que ambas contraseñas coincidan
     if (formulario.contrasena !== formulario.confirmarContrasena) {
       setError("Las contraseñas no coinciden");
       return;
@@ -83,6 +90,7 @@ function Registro() {
     setCargando(true);
 
     try {
+      // 1. Crear la cuenta
       const respuesta = await fetch("/api/registro", {
         method: "POST",
         headers: {
@@ -92,7 +100,9 @@ function Registro() {
           nombre_usuario: formulario.nombre_usuario,
           correo: formulario.correo,
           contrasena: formulario.contrasena,
-          codigo_invitacion: requiereInvitacion ? formulario.codigo_invitacion.trim() : "",
+          codigo_invitacion: requiereInvitacion
+            ? formulario.codigo_invitacion.trim()
+            : "",
         }),
       });
 
@@ -102,20 +112,56 @@ function Registro() {
         throw new Error(datos.mensaje || "No se pudo crear la cuenta");
       }
 
-      setExito("¡Cuenta creada correctamente!");
+      // La cuenta ya existe en la base de datos
+      setRegistroCreado(true);
+      setExito("¡Cuenta creada correctamente! Iniciando sesión...");
 
-      // Limpiar el formulario tras registrarse
-      setFormulario({
-        nombre_usuario: "",
-        correo: "",
-        contrasena: "",
-        confirmarContrasena: "",
-    codigo_invitacion: "",
-      });
-      setMostrarContrasena(false);
-      setMostrarConfirmacion(false);
+      // 2. Intentar iniciar sesión automáticamente
+      try {
+        const respuestaLogin = await fetch("/api/login", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify({
+            correo: formulario.correo,
+            contrasena: formulario.contrasena,
+          }),
+        });
+
+        const datosLogin = await respuestaLogin.json();
+
+        if (!respuestaLogin.ok || !datosLogin.usuario) {
+          throw new Error("No se pudo iniciar sesión");
+        }
+
+        iniciarSesion(datosLogin.usuario);
+
+        setExito("¡Cuenta creada correctamente! Bienvenido a Neumático Rojo.");
+
+        await new Promise((resolve) => setTimeout(resolve, 1200));
+
+        navigate("/", { replace: true });
+      } catch {
+        // La cuenta fue creada, pero el login falló
+        setExito("¡Tu cuenta se creó correctamente!");
+        setError(
+          "No se pudo iniciar sesión automáticamente. " +
+            "Ingresá desde Iniciar sesión con tu nueva cuenta.",
+        );
+
+        // Limpiar los campos sensibles
+        setFormulario((anterior) => ({
+          ...anterior,
+          contrasena: "",
+          confirmarContrasena: "",
+          codigo_invitacion: "",
+        }));
+      }
     } catch (error) {
-      setError(error.message);
+      // Error durante el registro
+      setError(error.message || "No se pudo crear la cuenta");
     } finally {
       setCargando(false);
     }
@@ -371,7 +417,8 @@ function Registro() {
                     />
                   </div>
                   <p className="mt-2 text-xs text-[#a9a9b4]">
-                    Necesitás el código que te compartió el creador de NeumaticoRojo.
+                    Necesitás el código que te compartió el creador de
+                    NeumaticoRojo.
                   </p>
                 </div>
               )}
@@ -416,7 +463,7 @@ function Registro() {
               {/* BOTÓN DE REGISTRO */}
               <button
                 type="submit"
-                disabled={cargando}
+                disabled={cargando || registroCreado}
                 className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#e10600] px-5 py-3.5 text-sm font-extrabold uppercase tracking-wider text-white shadow-[0_8px_28px_rgba(225,6,0,0.22)] transition-all hover:bg-[#f51a14] hover:shadow-[0_10px_32px_rgba(225,6,0,0.32)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ff6b65] disabled:cursor-not-allowed disabled:opacity-65"
               >
                 {cargando ? (
