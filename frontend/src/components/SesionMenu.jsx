@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import FotoPiloto from "./FotoPiloto";
+import { obtenerColorEscuderia } from "../utils/coloresF1";
 import {
   AlertCircle,
   ChevronDown,
@@ -110,9 +112,19 @@ function SesionMenu() {
         aria-expanded={abierto}
         aria-controls="menu-cuenta"
       >
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#e10600] font-racing text-sm font-extrabold text-white">
-          {usuario.nombre_usuario.charAt(0).toUpperCase()}
-        </span>
+        {usuario.id_piloto_avatar ? (
+          <FotoPiloto
+            idPiloto={usuario.id_piloto_avatar}
+            nombre={usuario.nombre_avatar}
+            colorEquipo={obtenerColorEscuderia(usuario.id_escuderia_avatar)}
+            temporada="2026"
+            tamano="sm"
+          />
+        ) : (
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#e10600] font-racing text-sm font-extrabold text-white">
+            {usuario.nombre_usuario.charAt(0).toUpperCase()}
+          </span>
+        )}
 
         <span className="truncate text-sm font-bold">
           {usuario.nombre_usuario}
@@ -127,76 +139,82 @@ function SesionMenu() {
       </button>
 
       <AnimatePresence initial={false}>
-      {abierto && (
-        <motion.div
-          key="menu-cuenta"
-          initial={reducirMovimiento ? false : { opacity: 0, y: -8, scale: 0.98 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={reducirMovimiento ? { opacity: 0 } : { opacity: 0, y: -8, scale: 0.98 }}
-          transition={{ duration: reducirMovimiento ? 0 : 0.18 }}
-          id="menu-cuenta"
-          className="absolute right-0 top-full z-[100] mt-3 w-64 max-w-[calc(100vw-2rem)] overflow-hidden rounded-xl border border-slate-200 bg-white p-2 text-slate-900 shadow-2xl dark:border-white/15 dark:bg-[#20212b] dark:text-white"
-        >
-          {/* Identidad de la cuenta */}
-          <div className="border-b border-slate-200 px-3 py-3 dark:border-white/10">
-            <p className="mb-1 font-racing text-[10px] font-bold uppercase tracking-[0.18em] text-[#e10600]">
-              Mi cuenta
-            </p>
-            <strong className="block truncate text-sm font-bold">
-              {usuario.nombre_usuario}
-            </strong>
-            <span className="mt-1 block break-all text-xs text-slate-500 dark:text-slate-400">
-              {usuario.correo}
-            </span>
-          </div>
-
-          {/* Acceso al perfil */}
-          <Link
-            to="/mi-perfil"
-            className="mt-2 flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-bold text-slate-700 no-underline transition-colors hover:bg-slate-100 hover:text-[#e10600] focus-visible:outline-2 focus-visible:outline-[#e10600] dark:text-slate-200 dark:hover:bg-white/10 dark:hover:text-white"
-            onClick={() => setAbierto(false)}
+        {abierto && (
+          <motion.div
+            key="menu-cuenta"
+            initial={
+              reducirMovimiento ? false : { opacity: 0, y: -8, scale: 0.98 }
+            }
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={
+              reducirMovimiento
+                ? { opacity: 0 }
+                : { opacity: 0, y: -8, scale: 0.98 }
+            }
+            transition={{ duration: reducirMovimiento ? 0 : 0.18 }}
+            id="menu-cuenta"
+            className="absolute right-0 top-full z-[100] mt-3 w-64 max-w-[calc(100vw-2rem)] overflow-hidden rounded-xl border border-slate-200 bg-white p-2 text-slate-900 shadow-2xl dark:border-white/15 dark:bg-[#20212b] dark:text-white"
           >
-            <UserRound
-              className="h-4 w-4 shrink-0 text-[#e10600]"
-              aria-hidden="true"
-            />
-            Mi perfil
-          </Link>
+            {/* Identidad de la cuenta */}
+            <div className="border-b border-slate-200 px-3 py-3 dark:border-white/10">
+              <p className="mb-1 font-racing text-[10px] font-bold uppercase tracking-[0.18em] text-[#e10600]">
+                Mi cuenta
+              </p>
+              <strong className="block truncate text-sm font-bold">
+                {usuario.nombre_usuario}
+              </strong>
+              <span className="mt-1 block break-all text-xs text-slate-500 dark:text-slate-400">
+                {usuario.correo}
+              </span>
+            </div>
 
-          <div className="my-2 h-px bg-slate-200 dark:bg-white/10" />
-
-          {/* Cerrar sesión */}
-          <button
-            type="button"
-            className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-bold text-slate-700 transition-colors hover:bg-red-50 hover:text-[#e10600] focus-visible:outline-2 focus-visible:outline-[#e10600] disabled:cursor-not-allowed disabled:opacity-60 dark:text-slate-200 dark:hover:bg-[#e10600]/15 dark:hover:text-white"
-            onClick={manejarLogout}
-            disabled={cerrando}
-          >
-            {cerrando ? (
-              <LoaderCircle
-                className="h-4 w-4 shrink-0 animate-spin text-[#e10600]"
-                aria-hidden="true"
-              />
-            ) : (
-              <LogOut
+            {/* Acceso al perfil */}
+            <Link
+              to="/mi-perfil"
+              className="mt-2 flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-bold text-slate-700 no-underline transition-colors hover:bg-slate-100 hover:text-[#e10600] focus-visible:outline-2 focus-visible:outline-[#e10600] dark:text-slate-200 dark:hover:bg-white/10 dark:hover:text-white"
+              onClick={() => setAbierto(false)}
+            >
+              <UserRound
                 className="h-4 w-4 shrink-0 text-[#e10600]"
                 aria-hidden="true"
               />
-            )}
-            {cerrando ? "Cerrando..." : "Cerrar sesión"}
-          </button>
+              Mi perfil
+            </Link>
 
-          {error && (
-            <p
-              className="mt-2 flex items-start gap-2 rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700 dark:bg-red-950/40 dark:text-red-300"
-              role="alert"
+            <div className="my-2 h-px bg-slate-200 dark:bg-white/10" />
+
+            {/* Cerrar sesión */}
+            <button
+              type="button"
+              className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-bold text-slate-700 transition-colors hover:bg-red-50 hover:text-[#e10600] focus-visible:outline-2 focus-visible:outline-[#e10600] disabled:cursor-not-allowed disabled:opacity-60 dark:text-slate-200 dark:hover:bg-[#e10600]/15 dark:hover:text-white"
+              onClick={manejarLogout}
+              disabled={cerrando}
             >
-              <AlertCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
-              {error}
-            </p>
-          )}
-        </motion.div>
-      )}
+              {cerrando ? (
+                <LoaderCircle
+                  className="h-4 w-4 shrink-0 animate-spin text-[#e10600]"
+                  aria-hidden="true"
+                />
+              ) : (
+                <LogOut
+                  className="h-4 w-4 shrink-0 text-[#e10600]"
+                  aria-hidden="true"
+                />
+              )}
+              {cerrando ? "Cerrando..." : "Cerrar sesión"}
+            </button>
+
+            {error && (
+              <p
+                className="mt-2 flex items-start gap-2 rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700 dark:bg-red-950/40 dark:text-red-300"
+                role="alert"
+              >
+                <AlertCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
+                {error}
+              </p>
+            )}
+          </motion.div>
+        )}
       </AnimatePresence>
     </div>
   );

@@ -104,7 +104,9 @@ function FotoPiloto({
       style={{ backgroundColor: colorEquipo || "#475569" }}
       aria-hidden="true"
     >
-      <UserRound className="h-1/2 w-1/2 text-white/85" strokeWidth={2} />
+      {(!archivo || imagenFallida) && (
+        <UserRound className="h-1/2 w-1/2 text-white/85" strokeWidth={2} />
+      )}
       {archivo && !imagenFallida && (
         <img
           key={archivo}
@@ -112,7 +114,7 @@ function FotoPiloto({
           alt=""
           loading="lazy"
           decoding="async"
-          className="absolute inset-0 h-full w-full scale-[1.06] object-cover object-[center_0%]"
+          className="absolute inset-0 h-full w-full scale-[2] object-cover object-[center_-13%]"
           onError={() => setImagenFallida(true)}
         />
       )}
