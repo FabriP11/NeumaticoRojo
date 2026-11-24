@@ -3,6 +3,7 @@ const model = require('../models/auth')
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const { createHash, timingSafeEqual } = require('node:crypto')
+const modeloFavoritos = require('../models/favoritos')
 
 // Por defecto el registro es privado. Solo se abre expresamente en el lanzamiento.
 const registroAbierto = () => process.env.REGISTRO_ABIERTO === 'true'
@@ -23,7 +24,8 @@ function validarInvitacion (codigoRecibido) {
   if (!codigoConfigurado || codigoConfigurado.length < 16) {
     return {
       estado: 503,
-      mensaje: 'El registro por invitacion no esta configurado. Contacta al administrador.'
+      mensaje:
+        'El registro por invitacion no esta configurado. Contacta al administrador.'
     }
   }
 
@@ -35,7 +37,9 @@ function validarInvitacion (codigoRecibido) {
     return { estado: 403, mensaje: 'Codigo de invitacion incorrecto' }
   }
 
-  const hashRecibido = createHash('sha256').update(codigoRecibido.trim()).digest()
+  const hashRecibido = createHash('sha256')
+    .update(codigoRecibido.trim())
+    .digest()
   const hashEsperado = createHash('sha256').update(codigoConfigurado).digest()
 
   if (!timingSafeEqual(hashRecibido, hashEsperado)) {
@@ -48,7 +52,8 @@ function validarInvitacion (codigoRecibido) {
 const registrar = async (req, res) => {
   try {
     // 1. Obtener los datos enviados por el usuario
-    const { nombre_usuario, correo, contrasena, codigo_invitacion } = req.body || {}
+    const { nombre_usuario, correo, contrasena, codigo_invitacion } =
+      req.body || {}
 
     // 2. Validar los campos
     if (
@@ -90,7 +95,9 @@ const registrar = async (req, res) => {
     // Verificar invitacion antes de ejecutar bcrypt o escribir en MySQL.
     const errorInvitacion = validarInvitacion(codigo_invitacion)
     if (errorInvitacion) {
-      return res.status(errorInvitacion.estado).json({ mensaje: errorInvitacion.mensaje })
+      return res
+        .status(errorInvitacion.estado)
+        .json({ mensaje: errorInvitacion.mensaje })
     }
 
     // 3. Proteger la contraseña
@@ -171,6 +178,14 @@ const iniciarSesion = async (req, res) => {
       })
     }
 
+    // Recuperar el perfil completo, incluido el avatar y los favoritos.
+    const [perfiles] = await model.buscarUsuarioActual(usuario.id_usuario)
+    if (!perfiles.length) {
+      return res.status(401).json({
+        mensaje: 'La cuenta ya no existe'
+      })
+    }
+
     // 5. Generar un token de sesión
     if (!process.env.JWT_SECRET) {
       throw new Error('Falta configurar JWT_SECRET')
@@ -197,15 +212,11 @@ const iniciarSesion = async (req, res) => {
       path: '/'
     })
 
-    // 7. Responder sin exponer contraseña ni token
+    // 7. Responder con el mismo perfil que devuelve /api/usuario-actual.
+    // No se expone la contraseña ni su hash.
     res.json({
       mensaje: 'Inicio de sesión correcto',
-      usuario: {
-        id_usuario: usuario.id_usuario,
-        nombre_usuario: usuario.nombre_usuario,
-        correo: usuario.correo,
-        rol: usuario.rol
-      }
+      usuario: perfiles[0]
     })
   } catch (error) {
     console.error('Error al iniciar sesión:', error.message)
@@ -286,4 +297,70 @@ const cerrarSesion = (req, res) => {
   })
 }
 
-module.exports = { registrar, iniciarSesion, usuarioActual, cerrarSesion, configuracionRegistro }
+const actualizarAvatar = async (req, res) => {
+  try {
+    const { id_piloto_avatar } = req.body || {}
+
+    if (
+      id_piloto_avatar !== null &&
+      (typeof id_piloto_avatar !== 'string' ||
+        !/^[a-zA-Z0-9_]{1,50}$/.test(id_piloto_avatar))
+    ) {
+      return res.status(400).json({
+        mensaje: 'Avatar no válido'
+      })
+    }
+
+    // Permitir solo pilotos de 2026.
+    if (id_piloto_avatar !== null) {
+      const [pilotos] = await modeloFavoritos.opcionesPilotos()
+
+      const existe = pilotos.some(
+        piloto => piloto.id_piloto === id_piloto_avatar
+      )
+
+      if (!existe) {
+        return res.status(400).json({
+          mensaje: 'El piloto seleccionado no está disponible'
+        })
+      }
+    }
+
+    const [resultado] = await model.guardarAvatar(req.idUsuario, id_piloto_avatar)
+
+    if (resultado.affectedRows === 0) {
+      return res.status(404).json({
+        mensaje: 'Usuario no encontrado'
+      })
+    }
+
+    const [usuarios] = await model.buscarUsuarioActual(req.idUsuario)
+
+    if (!usuarios.length) {
+      return res.status(404).json({
+        mensaje: 'Usuario no encontrado'
+      })
+    }
+
+    // El frontend necesita recibir el perfil actualizado, no solo un mensaje.
+    res.json({
+      mensaje: 'Avatar actualizado correctamente',
+      usuario: usuarios[0]
+    })
+  } catch (error) {
+    console.error('Error al actualizar avatar:', error.message)
+
+    res.status(500).json({
+      mensaje: 'No se pudo actualizar el avatar'
+    })
+  }
+}
+
+module.exports = {
+  registrar,
+  iniciarSesion,
+  usuarioActual,
+  cerrarSesion,
+  configuracionRegistro,
+  actualizarAvatar
+}

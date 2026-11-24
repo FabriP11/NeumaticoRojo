@@ -27,17 +27,34 @@ function buscarCredenciales (identificador) {
 }
 
 function buscarUsuarioActual (idUsuario) {
+  // La misma respuesta completa se utiliza en sesión, perfil, avatar y favoritos.
+  // Nunca incluye contrasena_hash.
   return pool.execute(
     `SELECT
-        id_usuario,
-        nombre_usuario,
-        correo,
-        rol,
-        id_piloto_favorito,
-        id_escuderia_favorita
-       FROM usuarios
-       WHERE id_usuario = ?
-       LIMIT 1`,
+       u.id_usuario,
+       u.nombre_usuario,
+       u.correo,
+       u.rol,
+       u.id_piloto_favorito,
+       u.id_escuderia_favorita,
+       u.id_piloto_avatar,
+       (
+         SELECT CONCAT(p.nombre, ' ', p.apellido)
+         FROM pilotos p
+         WHERE p.id_piloto = u.id_piloto_avatar
+         LIMIT 1
+       ) AS nombre_avatar,
+       (
+         SELECT pa.id_escuderia
+         FROM participaciones pa
+         WHERE pa.id_piloto = u.id_piloto_avatar
+           AND pa.anio = 2026
+         ORDER BY pa.id_participacion DESC
+         LIMIT 1
+       ) AS id_escuderia_avatar
+     FROM usuarios u
+     WHERE u.id_usuario = ?
+     LIMIT 1`,
     [idUsuario]
   )
 }
@@ -48,9 +65,19 @@ function buscarRolUsuario (idUsuario) {
   ])
 }
 
+function guardarAvatar (idUsuario, idPilotoAvatar) {
+  return pool.execute(
+    `UPDATE usuarios
+     SET id_piloto_avatar = ?
+     WHERE id_usuario = ?`,
+    [idPilotoAvatar, idUsuario]
+  )
+}
+
 module.exports = {
   registrarUsuario,
   buscarCredenciales,
   buscarUsuarioActual,
-  buscarRolUsuario
+  buscarRolUsuario,
+  guardarAvatar
 }

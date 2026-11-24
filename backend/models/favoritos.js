@@ -1,4 +1,5 @@
 const pool = require('./db')
+const { buscarUsuarioActual } = require('./auth')
 
 const TEMPORADA_FAVORITOS = 2026
 
@@ -22,18 +23,8 @@ function guardarFavoritos (idPiloto, idEscuderia, idUsuario) {
 }
 
 function consultarUsuarioFavoritos (idUsuario) {
-  return pool.execute(
-    `SELECT
-       id_usuario,
-       nombre_usuario,
-       correo,
-       rol,
-       id_piloto_favorito,
-       id_escuderia_favorita
-     FROM usuarios
-     WHERE id_usuario = ?`,
-    [idUsuario]
-  )
+  // Reutilizar la consulta completa para no perder el avatar al guardar favoritos.
+  return buscarUsuarioActual(idUsuario)
 }
 
 function consultarResumenFavoritos (temporada, idUsuario) {
@@ -91,19 +82,28 @@ function consultarParticipacion (temporada, idPiloto) {
 }
 
 // Solo pilotos que participan en 2026
+
 function opcionesPilotos () {
   return pool.execute(
     `SELECT DISTINCT
-       p.id_piloto,
-       p.nombre,
-       p.apellido,
-       p.nacionalidad
-     FROM pilotos p
-     INNER JOIN participaciones pa
-       ON pa.id_piloto = p.id_piloto
-     WHERE pa.anio = ?
-     ORDER BY p.nombre ASC, p.apellido ASC`,
-    [TEMPORADA_FAVORITOS]
+      p.id_piloto,
+      p.nombre,
+      p.apellido,
+      p.nacionalidad,
+      (
+        SELECT pa2.id_escuderia
+        FROM participaciones pa2
+        WHERE pa2.id_piloto = p.id_piloto
+          AND pa2.anio = ?
+        ORDER BY pa2.id_participacion DESC
+        LIMIT 1
+      ) AS id_escuderia
+    FROM pilotos p
+    INNER JOIN participaciones pa
+      ON pa.id_piloto = p.id_piloto
+    WHERE pa.anio = ?
+    ORDER BY p.nombre ASC, p.apellido ASC`,
+    [TEMPORADA_FAVORITOS, TEMPORADA_FAVORITOS]
   )
 }
 
