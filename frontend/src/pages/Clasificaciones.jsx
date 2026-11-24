@@ -339,7 +339,125 @@ function Clasificaciones() {
             </span>
           </div>
 
-          <div className="w-full overflow-x-auto">
+          {/* MÓVIL: tarjetas legibles sin desplazar la tabla horizontalmente. */}
+          <div className="divide-y divide-slate-200 md:hidden dark:divide-white/10">
+            {tipo === "pilotos" &&
+              pilotos.map((piloto) => {
+                const idPiloto = piloto.Driver.driverId;
+                const detalles = detallesPilotos[idPiloto] || {};
+                const idEquipo =
+                  detalles.id_escuderia || piloto.Constructors?.[0]?.constructorId;
+                const numero = detalles.numero ?? piloto.Driver.permanentNumber;
+                const colorEquipo = obtenerColorEscuderia(idEquipo);
+                const nombre = `${piloto.Driver.givenName} ${piloto.Driver.familyName}`;
+
+                return (
+                  <article
+                    key={idPiloto}
+                    className={`p-4 ${Number(piloto.position) <= 3 ? "bg-red-50/50 dark:bg-red-950/10" : ""}`}
+                  >
+                    <div className="flex min-w-0 items-center gap-3">
+                      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-slate-100 font-racing text-lg font-extrabold text-[#e10600] dark:bg-[#292b35]">
+                        {piloto.position}
+                      </span>
+                      {temporada === "2026" ? (
+                        <FotoPiloto
+                          idPiloto={idPiloto}
+                          nombre={nombre}
+                          colorEquipo={colorEquipo}
+                          temporada={temporada}
+                          tamano="md"
+                        />
+                      ) : (
+                        <BanderaCircular nacionalidad={piloto.Driver.nationality} />
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <Link
+                          to={`/pilotos/${idPiloto}?temporada=${temporada}`}
+                          className="inline-flex min-w-0 items-start gap-1 break-words font-nav text-sm font-bold text-[#242731] no-underline hover:text-[#e10600] dark:text-white dark:hover:text-[#ff6b6b]"
+                        >
+                          {nombre}
+                          <ArrowUpRight className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                        </Link>
+                        <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500 dark:text-[#aeb4c2]">
+                          {numero != null && String(numero).trim() !== "" && (
+                            <strong style={{ color: colorEquipo }}>#{numero}</strong>
+                          )}
+                          {piloto.Constructors?.length > 0 ? (
+                            piloto.Constructors.map((equipo) => (
+                              <span key={equipo.constructorId} className="inline-flex items-center gap-1">
+                                <ColorEscuderia id={equipo.constructorId} nombre={equipo.name} />
+                                {equipo.name}
+                              </span>
+                            ))
+                          ) : (
+                            <span>Sin escudería</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <dl className="mt-3 grid grid-cols-2 gap-2 text-center">
+                      <div className="rounded-lg bg-slate-100 px-3 py-2 dark:bg-[#111219]">
+                        <dt className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Victorias</dt>
+                        <dd className="mt-1 font-racing text-base font-bold tabular-nums">{piloto.wins}</dd>
+                      </div>
+                      <div className="rounded-lg bg-slate-100 px-3 py-2 dark:bg-[#111219]">
+                        <dt className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Puntos</dt>
+                        <dd className="mt-1 font-racing text-base font-extrabold tabular-nums">{piloto.points}</dd>
+                      </div>
+                    </dl>
+                  </article>
+                );
+              })}
+
+            {tipo === "constructores" &&
+              constructores.map((constructor) => {
+                const equipo = constructor.Constructor;
+                const idEquipo = equipo.constructorId;
+
+                return (
+                  <article
+                    key={idEquipo}
+                    className={`p-4 ${Number(constructor.position) <= 3 ? "bg-red-50/50 dark:bg-red-950/10" : ""}`}
+                  >
+                    <div className="flex min-w-0 items-center gap-3">
+                      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-slate-100 font-racing text-lg font-extrabold text-[#e10600] dark:bg-[#292b35]">
+                        {constructor.position}
+                      </span>
+                      <span className="h-7 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: obtenerColorEscuderia(idEquipo) }} aria-hidden="true" />
+                      <div className="min-w-0 flex-1">
+                        <Link
+                          to={`/escuderias/${idEquipo}?temporada=${temporada}`}
+                          className="inline-flex min-w-0 items-start gap-1 break-words font-nav text-sm font-bold text-[#242731] no-underline hover:text-[#e10600] dark:text-white dark:hover:text-[#ff6b6b]"
+                        >
+                          {equipo.name}
+                          <ArrowUpRight className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                        </Link>
+                        {equipo.nationality && (
+                          <div className="mt-1 flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+                            <BanderaCircular nacionalidad={equipo.nationality} />
+                            {equipo.nationality}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <dl className="mt-3 grid grid-cols-2 gap-2 text-center">
+                      <div className="rounded-lg bg-slate-100 px-3 py-2 dark:bg-[#111219]">
+                        <dt className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Victorias</dt>
+                        <dd className="mt-1 font-racing text-base font-bold tabular-nums">{constructor.wins}</dd>
+                      </div>
+                      <div className="rounded-lg bg-slate-100 px-3 py-2 dark:bg-[#111219]">
+                        <dt className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Puntos</dt>
+                        <dd className="mt-1 font-racing text-base font-extrabold tabular-nums">{constructor.points}</dd>
+                      </div>
+                    </dl>
+                  </article>
+                );
+              })}
+          </div>
+
+          {/* TABLET Y PC: se conserva la tabla completa de siempre. */}
+          <div className="hidden w-full overflow-x-auto md:block">
             <table className="w-full min-w-[640px] border-collapse text-left">
               <thead>
                 <tr>

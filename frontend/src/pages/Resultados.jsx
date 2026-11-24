@@ -361,7 +361,7 @@ function Resultados() {
                   id="resultados-temporada"
                   value={temporada}
                   onChange={cambiarTemporada}
-                  className="w-full appearance-none rounded-lg border border-white/10 bg-[#101117] px-3 py-2.5 pr-10 text-sm font-semibold text-white outline-none transition-colors hover:border-white/25 focus:border-[#e10600] focus:ring-2 focus:ring-[#e10600]/20"
+                  className="w-full appearance-none rounded-lg border border-white/10 bg-[#101117] px-3 py-2.5 pr-10 text-base sm:text-sm font-semibold text-white outline-none transition-colors hover:border-white/25 focus:border-[#e10600] focus:ring-2 focus:ring-[#e10600]/20"
                 >
                   {TEMPORADAS.map((anio) => (
                     <option key={anio} value={anio}>
@@ -390,7 +390,7 @@ function Resultados() {
                   value={ronda}
                   onChange={cambiarRonda}
                   disabled={cargandoCarreras || carreras.length === 0}
-                  className="w-full appearance-none rounded-lg border border-white/10 bg-[#101117] px-3 py-2.5 pr-10 text-sm font-semibold text-white outline-none transition-colors hover:border-white/25 focus:border-[#e10600] focus:ring-2 focus:ring-[#e10600]/20 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="w-full appearance-none rounded-lg border border-white/10 bg-[#101117] px-3 py-2.5 pr-10 text-base sm:text-sm font-semibold text-white outline-none transition-colors hover:border-white/25 focus:border-[#e10600] focus:ring-2 focus:ring-[#e10600]/20 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {carreras.length === 0 && (
                     <option value="1">Sin Grandes Premios disponibles</option>
@@ -561,7 +561,100 @@ function Resultados() {
                 </span>
               </div>
 
-              <div className="overflow-x-auto">
+              {/* MÓVIL: cada resultado se lee completo, sin scroll horizontal. */}
+              <div className="divide-y divide-white/10 md:hidden">
+                {datos.resultados.map((resultado, indice) => {
+                  const idPiloto = esPractica ? null : resultado.Driver.driverId;
+                  const nombrePiloto = esPractica
+                    ? resultado.nombre
+                    : `${resultado.Driver.givenName} ${resultado.Driver.familyName}`;
+                  const colorEquipo = esPractica
+                    ? resultado.color || "#e10600"
+                    : obtenerColorEscuderia(resultado.Constructor?.constructorId);
+                  const puesto = Number(resultado.position);
+                  const podio = puesto >= 1 && puesto <= 3;
+                  const metricas = esPractica
+                    ? esClasificacionSprint
+                      ? [
+                          ["SQ1", resultado.sq1],
+                          ["SQ2", resultado.sq2],
+                          ["SQ3", resultado.sq3],
+                          ["Vueltas", resultado.vueltas],
+                        ]
+                      : [
+                          ["Mejor vuelta", resultado.mejorVuelta],
+                          ["Diferencia", resultado.diferencia],
+                          ["Vueltas", resultado.vueltas],
+                        ]
+                    : esClasificacion
+                      ? [
+                          ["Q1", resultado.Q1],
+                          ["Q2", resultado.Q2],
+                          ["Q3", resultado.Q3],
+                        ]
+                      : [
+                          ["Parrilla", resultado.grid],
+                          ["Tiempo / Estado", resultado.Time?.time || resultado.status],
+                          ["Puntos", resultado.points],
+                        ];
+
+                  return (
+                    <article
+                      key={idPiloto || resultado.numero || indice}
+                      className={`p-4 ${podio ? "bg-[#e10600]/[0.055]" : ""}`}
+                    >
+                      <div className="flex min-w-0 items-center gap-3">
+                        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-[#292b35] font-racing text-base font-extrabold text-white">
+                          {resultado.positionText ?? resultado.position ?? "—"}
+                        </span>
+                        {esPractica ? (
+                          <span className="shrink-0 font-racing text-sm font-extrabold" style={{ color: colorEquipo }}>
+                            #{resultado.numero}
+                          </span>
+                        ) : temporada === "2026" ? (
+                          <FotoPiloto
+                            idPiloto={idPiloto}
+                            nombre={nombrePiloto}
+                            colorEquipo={colorEquipo}
+                            temporada={temporada}
+                            tamano="md"
+                          />
+                        ) : null}
+                        <div className="min-w-0 flex-1">
+                          {esPractica ? (
+                            <strong className="block break-words text-sm text-white">{nombrePiloto}</strong>
+                          ) : (
+                            <Link
+                              to={`/pilotos/${idPiloto}?temporada=${temporada}`}
+                              className="inline-flex items-start gap-1 break-words text-sm font-bold text-white no-underline hover:text-[#ff4b47]"
+                            >
+                              {nombrePiloto}
+                              <ArrowUpRight className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                            </Link>
+                          )}
+                          <p className="mt-1 flex items-center gap-2 text-xs text-slate-400">
+                            <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: colorEquipo }} aria-hidden="true" />
+                            <span className="min-w-0 break-words">{esPractica ? resultado.escuderia : resultado.Constructor?.name || "—"}</span>
+                          </p>
+                        </div>
+                      </div>
+                      <dl className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                        {metricas.map(([etiqueta, valor]) => (
+                          <div key={etiqueta} className="min-w-0 rounded-lg bg-[#111219] px-2.5 py-2">
+                            <dt className="text-[10px] font-bold uppercase tracking-wide text-slate-400">{etiqueta}</dt>
+                            <dd className="mt-1 break-words font-mono text-xs font-semibold tabular-nums text-white">
+                              {valor !== null && valor !== undefined && valor !== "" ? valor : "—"}
+                            </dd>
+                          </div>
+                        ))}
+                      </dl>
+                    </article>
+                  );
+                })}
+              </div>
+
+              {/* TABLET Y PC: mantener la tabla original sin cambios. */}
+              <div className="hidden overflow-x-auto md:block">
                 <table className="w-full min-w-[740px] border-collapse text-left text-sm">
                   <thead className="bg-[#111219] text-[11px] font-bold uppercase tracking-wider text-slate-400">
                     <tr>
