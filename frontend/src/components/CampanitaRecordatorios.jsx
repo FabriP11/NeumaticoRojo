@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { Link } from "react-router";
 import { Bell, BellRing, Check, LoaderCircle, Mail, X } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import { fetchConSesion } from "../utils/fetchConSesion";
 
 // Las preferencias siguen siendo globales: se aplican a próximos GP que
 // incluyan esas sesiones. El menú solo muestra las del GP actual/próximo.
@@ -115,7 +116,7 @@ export default function CampanitaRecordatorios({ carrera }) {
 
     async function consultar() {
       try {
-        const respuesta = await fetch("/api/notificaciones/preferencias", {
+        const respuesta = await fetchConSesion("/api/notificaciones/preferencias", {
           credentials: "include",
           signal: controller.signal,
         });
@@ -154,7 +155,7 @@ export default function CampanitaRecordatorios({ carrera }) {
     setMensaje("");
     setError("");
     try {
-      const respuesta = await fetch("/api/notificaciones/preferencias", {
+      const respuesta = await fetchConSesion("/api/notificaciones/preferencias", {
         method: "PUT",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
@@ -185,7 +186,7 @@ export default function CampanitaRecordatorios({ carrera }) {
         aria-expanded={abierto}
         aria-haspopup="dialog"
         title="Recordatorios por correo"
-        className="relative inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/20 bg-black/55 text-white transition-colors hover:border-[#e10600] hover:bg-[#e10600] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+        className="relative inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-white/20 bg-black/55 text-white transition-colors hover:border-[#e10600] hover:bg-[#e10600] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
       >
         <Bell className="h-[18px] w-[18px]" aria-hidden="true" />
         {activo && (
@@ -213,7 +214,7 @@ export default function CampanitaRecordatorios({ carrera }) {
               <button
                 onClick={() => setAbierto(false)}
                 aria-label="Cerrar recordatorios"
-                className="rounded-md p-1 text-white/70 hover:bg-white/10 hover:text-white"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-md text-white/70 hover:bg-white/10 hover:text-white"
                 type="button"
               >
                 <X className="h-4 w-4" />

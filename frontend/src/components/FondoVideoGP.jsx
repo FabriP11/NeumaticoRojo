@@ -1,35 +1,32 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
 
-// Fondo decorativo de TODO el banner, no solo de la columna izquierda.
+// Fondo decorativo de TODO el banner. En móvil no se monta ningún <video>.
 export default function FondoVideoGP({ esSemanaCarrera }) {
   const videoRef = useRef(null);
   const reducirMovimiento = useReducedMotion();
+  const [mostrarVideo, setMostrarVideo] = useState(false);
 
   useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
-
-    const movil = window.matchMedia("(max-width: 639px)");
-
-    const actualizar = () => {
-      if (reducirMovimiento || movil.matches || document.hidden) {
-        video.pause();
-      } else {
-        video.play().catch(() => {});
-      }
-    };
-
+    const escritorio = window.matchMedia("(min-width: 640px)");
+    function actualizar() {
+      setMostrarVideo(escritorio.matches && !document.hidden && !reducirMovimiento);
+    }
     actualizar();
-    movil.addEventListener("change", actualizar);
+    escritorio.addEventListener("change", actualizar);
     document.addEventListener("visibilitychange", actualizar);
-
     return () => {
-      movil.removeEventListener("change", actualizar);
+      escritorio.removeEventListener("change", actualizar);
       document.removeEventListener("visibilitychange", actualizar);
-      video.pause();
     };
   }, [reducirMovimiento]);
+
+  useEffect(() => {
+    if (!mostrarVideo || !videoRef.current) return;
+    const video = videoRef.current;
+    video.play().catch(() => {}); // Rechazo normal si el navegador bloquea autoplay.
+    return () => video.pause();
+  }, [mostrarVideo]);
 
   return (
     <motion.div
@@ -39,21 +36,24 @@ export default function FondoVideoGP({ esSemanaCarrera }) {
       transition={{ duration: 0.8 }}
       className="pointer-events-none absolute inset-0 z-0 overflow-hidden"
     >
-      <motion.video
-        ref={videoRef}
-        muted
-        loop
-        playsInline
-        preload="metadata"
-        initial={false}
-        animate={{ opacity: esSemanaCarrera ? 0.85 : 0.45 }}
-        transition={{ duration: reducirMovimiento ? 0 : 0.55 }}
-        className="absolute inset-0 hidden h-full w-full object-cover sm:block"
-      >
-        <source src="/videos/raceweek.mp4" type="video/mp4" />
-      </motion.video>
+      {mostrarVideo && (
+        <motion.video
+          ref={videoRef}
+          muted
+          loop
+          playsInline
+          autoPlay
+          preload="none"
+          initial={false}
+          animate={{ opacity: esSemanaCarrera ? 0.85 : 0.45 }}
+          transition={{ duration: reducirMovimiento ? 0 : 0.55 }}
+          className="absolute inset-0 h-full w-full object-cover"
+        >
+          <source src="/videos/raceweek.mp4" type="video/mp4" />
+        </motion.video>
+      )}
 
-      {/* Filtro para que el texto y los horarios siempre sean legibles. */}
+      {/* Mantener filtros y legibilidad con o sin video. */}
       <div className="absolute inset-0 bg-black/35" />
       <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(8,10,18,0.65)_0%,rgba(8,10,18,0.35)_55%,rgba(8,10,18,0.48)_100%)]" />
       <motion.div

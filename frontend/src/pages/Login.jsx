@@ -159,7 +159,7 @@ function Login() {
                     autoComplete="username"
                     disabled={cargando}
                     required
-                    className="box-border w-full rounded-xl border border-white/15 bg-[#111117] py-3.5 pl-12 pr-4 text-sm text-white outline-none transition-colors placeholder:text-[#777783] focus:border-[#e10600] focus:ring-2 focus:ring-[#e10600]/20 disabled:opacity-60"
+                    className="box-border w-full rounded-xl border border-white/15 bg-[#111117] py-3.5 pl-12 pr-4 text-base sm:text-sm text-white outline-none transition-colors placeholder:text-[#777783] focus:border-[#e10600] focus:ring-2 focus:ring-[#e10600]/20 disabled:opacity-60"
                   />
                 </div>
               </div>
@@ -186,7 +186,7 @@ function Login() {
                     autoComplete="current-password"
                     disabled={cargando}
                     required
-                    className="box-border w-full rounded-xl border border-white/15 bg-[#111117] py-3.5 pl-12 pr-12 text-sm text-white outline-none transition-colors placeholder:text-[#777783] focus:border-[#e10600] focus:ring-2 focus:ring-[#e10600]/20 disabled:opacity-60"
+                    className="box-border w-full rounded-xl border border-white/15 bg-[#111117] py-3.5 pl-12 pr-12 text-base sm:text-sm text-white outline-none transition-colors placeholder:text-[#777783] focus:border-[#e10600] focus:ring-2 focus:ring-[#e10600]/20 disabled:opacity-60"
                   />
                   <button
                     type="button"

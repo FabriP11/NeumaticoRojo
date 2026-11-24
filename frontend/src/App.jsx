@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { Routes, Route, Link, NavLink, useLocation } from "react-router";
 import {
@@ -16,16 +16,17 @@ import {
 
 import { useAuth } from "./context/AuthContext";
 import RaceWeekBanner from "./components/RaceWeekBanner";
-import Calendario from "./pages/Calendario";
-import Clasificaciones from "./pages/Clasificaciones";
-import PilotoDetalle from "./pages/PilotoDetalle";
-import Resultados from "./pages/Resultados";
-import Escuderias from "./pages/Escuderias";
-import EscuderiaDetalle from "./pages/EscuderiaDetalle";
-import Registro from "./pages/Registro";
-import Login from "./pages/Login";
+// Cargar las páginas secundarias solo cuando el usuario navega hacia ellas.
+const Calendario = lazy(() => import("./pages/Calendario"));
+const Clasificaciones = lazy(() => import("./pages/Clasificaciones"));
+const PilotoDetalle = lazy(() => import("./pages/PilotoDetalle"));
+const Resultados = lazy(() => import("./pages/Resultados"));
+const Escuderias = lazy(() => import("./pages/Escuderias"));
+const EscuderiaDetalle = lazy(() => import("./pages/EscuderiaDetalle"));
+const Registro = lazy(() => import("./pages/Registro"));
+const Login = lazy(() => import("./pages/Login"));
 import SesionMenu from "./components/SesionMenu";
-import MiPerfil from "./pages/MiPerfil";
+const MiPerfil = lazy(() => import("./pages/MiPerfil"));
 import FavoritosInicio from "./components/FavoritosInicio";
 import TablasInicio from "./components/TablasInicio";
 import Footer from "./components/Footer";
@@ -45,12 +46,10 @@ function ScrollArriba() {
   const location = useLocation();
 
   useEffect(() => {
-    window.scrollTo({
-      top: 0,
-      left: 0,
-      behavior: "instant",
-    });
-  }, [location.key, location.pathname, location.search]);
+    // Respetar las anclas internas, como #personalizar-favoritos.
+    if (location.hash) return;
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+  }, [location.pathname, location.search, location.hash]);
 
   return null;
 }
@@ -131,6 +130,19 @@ function Inicio() {
         {usuario && <FavoritosInicio />}
         <TablasInicio />
       </div>
+    </main>
+  );
+}
+
+function PaginaNoEncontrada() {
+  return (
+    <main className="mx-auto flex min-h-[55vh] max-w-3xl flex-col items-center justify-center gap-4 px-4 py-12 text-center">
+      <p className="font-racing text-5xl font-black italic text-[#e10600]">404</p>
+      <h1 className="font-racing text-2xl font-bold uppercase italic">Página no encontrada</h1>
+      <p className="text-sm text-gray-500 dark:text-gray-400">La dirección que buscás no existe.</p>
+      <Link to="/" className="min-h-11 rounded-xl bg-[#e10600] px-5 py-3 font-nav text-sm font-bold text-white no-underline hover:bg-[#b90500]">
+        Volver al inicio
+      </Link>
     </main>
   );
 }
@@ -289,7 +301,7 @@ function App() {
             <button
               type="button"
               onClick={() => setModoOscuro((anterior) => !anterior)}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[#dedfe5] bg-[#f6f7fa] text-[#282a34] shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-[#e10600] hover:text-[#e10600] hover:shadow-md active:scale-95 motion-reduce:transform-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e10600] dark:border-white/15 dark:bg-[#292b35] dark:text-white dark:hover:text-[#ff5c56]"
+              className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-[#dedfe5] bg-[#f6f7fa] text-[#282a34] shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-[#e10600] hover:text-[#e10600] hover:shadow-md active:scale-95 motion-reduce:transform-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e10600] dark:border-white/15 dark:bg-[#292b35] dark:text-white dark:hover:text-[#ff5c56]"
               aria-label={
                 modoOscuro ? "Activar modo claro" : "Activar modo oscuro"
               }
@@ -309,7 +321,7 @@ function App() {
             <button
               type="button"
               onClick={() => setMenuAbierto(true)}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[#dedfe5] bg-[#f6f7fa] text-[#282a34] shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-[#e10600] hover:text-[#e10600] hover:shadow-md active:scale-95 motion-reduce:transform-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e10600] dark:border-white/15 dark:bg-[#292b35] dark:text-white dark:hover:text-[#ff5c56]"
+              className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-[#dedfe5] bg-[#f6f7fa] text-[#282a34] shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-[#e10600] hover:text-[#e10600] hover:shadow-md active:scale-95 motion-reduce:transform-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e10600] dark:border-white/15 dark:bg-[#292b35] dark:text-white dark:hover:text-[#ff5c56]"
               aria-label="Abrir menú de navegación"
               aria-expanded={menuAbierto}
               aria-controls="nr-menu-lateral"
@@ -363,7 +375,7 @@ function App() {
                 <button
                   type="button"
                   onClick={() => setMenuAbierto(false)}
-                  className="flex h-10 w-10 items-center justify-center rounded-lg text-[#292b34] hover:bg-[#eceef2] dark:text-white dark:hover:bg-white/10"
+                  className="flex h-11 w-11 items-center justify-center rounded-lg text-[#292b34] hover:bg-[#eceef2] dark:text-white dark:hover:bg-white/10"
                   aria-label="Cerrar menú lateral"
                 >
                   <X className="h-6 w-6" />
@@ -430,18 +442,27 @@ function App() {
           exit={reducirMovimiento ? undefined : { opacity: 0, y: -6 }}
           transition={{ duration: reducirMovimiento ? 0 : 0.18 }}
         >
-          <Routes location={location}>
-            <Route path="/" element={<Inicio />} />
-            <Route path="/calendario" element={<Calendario />} />
-            <Route path="/clasificaciones" element={<Clasificaciones />} />
-            <Route path="/pilotos/:id" element={<PilotoDetalle />} />
-            <Route path="/resultados" element={<Resultados />} />
-            <Route path="/escuderias" element={<Escuderias />} />
-            <Route path="/escuderias/:id" element={<EscuderiaDetalle />} />
-            <Route path="/registro" element={<Registro />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/mi-perfil" element={<MiPerfil />} />
-          </Routes>
+          <Suspense
+            fallback={
+              <div role="status" className="flex min-h-[45vh] items-center justify-center font-nav text-sm text-gray-500 dark:text-gray-300">
+                Cargando página...
+              </div>
+            }
+          >
+            <Routes location={location}>
+              <Route path="/" element={<Inicio />} />
+              <Route path="/calendario" element={<Calendario />} />
+              <Route path="/clasificaciones" element={<Clasificaciones />} />
+              <Route path="/pilotos/:id" element={<PilotoDetalle />} />
+              <Route path="/resultados" element={<Resultados />} />
+              <Route path="/escuderias" element={<Escuderias />} />
+              <Route path="/escuderias/:id" element={<EscuderiaDetalle />} />
+              <Route path="/registro" element={<Registro />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/mi-perfil" element={<MiPerfil />} />
+              <Route path="*" element={<PaginaNoEncontrada />} />
+            </Routes>
+          </Suspense>
         </motion.div>
       </AnimatePresence>
       <Footer />
