@@ -8,6 +8,16 @@ const verificarOrigen = require('./middlewares/verificarOrigen');
 
 const app = express();
 
+// Railway coloca un proxy delante de Express: necesario para el límite por IP.
+// No utilizar 'true': aceptaría una cadena de cabeceras sin límite de saltos.
+if (process.env.NODE_ENV === 'production') {
+  const saltos = Number(process.env.TRUST_PROXY_HOPS ?? 1);
+  if (!Number.isInteger(saltos) || saltos < 0 || saltos > 3) {
+    throw new Error('TRUST_PROXY_HOPS debe estar entre 0 y 3');
+  }
+  app.set('trust proxy', saltos);
+}
+
 // Mismos middlewares que el proyecto original.
 app.use(cors({ origin: origenFrontend, credentials: true }));
 app.use(cookieParser());
