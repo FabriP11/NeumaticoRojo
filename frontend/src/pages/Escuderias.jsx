@@ -201,44 +201,44 @@ function Escuderias() {
   }, [temporada]);
 
   return (
-    <main className="min-h-screen bg-[#f4f5f8] px-4 py-8 text-[#15151d] dark:bg-[#15151d] dark:text-white sm:px-6 lg:px-8 lg:py-12">
+    <main className="min-h-screen bg-[#f4f5f8] px-4 py-5 text-[#15151d] dark:bg-[#15151d] dark:text-white sm:px-6 sm:py-6 lg:px-8">
       <div className="mx-auto w-full max-w-[1500px]">
         {/* ENCABEZADO */}
-        <header className="mb-8 flex flex-col gap-6 border-b border-black/10 pb-7 dark:border-white/10 lg:flex-row lg:items-end lg:justify-between">
-          <div className="border-l-4 border-[#e10600] pl-4">
-            <p className="mb-2 font-nav text-xs font-bold uppercase tracking-[0.22em] text-[#e10600]">
+        <header className="mb-5 flex flex-col gap-4 border-b border-black/10 pb-5 dark:border-white/10 sm:flex-row sm:items-end sm:justify-between">
+          <div className="min-w-0 border-l-4 border-[#e10600] pl-3 sm:pl-4">
+            <p className="mb-1 font-nav text-[10px] font-bold uppercase tracking-[0.16em] text-[#e10600]">
               FÓRMULA 1 · CAMPEONATO MUNDIAL
             </p>
-            <h1 className="flex items-center gap-3 font-racing text-3xl font-extrabold uppercase italic tracking-tight sm:text-4xl lg:text-5xl">
+            <h1 className="m-0 flex items-center gap-2 font-racing text-2xl font-extrabold uppercase italic tracking-tight sm:text-3xl lg:text-4xl">
               <Flag
-                className="h-8 w-8 shrink-0 text-[#e10600] sm:h-10 sm:w-10"
+                className="h-6 w-6 shrink-0 text-[#e10600] sm:h-7 sm:w-7"
                 strokeWidth={2.2}
                 aria-hidden="true"
               />
               Escuderías
             </h1>
-            <p className="mt-3 max-w-2xl font-nav text-base leading-relaxed text-gray-600 dark:text-gray-400">
+            <p className="mt-1.5 max-w-2xl font-nav text-sm leading-snug text-gray-600 dark:text-gray-400">
               Conocé los equipos que participan en el Campeonato Mundial de
               Fórmula 1.
             </p>
           </div>
 
           {/* SELECTOR DE TEMPORADA */}
-          <div className="w-full sm:w-64">
+          <div className="w-full shrink-0 sm:w-60">
             <label
               htmlFor="escuderias-temporada"
-              className="mb-2 block font-nav text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400"
+              className="mb-1 block font-nav text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400"
             >
               Seleccionar temporada
             </label>
             <div className="relative">
               <CalendarDays
-                className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#e10600]"
+                className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#e10600]"
                 aria-hidden="true"
               />
               <select
                 id="escuderias-temporada"
-                className="w-full cursor-pointer appearance-none rounded-xl border border-gray-300 bg-white py-3 pl-12 pr-11 font-nav text-base font-bold text-[#15151d] outline-none transition-colors hover:border-[#e10600]/60 focus:border-[#e10600] focus:ring-2 focus:ring-[#e10600]/20 dark:border-white/15 dark:bg-[#20212b] dark:text-white"
+                className="w-full cursor-pointer appearance-none rounded-xl border border-gray-300 bg-white py-2.5 pl-10 pr-10 font-nav text-sm font-bold text-[#15151d] outline-none transition-colors hover:border-[#e10600]/60 focus:border-[#e10600] focus:ring-2 focus:ring-[#e10600]/20 dark:border-white/15 dark:bg-[#20212b] dark:text-white"
                 value={temporada}
                 onChange={(e) => setTemporada(e.target.value)}
               >
@@ -359,7 +359,7 @@ function Escuderias() {
                       {/* PUNTOS Y VICTORIAS */}
                       <div className="grid grid-cols-2 gap-2">
                         <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-white/5 dark:bg-[#15151d]">
-                          <span className="mb-2 block font-nav text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                          <span className="mb-1 block font-nav text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
                             Puntos
                           </span>
                           <strong className="font-racing text-xl font-extrabold tabular-nums">
