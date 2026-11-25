@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { toast } from "sonner";
 import { Link, useNavigate } from "react-router";
 import {
   AlertCircle,
@@ -56,10 +57,12 @@ function Login() {
 
       setUsuario(datos.usuario);
       iniciarSesion(datos.usuario);
+      toast.success("Sesión iniciada correctamente");
       setContrasena("");
       navigate("/", { replace: true });
     } catch (error) {
       setError(error.message);
+      toast.error(error.message);
     } finally {
       setCargando(false);
     }
@@ -139,13 +142,7 @@ function Login() {
             <form className="space-y-6" onSubmit={manejarLogin}>
               {/* USUARIO O CORREO */}
               <div>
-                <label
-                  htmlFor="login-correo"
-                  className="mb-2 block text-xs font-extrabold uppercase tracking-wider text-[#e5e5eb]"
-                >
-                  Usuario o correo electrónico
-                </label>
-                <div className="relative">
+                <div className="relative nr-campo-flotante">
                   <UserRound
                     className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#888894]"
                     aria-hidden="true"
@@ -153,26 +150,21 @@ function Login() {
                   <input
                     id="login-correo"
                     type="text"
-                    placeholder="Tu usuario o correo electrónico"
+                    placeholder=" "
                     value={correo}
                     onChange={(e) => setCorreo(e.target.value)}
                     autoComplete="username"
                     disabled={cargando}
                     required
-                    className="box-border w-full rounded-xl border border-white/15 bg-[#111117] py-3.5 pl-12 pr-4 text-base sm:text-sm text-white outline-none transition-colors placeholder:text-[#777783] focus:border-[#e10600] focus:ring-2 focus:ring-[#e10600]/20 disabled:opacity-60"
+                    className="nr-input-flotante box-border w-full rounded-xl border border-white/15 bg-[#111117] py-3.5 pl-12 pr-4 text-base sm:text-sm text-white outline-none transition-colors placeholder:text-[#777783] focus:border-[#e10600] focus:ring-2 focus:ring-[#e10600]/20 disabled:opacity-60"
                   />
+                  <label htmlFor="login-correo" className="nr-label-flotante">Usuario o correo electrónico</label>
                 </div>
               </div>
 
               {/* CONTRASEÑA */}
               <div>
-                <label
-                  htmlFor="login-contrasena"
-                  className="mb-2 block text-xs font-extrabold uppercase tracking-wider text-[#e5e5eb]"
-                >
-                  Contraseña
-                </label>
-                <div className="relative">
+                <div className="relative nr-campo-flotante">
                   <LockKeyhole
                     className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#888894]"
                     aria-hidden="true"
@@ -180,14 +172,15 @@ function Login() {
                   <input
                     id="login-contrasena"
                     type={mostrarContrasena ? "text" : "password"}
-                    placeholder="Ingresá tu contraseña"
+                    placeholder=" "
                     value={contrasena}
                     onChange={(e) => setContrasena(e.target.value)}
                     autoComplete="current-password"
                     disabled={cargando}
                     required
-                    className="box-border w-full rounded-xl border border-white/15 bg-[#111117] py-3.5 pl-12 pr-12 text-base sm:text-sm text-white outline-none transition-colors placeholder:text-[#777783] focus:border-[#e10600] focus:ring-2 focus:ring-[#e10600]/20 disabled:opacity-60"
+                    className="nr-input-flotante box-border w-full rounded-xl border border-white/15 bg-[#111117] py-3.5 pl-12 pr-12 text-base sm:text-sm text-white outline-none transition-colors placeholder:text-[#777783] focus:border-[#e10600] focus:ring-2 focus:ring-[#e10600]/20 disabled:opacity-60"
                   />
+                  <label htmlFor="login-contrasena" className="nr-label-flotante">Contraseña</label>
                   <button
                     type="button"
                     onClick={() =>

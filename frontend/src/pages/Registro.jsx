@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { Link, useNavigate } from "react-router";
 import { useAuth } from "../context/AuthContext";
 import {
@@ -84,6 +85,7 @@ function Registro() {
 
     if (formulario.contrasena !== formulario.confirmarContrasena) {
       setError("Las contraseñas no coinciden");
+      toast.error("Las contraseñas no coinciden");
       return;
     }
 
@@ -137,6 +139,7 @@ function Registro() {
         }
 
         iniciarSesion(datosLogin.usuario);
+        toast.success("Cuenta creada. Sesión iniciada.");
 
         setExito("¡Cuenta creada correctamente! Bienvenido a Neumático Rojo.");
 
@@ -146,6 +149,7 @@ function Registro() {
       } catch {
         // La cuenta fue creada, pero el login falló
         setExito("¡Tu cuenta se creó correctamente!");
+        toast.success("Cuenta creada correctamente");
         setError(
           "No se pudo iniciar sesión automáticamente. " +
             "Ingresá desde Iniciar sesión con tu nueva cuenta.",
@@ -162,19 +166,18 @@ function Registro() {
     } catch (error) {
       // Error durante el registro
       setError(error.message || "No se pudo crear la cuenta");
+      toast.error(error.message || "No se pudo crear la cuenta");
     } finally {
       setCargando(false);
     }
   }
 
   const claseInput =
-    "box-border w-full rounded-xl border border-white/15 bg-[#111117] py-3.5 pl-12 pr-4 text-base sm:text-sm text-white outline-none transition-colors placeholder:text-[#777783] focus:border-[#e10600] focus:ring-2 focus:ring-[#e10600]/20 disabled:opacity-60";
+    "nr-input-flotante box-border w-full rounded-xl border border-white/15 bg-[#111117] py-3.5 pl-12 pr-4 text-base sm:text-sm text-white outline-none transition-colors placeholder:text-[#777783] focus:border-[#e10600] focus:ring-2 focus:ring-[#e10600]/20 disabled:opacity-60";
 
   const claseInputConBoton =
-    "box-border w-full rounded-xl border border-white/15 bg-[#111117] py-3.5 pl-12 pr-12 text-base sm:text-sm text-white outline-none transition-colors placeholder:text-[#777783] focus:border-[#e10600] focus:ring-2 focus:ring-[#e10600]/20 disabled:opacity-60";
+    "nr-input-flotante box-border w-full rounded-xl border border-white/15 bg-[#111117] py-3.5 pl-12 pr-12 text-base sm:text-sm text-white outline-none transition-colors placeholder:text-[#777783] focus:border-[#e10600] focus:ring-2 focus:ring-[#e10600]/20 disabled:opacity-60";
 
-  const claseLabel =
-    "mb-2 block text-xs font-extrabold uppercase tracking-wider text-[#e5e5eb]";
 
   return (
     <main className="min-h-[calc(100vh-100px)] bg-[#101015] px-4 py-10 text-white sm:px-6 lg:py-16">
@@ -250,10 +253,7 @@ function Registro() {
             <form className="space-y-5" onSubmit={manejarRegistro}>
               {/* NOMBRE DE USUARIO */}
               <div>
-                <label htmlFor="nombre_usuario" className={claseLabel}>
-                  Nombre de usuario
-                </label>
-                <div className="relative">
+                <div className="relative nr-campo-flotante">
                   <UserRound
                     className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#888894]"
                     aria-hidden="true"
@@ -262,7 +262,7 @@ function Registro() {
                     id="nombre_usuario"
                     type="text"
                     name="nombre_usuario"
-                    placeholder="Tu nombre de usuario"
+                    placeholder=" "
                     value={formulario.nombre_usuario}
                     onChange={manejarCambio}
                     autoComplete="username"
@@ -272,15 +272,13 @@ function Registro() {
                     required
                     className={claseInput}
                   />
+                  <label htmlFor="nombre_usuario" className="nr-label-flotante">Nombre de usuario</label>
                 </div>
               </div>
 
               {/* CORREO ELECTRÓNICO */}
               <div>
-                <label htmlFor="correo" className={claseLabel}>
-                  Correo electrónico
-                </label>
-                <div className="relative">
+                <div className="relative nr-campo-flotante">
                   <Mail
                     className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#888894]"
                     aria-hidden="true"
@@ -289,7 +287,7 @@ function Registro() {
                     id="correo"
                     type="email"
                     name="correo"
-                    placeholder="tu@email.com"
+                    placeholder=" "
                     value={formulario.correo}
                     onChange={manejarCambio}
                     autoComplete="email"
@@ -298,15 +296,13 @@ function Registro() {
                     required
                     className={claseInput}
                   />
+                  <label htmlFor="correo" className="nr-label-flotante">Correo electrónico</label>
                 </div>
               </div>
 
               {/* CONTRASEÑA */}
               <div>
-                <label htmlFor="contrasena" className={claseLabel}>
-                  Contraseña
-                </label>
-                <div className="relative">
+                <div className="relative nr-campo-flotante">
                   <LockKeyhole
                     className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#888894]"
                     aria-hidden="true"
@@ -315,7 +311,7 @@ function Registro() {
                     id="contrasena"
                     type={mostrarContrasena ? "text" : "password"}
                     name="contrasena"
-                    placeholder="Mínimo 8 caracteres"
+                    placeholder=" "
                     value={formulario.contrasena}
                     onChange={manejarCambio}
                     autoComplete="new-password"
@@ -324,6 +320,8 @@ function Registro() {
                     required
                     className={claseInputConBoton}
                   />
+                  <label htmlFor="contrasena" className="nr-label-flotante">Contraseña</label>
+                  <span className="sr-only">La contraseña debe tener al menos 8 caracteres</span>
                   <button
                     type="button"
                     onClick={() =>
@@ -346,12 +344,11 @@ function Registro() {
                 </div>
               </div>
 
+              <p className="-mt-2 text-xs text-[#a9a9b4]">La contraseña debe tener al menos 8 caracteres.</p>
+
               {/* CONFIRMAR CONTRASEÑA */}
               <div>
-                <label htmlFor="confirmarContrasena" className={claseLabel}>
-                  Confirmar contraseña
-                </label>
-                <div className="relative">
+                <div className="relative nr-campo-flotante">
                   <LockKeyhole
                     className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#888894]"
                     aria-hidden="true"
@@ -360,7 +357,7 @@ function Registro() {
                     id="confirmarContrasena"
                     type={mostrarConfirmacion ? "text" : "password"}
                     name="confirmarContrasena"
-                    placeholder="Repetí tu contraseña"
+                    placeholder=" "
                     value={formulario.confirmarContrasena}
                     onChange={manejarCambio}
                     autoComplete="new-password"
@@ -369,6 +366,7 @@ function Registro() {
                     required
                     className={claseInputConBoton}
                   />
+                  <label htmlFor="confirmarContrasena" className="nr-label-flotante">Confirmar contraseña</label>
                   <button
                     type="button"
                     onClick={() =>
@@ -394,10 +392,7 @@ function Registro() {
               {/* ACCESO POR INVITACION - BETA */}
               {requiereInvitacion && (
                 <div>
-                  <label htmlFor="codigo_invitacion" className={claseLabel}>
-                    Código de invitación
-                  </label>
-                  <div className="relative">
+                <div className="relative nr-campo-flotante">
                     <KeyRound
                       className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#888894]"
                       aria-hidden="true"
@@ -406,7 +401,7 @@ function Registro() {
                       id="codigo_invitacion"
                       type="text"
                       name="codigo_invitacion"
-                      placeholder="Código de acceso a la beta"
+                      placeholder=" "
                       value={formulario.codigo_invitacion}
                       onChange={manejarCambio}
                       autoComplete="off"
@@ -415,6 +410,7 @@ function Registro() {
                       required
                       className={claseInput}
                     />
+                  <label htmlFor="codigo_invitacion" className="nr-label-flotante">Código de invitación</label>
                   </div>
                   <p className="mt-2 text-xs text-[#a9a9b4]">
                     Necesitás el código que te compartió el creador de

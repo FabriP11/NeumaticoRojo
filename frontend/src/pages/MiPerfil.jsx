@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { Link } from "react-router";
 import FotoPiloto, { obtenerArchivoPiloto } from "../components/FotoPiloto";
 import FondoTarjetaInicio from "../components/FondoTarjetaInicio";
@@ -165,8 +166,10 @@ function MiPerfil() {
 
       iniciarSesion(datos.usuario);
       setMensaje("¡Favoritos guardados correctamente!");
+      toast.success("Favoritos guardados correctamente");
     } catch (error) {
       setErrorGuardado(error.message);
+      toast.error(error.message);
     } finally {
       setGuardando(false);
     }
@@ -206,8 +209,10 @@ function MiPerfil() {
       iniciarSesion(datos.usuario);
       setAvatarSeleccionado(datos.usuario.id_piloto_avatar || "");
       setMensajeAvatar("¡Foto de perfil actualizada!");
+      toast.success("Foto de perfil actualizada");
     } catch (error) {
       setErrorAvatar(error.message);
+      toast.error(error.message);
     } finally {
       setGuardandoAvatar(false);
     }
