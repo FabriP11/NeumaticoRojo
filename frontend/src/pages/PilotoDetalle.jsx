@@ -108,12 +108,15 @@ function PilotoDetalle() {
   const vieneDeEscuderia =
     typeof volverA === "string" &&
     /^\/escuderias\/[a-z0-9_-]+\?temporada=\d{4}$/i.test(volverA);
-  const destinoVolver = vieneDeEscuderia
+  const vieneDePilotos = volverA === `/pilotos?temporada=${temporada}`;
+  const destinoVolver = vieneDeEscuderia || vieneDePilotos
     ? volverA
     : `/clasificaciones?temporada=${temporada}`;
   const textoVolver = vieneDeEscuderia
     ? "Volver a escudería"
-    : "Volver a clasificaciones";
+    : vieneDePilotos
+      ? "Volver a pilotos"
+      : "Volver a clasificaciones";
 
   const [datos, setDatos] = useState(null);
   const [cargando, setCargando] = useState(true);

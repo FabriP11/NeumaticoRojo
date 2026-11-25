@@ -11,6 +11,7 @@ import {
   Sun,
   Trophy,
   UsersRound,
+  UserRound,
   X,
 } from "lucide-react";
 
@@ -21,6 +22,7 @@ const Calendario = lazy(() => import("./pages/Calendario"));
 const Clasificaciones = lazy(() => import("./pages/Clasificaciones"));
 const PilotoDetalle = lazy(() => import("./pages/PilotoDetalle"));
 const Resultados = lazy(() => import("./pages/Resultados"));
+const Pilotos = lazy(() => import("./pages/Pilotos"));
 const Escuderias = lazy(() => import("./pages/Escuderias"));
 const EscuderiaDetalle = lazy(() => import("./pages/EscuderiaDetalle"));
 const Registro = lazy(() => import("./pages/Registro"));
@@ -39,6 +41,7 @@ const enlacesNavegacion = [
   { ruta: "/calendario", nombre: "Calendario", Icono: CalendarDays },
   { ruta: "/resultados", nombre: "Resultados", Icono: Flag },
   { ruta: "/clasificaciones", nombre: "Clasificaciones", Icono: Trophy },
+  { ruta: "/pilotos", nombre: "Pilotos", Icono: UserRound },
   { ruta: "/escuderias", nombre: "Escuderías", Icono: UsersRound },
 ];
 
@@ -265,7 +268,7 @@ function App() {
           {/* ENLACES VISIBLES EN ESCRITORIO */}
           <nav
             aria-label="Navegación principal"
-            className="hidden items-center gap-1 lg:flex"
+            className="hidden items-center gap-0.5 lg:flex xl:gap-1"
           >
             {enlacesNavegacion.map((enlace) => (
               <NavLink
@@ -273,7 +276,7 @@ function App() {
                 to={enlace.ruta}
                 end={enlace.ruta === "/"}
                 className={({ isActive }) =>
-                  `relative rounded-lg px-3 py-3 font-nav text-[15px] font-bold no-underline transition-colors xl:px-4 ${
+                  `relative rounded-lg px-2.5 py-3 font-nav text-[14px] font-bold no-underline transition-colors xl:px-3 xl:text-[15px] ${
                     isActive
                       ? "bg-[#e10600]/10 text-[#e10600] dark:bg-[#e10600]/15 dark:text-[#ff4c46]"
                       : "text-[#292b34] hover:bg-[#f0f1f4] hover:text-[#e10600] dark:text-[#e7e7eb] dark:hover:bg-white/10 dark:hover:text-white"
@@ -453,6 +456,7 @@ function App() {
               <Route path="/" element={<Inicio />} />
               <Route path="/calendario" element={<Calendario />} />
               <Route path="/clasificaciones" element={<Clasificaciones />} />
+              <Route path="/pilotos" element={<Pilotos />} />
               <Route path="/pilotos/:id" element={<PilotoDetalle />} />
               <Route path="/resultados" element={<Resultados />} />
               <Route path="/escuderias" element={<Escuderias />} />
