@@ -13,7 +13,6 @@ import {
   Medal,
   Trophy,
   UserRound,
-  UsersRound,
 } from "lucide-react";
 import FotoPiloto from "../components/FotoPiloto";
 import { obtenerColorEscuderia } from "../utils/coloresF1";
@@ -244,6 +243,9 @@ function EscuderiaDetalle() {
   const pilotosTitulares2026 = es2026
     ? obtenerPilotosTitulares2026(id, pilotos)
     : [];
+  // Los titulares de 2026 aparecen arriba del coche. En temporadas anteriores,
+  // mantener el acceso a los pilotos aunque se elimine la sección «Plantilla».
+  const pilotosEncabezado = es2026 ? pilotosTitulares2026 : pilotos;
 
   return (
     <main className="min-h-[calc(100dvh-76px)] bg-[#f4f5f8] px-4 py-4 text-gray-900 sm:px-6 dark:bg-[#15151d] dark:text-white">
@@ -307,24 +309,36 @@ function EscuderiaDetalle() {
                 </span>
               </div>
 
-              {es2026 && pilotosTitulares2026.length > 0 && (
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {pilotosTitulares2026.map((piloto) => (
-                    <div
+              {pilotosEncabezado.length > 0 && (
+                <div className="mt-3 flex flex-wrap gap-2" aria-label="Perfiles de pilotos">
+                  {pilotosEncabezado.map((piloto) => (
+                    <Link
                       key={piloto.driverId}
-                      className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-black/30 py-1 pl-1 pr-2.5 backdrop-blur-sm"
+                      to={`/pilotos/${piloto.driverId}?temporada=${temporada}`}
+                      aria-label={`Ver perfil de ${piloto.givenName} ${piloto.familyName}`}
+                      className="group inline-flex min-h-11 max-w-full items-center gap-1.5 rounded-full border border-white/20 bg-black/30 py-1 pl-1 pr-2.5 text-white no-underline backdrop-blur-sm transition-colors hover:border-white/60 hover:bg-black/50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
                     >
-                      <FotoPiloto
-                        idPiloto={piloto.driverId}
-                        nombre={`${piloto.givenName} ${piloto.familyName}`}
-                        colorEquipo={color}
-                        temporada={temporada}
-                        tamano="sm"
-                      />
-                      <span className="font-nav text-xs font-bold text-white">
+                      {es2026 ? (
+                        <FotoPiloto
+                          idPiloto={piloto.driverId}
+                          nombre={`${piloto.givenName} ${piloto.familyName}`}
+                          colorEquipo={color}
+                          temporada={temporada}
+                          tamano="sm"
+                        />
+                      ) : (
+                        <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/15">
+                          <UserRound className="h-4 w-4" aria-hidden="true" />
+                        </span>
+                      )}
+                      <span className="min-w-0 font-nav text-xs font-bold text-white">
                         {piloto.givenName} {piloto.familyName}
                       </span>
-                    </div>
+                      <ArrowUpRight
+                        className="h-3.5 w-3.5 shrink-0 text-white/80 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+                        aria-hidden="true"
+                      />
+                    </Link>
                   ))}
                 </div>
               )}
@@ -414,75 +428,6 @@ function EscuderiaDetalle() {
           ))}
         </section>
 
-        {/* Lista de pilotos con fotografía real solo para la temporada 2026. */}
-        <section className="rounded-xl border border-gray-200 bg-white p-3 shadow-sm sm:p-4 dark:border-white/10 dark:bg-[#20212b]">
-          <div className="mb-3 flex items-center gap-2 border-l-4 border-[#e10600] pl-3">
-            <UsersRound className="h-5 w-5 shrink-0 text-[#e10600]" />
-            <div>
-              <p className="mb-0 font-nav text-[10px] font-bold uppercase tracking-[.2em] text-[#e10600]">
-                Plantilla
-              </p>
-              <h2 className="m-0 font-racing text-base font-extrabold uppercase italic tracking-tight text-gray-900 sm:text-lg dark:text-white">
-                Pilotos de la temporada {temporada}
-              </h2>
-            </div>
-          </div>
-
-          {pilotos.length > 0 ? (
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3">
-              {pilotos.map((piloto, indice) => (
-                <motion.div
-                  key={piloto.driverId}
-                  initial={reducirMovimiento ? false : { opacity: 0, y: 12 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, amount: 0.12 }}
-                  transition={{
-                    duration: reducirMovimiento ? 0 : 0.28,
-                    delay: reducirMovimiento ? 0 : (indice % 6) * 0.05,
-                  }}
-                  className="min-w-0"
-                >
-                  <Link
-                    to={`/pilotos/${piloto.driverId}?temporada=${temporada}`}
-                    className="group flex items-center gap-2.5 rounded-lg border border-gray-200 bg-gray-50 p-2.5 text-gray-900 no-underline transition-all duration-200 hover:-translate-y-0.5 motion-reduce:transform-none hover:border-gray-300 hover:shadow-md dark:border-white/10 dark:bg-[#15151d] dark:text-white dark:hover:border-white/25 dark:hover:bg-[#292b36]"
-                    style={{ borderLeftWidth: 4, borderLeftColor: color }}
-                  >
-                    {es2026 ? (
-                      <FotoPiloto
-                        idPiloto={piloto.driverId}
-                        nombre={`${piloto.givenName} ${piloto.familyName}`}
-                        colorEquipo={color}
-                        temporada={temporada}
-                        tamano="md"
-                      />
-                    ) : (
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gray-200 dark:bg-white/5">
-                        <UserRound
-                          className="h-6 w-6"
-                          style={{ color }}
-                          aria-hidden="true"
-                        />
-                      </div>
-                    )}
-                    <div className="min-w-0 flex-1">
-                      <h3 className="m-0 font-racing text-sm font-bold text-gray-900 sm:text-base dark:text-white">
-                        {piloto.givenName} {piloto.familyName}
-                      </h3>
-                      <p className="mt-0.5 font-nav text-xs text-gray-600 dark:text-gray-400">
-                        {piloto.nationality}
-                      </p>
-                    </div>
-                    <ArrowUpRight className="h-4 w-4 shrink-0 text-gray-500 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-[#e10600] dark:text-gray-400" />
-                  </Link>
-                </motion.div>
-              ))}
-            </div>
-          ) : (
-            <p className="rounded-xl border border-gray-200 bg-gray-50 p-5 text-gray-500 dark:border-white/10 dark:bg-[#15151d] dark:text-gray-400">
-              No hay pilotos disponibles para esta temporada.
-            </p>
-          )}
-        </section>
       </div>
     </main>
   );
