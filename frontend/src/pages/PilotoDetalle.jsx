@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
-import { Link, useParams, useSearchParams } from "react-router";
+import { Link, useLocation, useParams, useSearchParams } from "react-router";
 import {
   AlertCircle,
   ArrowLeft,
@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { obtenerColorEscuderia } from "../utils/coloresF1";
 import { obtenerArchivoPiloto } from "../components/FotoPiloto";
+import { obtenerImagenFondoGP } from "../utils/imagenesGP";
 
 // Misma paleta de fondo que usamos en el perfil de las escuderías.
 const FONDOS_ESCUDERIAS = {
@@ -78,7 +79,7 @@ function RetratoPiloto({ idPiloto, nombre, temporada, reducirMovimiento }) {
           }}
           src={`/pilotos/2026/${archivo}.avif`}
           alt={`Fotografía de ${nombre} en la temporada 2026`}
-          className="pointer-events-none relative z-10 block h-full w-full max-w-[480px] origin-bottom scale-[1.07] object-contain object-bottom drop-shadow-[0_12px_18px_rgba(0,0,0,.35)] sm:scale-100"
+          className="pointer-events-none relative top-2 z-10 block h-full w-full max-w-[480px] origin-bottom scale-[0.93] object-contain object-bottom drop-shadow-[0_12px_18px_rgba(0,0,0,.35)] sm:top-0 sm:scale-100"
           loading="eager"
           decoding="async"
           onError={() => setFalloImagen(true)}
@@ -101,6 +102,18 @@ function PilotoDetalle() {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
   const temporada = searchParams.get("temporada") || "2026";
+
+  const location = useLocation();
+  const volverA = location.state?.volverA;
+  const vieneDeEscuderia =
+    typeof volverA === "string" &&
+    /^\/escuderias\/[a-z0-9_-]+\?temporada=\d{4}$/i.test(volverA);
+  const destinoVolver = vieneDeEscuderia
+    ? volverA
+    : `/clasificaciones?temporada=${temporada}`;
+  const textoVolver = vieneDeEscuderia
+    ? "Volver a escudería"
+    : "Volver a clasificaciones";
 
   const [datos, setDatos] = useState(null);
   const [cargando, setCargando] = useState(true);
@@ -156,11 +169,11 @@ function PilotoDetalle() {
       <main className={clasePagina}>
         <div className="mx-auto flex w-full max-w-[1500px] flex-col gap-5">
           <Link
-            to="/clasificaciones"
+            to={destinoVolver}
             className="inline-flex w-fit items-center gap-2 font-nav text-base font-bold text-[#d10c16] no-underline dark:text-[#ff6a6a]"
           >
             <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-            Volver a clasificaciones
+            {textoVolver}
           </Link>
           <div
             className={`flex items-center gap-3 rounded-2xl border p-6 ${
@@ -214,14 +227,14 @@ function PilotoDetalle() {
     <main className={clasePagina}>
       <div className="mx-auto flex w-full max-w-[1500px] flex-col gap-7">
         <Link
-          to="/clasificaciones"
+          to={destinoVolver}
           className="group inline-flex w-fit items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 font-nav text-base font-bold text-slate-700 no-underline transition-colors hover:text-[#e10600] dark:border-white/10 dark:bg-white/5 dark:text-gray-300 dark:hover:text-white"
         >
           <ArrowLeft
             className="h-4 w-4 transition-transform group-hover:-translate-x-1"
             aria-hidden="true"
           />
-          Volver a clasificaciones
+          {textoVolver}
         </Link>
 
         {/* Cabecera deportiva: cambia según la escudería de la temporada seleccionada. */}
@@ -265,14 +278,14 @@ function PilotoDetalle() {
           <div
             className={`relative z-10 grid min-w-0 grid-cols-1 ${
               mostrarRetrato
-                ? "grid-cols-[minmax(0,1fr)_minmax(108px,39%)] sm:grid-cols-[minmax(0,1fr)_minmax(260px,42%)]"
+                ? "h-[395px] grid-cols-[minmax(0,1fr)_minmax(108px,39%)] sm:h-[480px] sm:grid-cols-[minmax(0,1fr)_minmax(260px,42%)] lg:h-[520px]"
                 : "grid-cols-1"
             }`}
           >
             <div
               className={`relative flex min-w-0 flex-col justify-center ${
                 mostrarRetrato
-                  ? "gap-3 py-5 pl-4 pr-1 sm:gap-5 sm:p-8 lg:p-10"
+                  ? "justify-start gap-2 py-4 pl-3 pr-1 sm:justify-center sm:gap-5 sm:p-8 lg:p-10"
                   : "gap-5 p-6 sm:p-8 lg:p-10"
               }`}
             >
@@ -331,6 +344,29 @@ function PilotoDetalle() {
                 <span className="sm:hidden">{temporada}</span>
                 <span className="hidden sm:inline">Temporada {temporada}</span>
               </div>
+
+              {/* Estadísticas dentro de la cabecera, solo en móviles con retrato. */}
+              {mostrarRetrato && (
+                <div
+                  className="mt-auto grid grid-cols-2 gap-1.5 pt-1 sm:hidden"
+                  aria-label="Estadísticas de la temporada"
+                >
+                  {estadisticas.map(({ titulo, valor, Icono }) => (
+                    <div
+                      key={titulo}
+                      className="min-w-0 rounded-lg border border-white/25 bg-black/25 px-1.5 py-1.5 text-white backdrop-blur-[2px]"
+                    >
+                      <span className="flex items-center gap-1 font-nav text-[8px] font-bold uppercase leading-tight tracking-wide text-white/85">
+                        <Icono className="h-3 w-3 shrink-0" aria-hidden="true" />
+                        {titulo}
+                      </span>
+                      <strong className="mt-0.5 block truncate font-racing text-base font-extrabold leading-tight text-white">
+                        {valor}
+                      </strong>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {mostrarRetrato && (
@@ -348,7 +384,7 @@ function PilotoDetalle() {
         {/* Estadísticas: mantenemos los datos existentes. */}
         <section
           aria-label="Estadísticas del piloto"
-          className="grid grid-cols-2 gap-2 sm:gap-4 lg:grid-cols-4"
+          className={`${mostrarRetrato ? "hidden sm:grid" : "grid"} grid-cols-2 gap-2 sm:gap-4 lg:grid-cols-4`}
         >
           {estadisticas.map(({ titulo, valor, Icono }, indice) => (
             <motion.article
@@ -399,12 +435,32 @@ function PilotoDetalle() {
             <div className="grid gap-2 md:hidden">
               {carreras.map((carrera) => {
                 const resultado = carrera.Results?.[0];
+                const imagenFondoGP = obtenerImagenFondoGP(carrera);
                 return (
                   <article
                     key={carrera.round}
-                    className="min-w-0 rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-white/10 dark:bg-[#15151d]"
+                    className="relative isolate min-w-0 overflow-hidden rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-white/10 dark:bg-[#15151d]"
                   >
-                    <div className="mb-3 flex min-w-0 items-start gap-2">
+                    {/* El fondo es absoluto: no altera la altura ni el ancho de la tarjeta. */}
+                    {imagenFondoGP && (
+                      <div
+                        className="pointer-events-none absolute inset-0 z-0 overflow-hidden"
+                        aria-hidden="true"
+                      >
+                        <img
+                          src={imagenFondoGP}
+                          alt=""
+                          loading="lazy"
+                          decoding="async"
+                          className="h-full w-full scale-[1.06] object-cover object-center opacity-85 blur-[1px] dark:opacity-80"
+                          onError={(evento) => {
+                            evento.currentTarget.style.display = "none";
+                          }}
+                        />
+                        <div className="absolute inset-0 bg-white/75 dark:bg-[#101116]/70" />
+                      </div>
+                    )}
+                    <div className="relative z-10 mb-3 flex min-w-0 items-start gap-2">
                       <span className="inline-flex h-8 min-w-8 shrink-0 items-center justify-center rounded-lg bg-[#e10600]/10 px-1 font-racing text-sm font-extrabold text-[#b90000] dark:bg-[#e10600]/15 dark:text-[#ff7772]">
                         {carrera.round}
                       </span>
@@ -417,7 +473,7 @@ function PilotoDetalle() {
                         </h3>
                       </div>
                     </div>
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="relative z-10 grid grid-cols-3 gap-2">
                       <div className="min-w-0 rounded-lg bg-white px-2 py-2 text-center dark:bg-[#20212b]">
                         <span className="block text-[10px] font-bold uppercase tracking-wide text-slate-500 dark:text-gray-400">
                           Parrilla
