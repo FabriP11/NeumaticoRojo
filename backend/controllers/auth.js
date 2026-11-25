@@ -198,7 +198,7 @@ const iniciarSesion = async (req, res) => {
       },
       process.env.JWT_SECRET,
       {
-        expiresIn: '2h',
+        expiresIn: '7d',
         algorithm: 'HS256'
       }
     )
@@ -208,7 +208,7 @@ const iniciarSesion = async (req, res) => {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 2 * 60 * 60 * 1000,
+      maxAge: 7 * 24 * 60 * 60 * 1000,
       path: '/'
     })
 
@@ -326,7 +326,10 @@ const actualizarAvatar = async (req, res) => {
       }
     }
 
-    const [resultado] = await model.guardarAvatar(req.idUsuario, id_piloto_avatar)
+    const [resultado] = await model.guardarAvatar(
+      req.idUsuario,
+      id_piloto_avatar
+    )
 
     if (resultado.affectedRows === 0) {
       return res.status(404).json({

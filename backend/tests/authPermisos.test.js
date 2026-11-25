@@ -96,7 +96,8 @@ after(() => {
   else process.env.NODE_ENV = nodeEnvAnterior
   if (registroAbiertoAnterior === undefined) delete process.env.REGISTRO_ABIERTO
   else process.env.REGISTRO_ABIERTO = registroAbiertoAnterior
-  if (codigoInvitacionAnterior === undefined) delete process.env.CODIGO_INVITACION_BETA
+  if (codigoInvitacionAnterior === undefined)
+    delete process.env.CODIGO_INVITACION_BETA
   else process.env.CODIGO_INVITACION_BETA = codigoInvitacionAnterior
 })
 
@@ -317,7 +318,7 @@ test('login: acepta correo y crea cookie httpOnly con JWT valido', async () => {
   assert.equal(res.cookieEnviada.nombre, 'nr_sesion')
   assert.equal(res.cookieEnviada.opciones.httpOnly, true)
   assert.equal(res.cookieEnviada.opciones.sameSite, 'lax')
-  assert.equal(res.cookieEnviada.opciones.maxAge, 7200000)
+  assert.equal(res.cookieEnviada.opciones.maxAge, 604800000)
   assert.equal(res.cookieEnviada.opciones.secure, false) // NODE_ENV = test
   const datos = jwt.verify(res.cookieEnviada.valor, SECRET_PRUEBAS, {
     algorithms: ['HS256']
