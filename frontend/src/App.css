@@ -27,3 +27,118 @@ html.dark body {
   width: 100%;
   min-height: 100vh;
 }
+
+/* Etapa 1 · Respuesta táctil en celulares.
+   Scale es independiente de transform: no altera animaciones de Motion. */
+@media (hover: none) and (pointer: coarse) {
+  :where(
+    button:not(:disabled):not([aria-disabled="true"]):not([class*="inset-0"]):not([class*="active:scale-"]),
+    a[href][class*="rounded"]:not([aria-disabled="true"]):not([class*="active:scale-"]),
+    nav a[href]:not([aria-disabled="true"]):not([class*="active:scale-"])
+  ) {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    transition-property: scale, transform, color, background-color, border-color, box-shadow, opacity, filter;
+    transition-duration: 170ms;
+    transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  :where(
+    button:not(:disabled):not([aria-disabled="true"]):not([class*="inset-0"]):not([class*="active:scale-"]),
+    a[href][class*="rounded"]:not([aria-disabled="true"]):not([class*="active:scale-"]),
+    nav a[href]:not([aria-disabled="true"]):not([class*="active:scale-"])
+  ):active {
+    scale: 0.97;
+    filter: brightness(0.94);
+  }
+}
+
+/* La preferencia de accesibilidad evita el movimiento, pero conserva el feedback de color. */
+@media (prefers-reduced-motion: reduce) {
+  :where(button, nav a[href], a[href][class*="rounded"]) {
+    transition-duration: 0.01ms;
+  }
+  :where(button, nav a[href], a[href][class*="rounded"]):active {
+    scale: 1;
+  }
+}
+
+
+/* Etapa 2: etiquetas flotantes para los formularios de autenticación. */
+.nr-campo-flotante .nr-input-flotante {
+  min-height: 58px;
+  padding-top: 1.45rem;
+  padding-bottom: .45rem;
+}
+.nr-campo-flotante .nr-label-flotante {
+  position: absolute;
+  z-index: 1;
+  top: 50%;
+  left: 3rem;
+  max-width: calc(100% - 6rem);
+  transform: translateY(-50%);
+  transform-origin: left top;
+  color: #a6a6b2;
+  font-family: "Rajdhani", Arial, sans-serif;
+  font-size: .94rem;
+  font-weight: 600;
+  line-height: 1;
+  pointer-events: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: top 180ms ease, transform 180ms ease, font-size 180ms ease, color 180ms ease;
+}
+.nr-campo-flotante .nr-input-flotante:focus ~ .nr-label-flotante,
+.nr-campo-flotante .nr-input-flotante:not(:placeholder-shown) ~ .nr-label-flotante {
+  top: .6rem;
+  transform: none;
+  font-size: .7rem;
+  color: #ff7771;
+}
+.nr-campo-flotante .nr-input-flotante:-webkit-autofill ~ .nr-label-flotante {
+  top: .6rem;
+  transform: none;
+  font-size: .7rem;
+}
+@media (prefers-reduced-motion: reduce) {
+  .nr-campo-flotante .nr-label-flotante { transition: none; }
+}
+
+/* Etapa 4: navegación por teclado, pantalla completa y contraste del foco. */
+.nr-saltar-contenido {
+  position: fixed;
+  top: calc(env(safe-area-inset-top, 0px) + 0.75rem);
+  left: 1rem;
+  z-index: 200;
+  padding: .75rem 1rem;
+  color: #fff;
+  background: #b90b06;
+  border-radius: .75rem;
+  font: 700 1rem "Rajdhani", Arial, sans-serif;
+  text-decoration: none;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, .25);
+  transform: translateY(-180%);
+}
+.nr-saltar-contenido:focus-visible {
+  transform: translateY(0);
+  outline: 3px solid #fff;
+  outline-offset: 2px;
+}
+
+#nr-contenido { scroll-margin-top: 6rem; }
+:where(button, a[href], input, select, textarea, [role="button"]):focus-visible {
+  outline: 2px solid #e10600;
+  outline-offset: 3px;
+}
+
+/* Accesibilidad: suspender efectos continuos si se reduce el movimiento. */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

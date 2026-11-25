@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { Toaster } from "sonner";
 import { Routes, Route, Link, NavLink, useLocation } from "react-router";
 import {
   ArrowRight,
@@ -44,6 +45,27 @@ const enlacesNavegacion = [
   { ruta: "/pilotos", nombre: "Pilotos", Icono: UserRound },
   { ruta: "/escuderias", nombre: "Escuderías", Icono: UsersRound },
 ];
+
+// La barra inferior muestra los cuatro accesos principales y un botón «Más».
+const enlacesInferiores = enlacesNavegacion.slice(0, 4);
+
+const titulosSecciones = {
+  "/": "Inicio",
+  "/calendario": "Calendario",
+  "/resultados": "Resultados",
+  "/clasificaciones": "Clasificaciones",
+  "/pilotos": "Pilotos",
+  "/escuderias": "Escuderías",
+  "/login": "Iniciar sesión",
+  "/registro": "Registro",
+  "/mi-perfil": "Mi perfil",
+};
+
+function nombrePagina(ruta) {
+  return titulosSecciones[ruta] ||
+    (ruta.startsWith("/pilotos/") ? "Piloto" :
+      ruta.startsWith("/escuderias/") ? "Escudería" : "Neumático Rojo");
+}
 
 function ScrollArriba() {
   const location = useLocation();
@@ -154,8 +176,17 @@ function App() {
   const location = useLocation();
   const reducirMovimiento = useReducedMotion();
   const lateralRef = useRef(null);
+
+  // Título legible al navegar y al volver con el historial del navegador.
+  useEffect(() => {
+    document.title = `${nombrePagina(location.pathname)} | Neumático Rojo`;
+  }, [location.pathname]);
   const [menuAbierto, setMenuAbierto] = useState(false);
   const [headerConSombra, setHeaderConSombra] = useState(false);
+  const [headerCompacto, setHeaderCompacto] = useState(false);
+  const seccionEnMas = ["/pilotos", "/escuderias", "/mi-perfil", "/login", "/registro"].some(
+    (ruta) => location.pathname === ruta || location.pathname.startsWith(`${ruta}/`),
+  );
 
   // Modo oscuro predeterminado, con preferencia guardada en el navegador.
   const [modoOscuro, setModoOscuro] = useState(() => {
@@ -169,6 +200,9 @@ function App() {
   useEffect(() => {
     document.documentElement.classList.toggle("dark", modoOscuro);
     document.documentElement.style.colorScheme = modoOscuro ? "dark" : "light";
+    document.querySelector('meta[name="theme-color"]')?.setAttribute(
+      "content", modoOscuro ? "#101116" : "#f4f5f8",
+    );
 
     try {
       window.localStorage.setItem("nr-tema", modoOscuro ? "oscuro" : "claro");
@@ -177,9 +211,14 @@ function App() {
     }
   }, [modoOscuro]);
 
-  // La sombra aparece cuando el usuario comienza a desplazarse.
+  // En móvil el encabezado se compacta al bajar y recupera su altura al subir.
+  // Dos umbrales evitan que oscile cuando cambia la altura del propio header.
   useEffect(() => {
-    const actualizar = () => setHeaderConSombra(window.scrollY > 16);
+    const actualizar = () => {
+      const scroll = Math.max(0, window.scrollY);
+      setHeaderConSombra(scroll > 16);
+      setHeaderCompacto((actual) => (actual ? scroll > 48 : scroll > 120));
+    };
     actualizar();
     window.addEventListener("scroll", actualizar, { passive: true });
     return () => window.removeEventListener("scroll", actualizar);
@@ -236,8 +275,11 @@ function App() {
   }, [menuAbierto]);
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#f4f5f8] text-[#15151d] transition-colors duration-300 dark:bg-[#101116] dark:text-white">
+    <div className="flex min-h-screen flex-col bg-[#f4f5f8] pb-[calc(5rem+env(safe-area-inset-bottom))] text-[#15151d] transition-colors duration-300 lg:pb-0 dark:bg-[#101116] dark:text-white">
       <ScrollArriba />
+      <a href="#nr-contenido" className="nr-saltar-contenido">
+        Saltar al contenido
+      </a>
       {/* BARRA SUPERIOR */}
       <header
         className={`sticky top-0 z-40 border-b border-[#dedfe5] backdrop-blur-xl transition-[background-color,box-shadow] duration-300 dark:border-white/10 ${
@@ -248,19 +290,35 @@ function App() {
       >
         <div className="h-1 w-full bg-[#e10600]" />
 
-        <div className="mx-auto flex min-h-[76px] w-full max-w-[1500px] items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+        <div
+          className={`mx-auto flex w-full max-w-[1500px] items-center justify-between gap-4 px-4 transition-[min-height] duration-300 ease-out motion-reduce:transition-none sm:px-6 lg:min-h-[76px] lg:px-8 ${
+            headerCompacto ? "min-h-[60px]" : "min-h-[76px]"
+          }`}
+        >
           {/* IDENTIDAD VISUAL */}
           <Link
             to="/"
             className="group flex min-w-0 shrink-0 flex-col no-underline transition-transform duration-200 hover:scale-[1.015] motion-reduce:transform-none"
           >
-            <span className="font-racing text-xl font-extrabold uppercase italic tracking-tight text-[#15151d] sm:text-2xl dark:text-white">
+            <span
+              className={`font-racing font-extrabold uppercase italic tracking-tight text-[#15151d] transition-[font-size] duration-300 motion-reduce:transition-none dark:text-white ${
+                headerCompacto
+                  ? "text-lg sm:text-xl lg:text-2xl"
+                  : "text-xl sm:text-2xl"
+              }`}
+            >
               NEUMATICO
               <span className="text-[#e10600] transition-colors group-hover:text-red-500">
                 ROJO
               </span>
             </span>
-            <span className="font-nav text-[10px] font-bold uppercase tracking-[0.24em] text-[#777b86] dark:text-[#a5a8b4]">
+            <span
+              className={`font-nav text-[10px] font-bold uppercase tracking-[0.24em] text-[#777b86] transition-[max-height,opacity] duration-300 motion-reduce:transition-none dark:text-[#a5a8b4] ${
+                headerCompacto
+                  ? "max-h-0 overflow-hidden opacity-0 lg:max-h-5 lg:opacity-100"
+                  : "max-h-5 opacity-100"
+              }`}
+            >
               FORMULA 1 · ESTADÍSTICAS
             </span>
           </Link>
@@ -324,7 +382,7 @@ function App() {
             <button
               type="button"
               onClick={() => setMenuAbierto(true)}
-              className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-[#dedfe5] bg-[#f6f7fa] text-[#282a34] shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-[#e10600] hover:text-[#e10600] hover:shadow-md active:scale-95 motion-reduce:transform-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e10600] dark:border-white/15 dark:bg-[#292b35] dark:text-white dark:hover:text-[#ff5c56]"
+              className="hidden lg:inline-flex h-11 w-11 items-center justify-center rounded-xl border border-[#dedfe5] bg-[#f6f7fa] text-[#282a34] shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-[#e10600] hover:text-[#e10600] hover:shadow-md active:scale-95 motion-reduce:transform-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e10600] dark:border-white/15 dark:bg-[#292b35] dark:text-white dark:hover:text-[#ff5c56]"
               aria-label="Abrir menú de navegación"
               aria-expanded={menuAbierto}
               aria-controls="nr-menu-lateral"
@@ -418,16 +476,16 @@ function App() {
                 ))}
               </nav>
 
-              {/* CUENTA: VISIBLE AQUÍ CUANDO NO APARECE EN LA CABECERA */}
-              <div className="mt-8 border-t border-[#dfe1e6] pt-5 xl:hidden dark:border-white/15">
-                <p className="mb-3 font-nav text-xs font-bold uppercase tracking-widest text-[#777b86] dark:text-[#a5a8b4]">
-                  MI CUENTA
-                </p>
-                <SesionMenu />
-              </div>
+              {/* CUENTA Y PIE AGRUPADOS AL FINAL DEL MENÚ */}
+              <div className="mt-auto pt-6">
+                <div className="border-t border-[#dfe1e6] pt-5 xl:hidden dark:border-white/15">
+                  <p className="mb-3 font-nav text-xs font-bold uppercase tracking-widest text-[#777b86] dark:text-[#a5a8b4]">
+                    MI CUENTA
+                  </p>
+                  <SesionMenu desplegarArriba />
+                </div>
 
-              <div className="mt-auto pt-10">
-                <p className="border-t border-[#dfe1e6] pt-4 font-nav text-xs text-[#777b86] dark:border-white/15 dark:text-[#9da0ab]">
+                <p className="mt-4 border-t border-[#dfe1e6] pt-3 font-nav text-xs text-[#777b86] dark:border-white/15 dark:text-[#9da0ab]">
                   Resultados, calendario y estadísticas de Fórmula 1.
                 </p>
               </div>
@@ -440,6 +498,8 @@ function App() {
       <AnimatePresence mode="wait" initial={false}>
         <motion.div
           key={location.pathname}
+          id="nr-contenido"
+          tabIndex={-1}
           initial={reducirMovimiento ? false : { opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           exit={reducirMovimiento ? undefined : { opacity: 0, y: -6 }}
@@ -469,7 +529,95 @@ function App() {
           </Suspense>
         </motion.div>
       </AnimatePresence>
+      <Toaster
+        theme={modoOscuro ? "dark" : "light"}
+        position="top-center"
+        richColors
+        closeButton
+        duration={3200}
+        toastOptions={{
+          style: {
+            fontFamily: "Rajdhani, sans-serif",
+            fontSize: "14px",
+            fontWeight: 600,
+          },
+        }}
+      />
       <Footer />
+
+      {/* NAVEGACIÓN INFERIOR: solo en móvil y tablet. */}
+      <nav
+        aria-label="Navegación rápida móvil"
+        className="fixed inset-x-0 bottom-0 z-[60] border-t border-[#dedfe5] bg-white/95 shadow-[0_-8px_30px_rgba(0,0,0,0.08)] backdrop-blur-xl lg:hidden dark:border-white/10 dark:bg-[#15151d]/95 dark:shadow-[0_-8px_30px_rgba(0,0,0,0.35)]"
+        style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
+      >
+        <div className="mx-auto grid max-w-xl grid-cols-5 gap-0.5 px-2 pb-1 pt-2">
+          {enlacesInferiores.map(({ ruta, nombre, Icono }) => (
+            <NavLink
+              key={ruta}
+              to={ruta}
+              end={ruta === "/"}
+              aria-label={nombre}
+              className={({ isActive }) =>
+                `flex min-h-14 min-w-0 flex-col items-center justify-center gap-0.5 rounded-xl font-nav text-[10px] font-bold no-underline transition-transform active:scale-95 motion-reduce:transform-none focus-visible:outline-2 focus-visible:outline-[#e10600] ${
+                  isActive
+                    ? "text-[#d10702] dark:text-[#ff625c]"
+                    : "text-[#666a75] dark:text-[#a8aab5]"
+                }`
+              }
+            >
+              {({ isActive }) => (
+                <>
+                  <span className="relative flex h-8 w-12 items-center justify-center rounded-xl">
+                    {isActive && (
+                      <motion.span
+                        layoutId="indicador-navegacion-movil"
+                        className="absolute inset-0 rounded-xl bg-[#e10600]/10 dark:bg-[#e10600]/20"
+                        transition={
+                          reducirMovimiento
+                            ? { duration: 0 }
+                            : { type: "spring", stiffness: 450, damping: 36 }
+                        }
+                      />
+                    )}
+                    <Icono className="relative z-10 h-5 w-5" aria-hidden="true" />
+                  </span>
+                  <span>{ruta === "/clasificaciones" ? "Clasif." : nombre}</span>
+                </>
+              )}
+            </NavLink>
+          ))}
+
+          <button
+            type="button"
+            onClick={() => setMenuAbierto(true)}
+            aria-label="Abrir más opciones"
+            aria-expanded={menuAbierto}
+            aria-controls="nr-menu-lateral"
+            className={`flex min-h-14 min-w-0 flex-col items-center justify-center gap-0.5 rounded-xl font-nav text-[10px] font-bold transition-transform active:scale-95 motion-reduce:transform-none focus-visible:outline-2 focus-visible:outline-[#e10600] ${
+              seccionEnMas || menuAbierto
+                ? "text-[#d10702] dark:text-[#ff625c]"
+                : "text-[#666a75] dark:text-[#a8aab5]"
+            }`}
+          >
+            <span className="relative flex h-8 w-12 items-center justify-center rounded-xl">
+              {seccionEnMas && (
+                <motion.span
+                  layoutId="indicador-navegacion-movil"
+                  className="absolute inset-0 rounded-xl bg-[#e10600]/10 dark:bg-[#e10600]/20"
+                  transition={
+                    reducirMovimiento
+                      ? { duration: 0 }
+                      : { type: "spring", stiffness: 450, damping: 36 }
+                  }
+                />
+              )}
+              <Menu className="relative z-10 h-5 w-5" aria-hidden="true" />
+            </span>
+            <span>Más</span>
+          </button>
+        </div>
+      </nav>
     </div>
   );
 }

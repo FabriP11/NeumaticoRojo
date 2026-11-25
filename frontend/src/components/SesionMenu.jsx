@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import { Link, useNavigate } from "react-router";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import FotoPiloto from "./FotoPiloto";
@@ -14,7 +15,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
-function SesionMenu() {
+function SesionMenu({ desplegarArriba = false }) {
   const { usuario, comprobandoSesion, cerrarSesion } = useAuth();
   const reducirMovimiento = useReducedMotion();
   const navigate = useNavigate();
@@ -54,10 +55,12 @@ function SesionMenu() {
 
     try {
       await cerrarSesion();
+      toast.success("Sesión cerrada correctamente");
       setAbierto(false);
       navigate("/", { replace: true });
     } catch (error) {
       setError(error.message);
+      toast.error(error.message);
     } finally {
       setCerrando(false);
     }
@@ -143,17 +146,17 @@ function SesionMenu() {
           <motion.div
             key="menu-cuenta"
             initial={
-              reducirMovimiento ? false : { opacity: 0, y: -8, scale: 0.98 }
+              reducirMovimiento ? false : { opacity: 0, y: desplegarArriba ? 8 : -8, scale: 0.98 }
             }
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={
               reducirMovimiento
                 ? { opacity: 0 }
-                : { opacity: 0, y: -8, scale: 0.98 }
+                : { opacity: 0, y: desplegarArriba ? 8 : -8, scale: 0.98 }
             }
             transition={{ duration: reducirMovimiento ? 0 : 0.18 }}
             id="menu-cuenta"
-            className="absolute right-0 top-full z-[100] mt-3 w-64 max-w-[calc(100vw-2rem)] overflow-hidden rounded-xl border border-slate-200 bg-white p-2 text-slate-900 shadow-2xl dark:border-white/15 dark:bg-[#20212b] dark:text-white"
+            className={`absolute right-0 z-[100] w-64 max-w-[calc(100vw-2rem)] overflow-hidden rounded-xl border border-slate-200 bg-white p-2 text-slate-900 shadow-2xl dark:border-white/15 dark:bg-[#20212b] dark:text-white ${desplegarArriba ? "bottom-full mb-3" : "top-full mt-3"}`}
           >
             {/* Identidad de la cuenta */}
             <div className="border-b border-slate-200 px-3 py-3 dark:border-white/10">
