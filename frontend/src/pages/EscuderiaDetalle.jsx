@@ -248,7 +248,7 @@ function EscuderiaDetalle() {
   const pilotosEncabezado = es2026 ? pilotosTitulares2026 : pilotos;
 
   return (
-    <main className="min-h-[calc(100dvh-76px)] bg-[#f4f5f8] px-4 py-4 text-gray-900 sm:px-6 dark:bg-[#15151d] dark:text-white">
+    <main className="bg-[#f4f5f8] px-4 pb-8 pt-4 text-gray-900 sm:px-6 dark:bg-[#15151d] dark:text-white">
       <div className="mx-auto flex w-full max-w-[1500px] flex-col gap-3">
         <Link
           to={volver}
@@ -315,6 +315,7 @@ function EscuderiaDetalle() {
                     <Link
                       key={piloto.driverId}
                       to={`/pilotos/${piloto.driverId}?temporada=${temporada}`}
+                      state={{ volverA: `/escuderias/${id}?temporada=${temporada}` }}
                       aria-label={`Ver perfil de ${piloto.givenName} ${piloto.familyName}`}
                       className="group inline-flex min-h-11 max-w-full items-center gap-1.5 rounded-full border border-white/20 bg-black/30 py-1 pl-1 pr-2.5 text-white no-underline backdrop-blur-sm transition-colors hover:border-white/60 hover:bg-black/50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
                     >
