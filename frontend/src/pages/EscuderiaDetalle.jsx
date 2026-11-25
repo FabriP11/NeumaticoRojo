@@ -108,7 +108,7 @@ function obtenerPilotosTitulares2026(idEscuderia, pilotos) {
     .filter(Boolean);
 }
 
-const EXTENSIONES_LOGO = ["webp", "png", "jpg", "jpeg", "avif", "svg"];
+const EXTENSIONES_LOGO = ["png", "avif", "webp", "jpg", "jpeg", "svg"];
 
 function LogoEscuderia({ id, nombre }) {
   const archivo = nombresLogo[id];
@@ -128,6 +128,7 @@ function LogoEscuderia({ id, nombre }) {
         src={`/escuderias/${archivo}.${EXTENSIONES_LOGO[indice]}`}
         alt={`Logo de ${nombre}`}
         className="max-h-full max-w-full object-contain"
+        loading="eager"
         decoding="async"
         onError={() => {
           if (indice + 1 < EXTENSIONES_LOGO.length) {

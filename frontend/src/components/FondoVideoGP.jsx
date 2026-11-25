@@ -1,22 +1,33 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
 
-// Fondo decorativo de TODO el banner. En móvil no se monta ningún <video>.
+// Fondo decorativo: se evita solicitar el vídeo en móvil, tablet y ahorro de datos.
 export default function FondoVideoGP({ esSemanaCarrera }) {
   const videoRef = useRef(null);
   const reducirMovimiento = useReducedMotion();
   const [mostrarVideo, setMostrarVideo] = useState(false);
 
   useEffect(() => {
-    const escritorio = window.matchMedia("(min-width: 640px)");
+    const escritorio = window.matchMedia("(min-width: 1024px)");
+    const ahorroDatos = window.matchMedia("(prefers-reduced-data: reduce)");
     function actualizar() {
-      setMostrarVideo(escritorio.matches && !document.hidden && !reducirMovimiento);
+      setMostrarVideo(
+        escritorio.matches &&
+        !ahorroDatos.matches &&
+        !navigator.connection?.saveData &&
+        !document.hidden &&
+        !reducirMovimiento,
+      );
     }
     actualizar();
     escritorio.addEventListener("change", actualizar);
+    ahorroDatos.addEventListener("change", actualizar);
+    navigator.connection?.addEventListener?.("change", actualizar);
     document.addEventListener("visibilitychange", actualizar);
     return () => {
       escritorio.removeEventListener("change", actualizar);
+      ahorroDatos.removeEventListener("change", actualizar);
+      navigator.connection?.removeEventListener?.("change", actualizar);
       document.removeEventListener("visibilitychange", actualizar);
     };
   }, [reducirMovimiento]);
