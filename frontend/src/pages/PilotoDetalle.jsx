@@ -62,9 +62,9 @@ function RetratoPiloto({ idPiloto, nombre, temporada, reducirMovimiento }) {
   if (String(temporada) !== "2026") return null;
 
   return (
-    <div className="relative flex h-[200px] w-full items-end justify-center overflow-hidden sm:h-[400px] lg:h-[400px]">
+    <div className="relative flex h-full min-h-[250px] w-full min-w-0 items-end justify-center overflow-hidden sm:min-h-[400px]">
       <div
-        className="pointer-events-none absolute bottom-[-175px] left-1/2 h-[460px] w-[460px] -translate-x-1/2 rounded-full border border-white/15 bg-black/10"
+        className="pointer-events-none absolute -bottom-24 left-1/2 h-[260px] w-[260px] -translate-x-1/2 rounded-full border border-white/15 bg-black/10 sm:-bottom-[175px] sm:h-[460px] sm:w-[460px]"
         aria-hidden="true"
       />
       {archivo && !falloImagen ? (
@@ -78,7 +78,7 @@ function RetratoPiloto({ idPiloto, nombre, temporada, reducirMovimiento }) {
           }}
           src={`/pilotos/2026/${archivo}.avif`}
           alt={`Fotografía de ${nombre} en la temporada 2026`}
-          className="pointer-events-none relative z-10 block h-full w-full max-w-[480px] translate-y-[5px] origin-bottom scale-[1.00] object-contain object-bottom drop-shadow-[0_12px_18px_rgba(0,0,0,.35)]"
+          className="pointer-events-none relative z-10 block h-full w-full max-w-[480px] origin-bottom scale-[1.07] object-contain object-bottom drop-shadow-[0_12px_18px_rgba(0,0,0,.35)] sm:scale-100"
           loading="eager"
           decoding="async"
           onError={() => setFalloImagen(true)}
@@ -86,7 +86,7 @@ function RetratoPiloto({ idPiloto, nombre, temporada, reducirMovimiento }) {
       ) : (
         <div className="relative z-10 flex h-full items-center justify-center text-white/55">
           <UserRound
-            className="h-32 w-32"
+            className="h-16 w-16 sm:h-32 sm:w-32"
             strokeWidth={1.25}
             aria-hidden="true"
           />
@@ -265,22 +265,34 @@ function PilotoDetalle() {
           <div
             className={`relative z-10 grid min-w-0 grid-cols-1 ${
               mostrarRetrato
-                ? "lg:grid-cols-[minmax(0,1fr)_minmax(300px,42%)]"
-                : "lg:grid-cols-1"
+                ? "grid-cols-[minmax(0,1fr)_minmax(108px,39%)] sm:grid-cols-[minmax(0,1fr)_minmax(260px,42%)]"
+                : "grid-cols-1"
             }`}
           >
-            <div className="relative flex min-w-0 flex-col justify-center gap-5 p-6 sm:p-8 lg:p-10">
-              <p className="m-0 flex items-center gap-2 font-nav text-sm font-bold uppercase tracking-[.22em] text-white/90">
+            <div
+              className={`relative flex min-w-0 flex-col justify-center ${
+                mostrarRetrato
+                  ? "gap-3 py-5 pl-4 pr-1 sm:gap-5 sm:p-8 lg:p-10"
+                  : "gap-5 p-6 sm:p-8 lg:p-10"
+              }`}
+            >
+              <p className="m-0 flex items-center gap-1.5 font-nav text-[10px] font-bold uppercase tracking-[.12em] text-white/90 sm:gap-2 sm:text-sm sm:tracking-[.22em]">
                 <UserRound className="h-4 w-4" aria-hidden="true" />
                 Perfil de piloto
               </p>
 
               <div>
-                <h1 className="m-0 max-w-3xl font-racing text-3xl font-extrabold uppercase italic leading-tight tracking-tight text-white sm:text-5xl lg:text-[clamp(2.3rem,4vw,4.4rem)]">
+                <h1
+                  className={`m-0 max-w-3xl break-words font-racing font-extrabold uppercase italic leading-tight tracking-tight text-white ${
+                    mostrarRetrato
+                      ? "text-[clamp(1.15rem,6vw,1.8rem)] sm:text-5xl lg:text-[clamp(2.3rem,4vw,4.4rem)]"
+                      : "text-3xl sm:text-5xl lg:text-[clamp(2.3rem,4vw,4.4rem)]"
+                  }`}
+                >
                   {nombre}
                 </h1>
                 {dorsal && (
-                  <div className="mt-3 inline-flex items-center gap-2 rounded-full border border-white/25 bg-black/20 px-3 py-1 font-racing text-sm font-extrabold text-white backdrop-blur-sm">
+                  <div className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-white/25 bg-black/20 px-2 py-1 font-racing text-xs font-extrabold text-white backdrop-blur-sm sm:mt-3 sm:gap-2 sm:px-3 sm:text-sm">
                     #{dorsal}
                     <span className="font-nav font-semibold text-white/75">
                       Dorsal
@@ -289,7 +301,7 @@ function PilotoDetalle() {
                 )}
               </div>
 
-              <div className="flex flex-wrap items-center gap-x-5 gap-y-3 font-nav text-base font-semibold text-white/95">
+              <div className="flex min-w-0 flex-col items-start gap-2 font-nav text-xs font-semibold text-white/95 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-5 sm:gap-y-3 sm:text-base">
                 <span className="inline-flex items-center gap-2">
                   <Globe2 className="h-4 w-4 shrink-0" aria-hidden="true" />
                   {piloto.nationality}
@@ -297,10 +309,10 @@ function PilotoDetalle() {
                 {idEquipo ? (
                   <Link
                     to={`/escuderias/${idEquipo}?temporada=${temporada}`}
-                    className="inline-flex items-center gap-2 rounded-lg border border-white/20 bg-black/25 px-3 py-1.5 text-white no-underline transition-colors hover:bg-black/40"
+                    className="inline-flex max-w-full min-w-0 items-center gap-1.5 rounded-lg border border-white/20 bg-black/25 px-2 py-1.5 text-white no-underline transition-colors hover:bg-black/40 sm:gap-2 sm:px-3"
                   >
                     <Flag className="h-4 w-4 shrink-0" aria-hidden="true" />
-                    {escuderias}
+                    <span className="min-w-0 break-words">{escuderias}</span>
                     <ArrowUpRight
                       className="h-4 w-4 shrink-0 opacity-80"
                       aria-hidden="true"
@@ -314,9 +326,10 @@ function PilotoDetalle() {
                 )}
               </div>
 
-              <div className="mt-1 inline-flex w-fit items-center gap-2 rounded-lg border border-white/20 bg-black/25 px-4 py-2.5 font-nav text-base font-bold text-white backdrop-blur-sm">
+              <div className="mt-1 inline-flex max-w-full w-fit items-center gap-1.5 rounded-lg border border-white/20 bg-black/25 px-2 py-2 font-nav text-xs font-bold text-white backdrop-blur-sm sm:gap-2 sm:px-4 sm:py-2.5 sm:text-base">
                 <CalendarDays className="h-4 w-4" aria-hidden="true" />
-                Temporada {temporada}
+                <span className="sm:hidden">{temporada}</span>
+                <span className="hidden sm:inline">Temporada {temporada}</span>
               </div>
             </div>
 
@@ -335,7 +348,7 @@ function PilotoDetalle() {
         {/* Estadísticas: mantenemos los datos existentes. */}
         <section
           aria-label="Estadísticas del piloto"
-          className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4"
+          className="grid grid-cols-2 gap-2 sm:gap-4 lg:grid-cols-4"
         >
           {estadisticas.map(({ titulo, valor, Icono }, indice) => (
             <motion.article
@@ -348,24 +361,24 @@ function PilotoDetalle() {
                 duration: reducirMovimiento ? 0 : 0.32,
                 delay: reducirMovimiento ? 0 : indice * 0.055,
               }}
-              className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition-colors hover:border-slate-300 dark:border-white/10 dark:bg-[#20212b] dark:shadow-md dark:hover:border-white/20"
+              className="min-w-0 rounded-xl border border-slate-200 bg-white p-3 shadow-sm transition-colors hover:border-slate-300 sm:p-5 dark:border-white/10 dark:bg-[#20212b] dark:shadow-md dark:hover:border-white/20"
             >
-              <div className="mb-4 flex items-center gap-2 font-nav text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-gray-400">
+              <div className="mb-2 flex items-center gap-1.5 font-nav text-[10px] font-bold uppercase tracking-wide text-slate-500 sm:mb-4 sm:gap-2 sm:text-xs sm:tracking-widest dark:text-gray-400">
                 <Icono
                   className="h-5 w-5 shrink-0 text-[#e10600]"
                   aria-hidden="true"
                 />
                 {titulo}
               </div>
-              <strong className="block font-racing text-3xl font-extrabold tracking-tight text-[#15151d] sm:text-4xl dark:text-white">
+              <strong className="block font-racing text-2xl font-extrabold tracking-tight text-[#15151d] sm:text-4xl dark:text-white">
                 {valor}
               </strong>
             </motion.article>
           ))}
         </section>
 
-        {/* Resultados de la temporada: conserva exactamente la estructura anterior. */}
-        <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7 dark:border-white/10 dark:bg-[#20212b] dark:shadow-lg">
+        {/* Historial: tarjetas en móvil y tabla original desde pantallas medianas. */}
+        <section className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:p-7 dark:border-white/10 dark:bg-[#20212b] dark:shadow-lg">
           <div className="mb-6 flex items-start gap-3 border-l-4 border-[#e10600] pl-4">
             <ListOrdered
               className="mt-1 h-6 w-6 shrink-0 text-[#e10600]"
@@ -381,7 +394,63 @@ function PilotoDetalle() {
             </div>
           </div>
 
-          <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white dark:border-white/10 dark:bg-[#15151d]">
+          {/* Vista compacta en móvil: todas las columnas visibles sin scroll horizontal. */}
+          {carreras.length > 0 && (
+            <div className="grid gap-2 md:hidden">
+              {carreras.map((carrera) => {
+                const resultado = carrera.Results?.[0];
+                return (
+                  <article
+                    key={carrera.round}
+                    className="min-w-0 rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-white/10 dark:bg-[#15151d]"
+                  >
+                    <div className="mb-3 flex min-w-0 items-start gap-2">
+                      <span className="inline-flex h-8 min-w-8 shrink-0 items-center justify-center rounded-lg bg-[#e10600]/10 px-1 font-racing text-sm font-extrabold text-[#b90000] dark:bg-[#e10600]/15 dark:text-[#ff7772]">
+                        {carrera.round}
+                      </span>
+                      <div className="min-w-0">
+                        <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500 dark:text-gray-400">
+                          Gran Premio · Ronda {carrera.round}
+                        </p>
+                        <h3 className="mt-0.5 break-words font-nav text-sm font-bold leading-snug text-[#15151d] dark:text-white">
+                          {carrera.raceName}
+                        </h3>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2">
+                      <div className="min-w-0 rounded-lg bg-white px-2 py-2 text-center dark:bg-[#20212b]">
+                        <span className="block text-[10px] font-bold uppercase tracking-wide text-slate-500 dark:text-gray-400">
+                          Parrilla
+                        </span>
+                        <strong className="mt-1 block font-racing text-base text-[#15151d] dark:text-white">
+                          {resultado?.grid ?? "—"}
+                        </strong>
+                      </div>
+                      <div className="min-w-0 rounded-lg bg-white px-2 py-2 text-center dark:bg-[#20212b]">
+                        <span className="block text-[10px] font-bold uppercase tracking-wide text-slate-500 dark:text-gray-400">
+                          Posición
+                        </span>
+                        <strong className="mt-1 block font-racing text-base text-[#15151d] dark:text-white">
+                          {resultado?.positionText || "—"}
+                        </strong>
+                      </div>
+                      <div className="min-w-0 rounded-lg bg-[#e10600]/10 px-2 py-2 text-center dark:bg-[#e10600]/15">
+                        <span className="block text-[10px] font-bold uppercase tracking-wide text-[#a30808] dark:text-[#ffaba7]">
+                          Puntos
+                        </span>
+                        <strong className="mt-1 block font-racing text-base text-[#b90000] dark:text-[#ff7772]">
+                          {resultado?.points ?? "—"}
+                        </strong>
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Tabla original para tablets y computadoras. */}
+          <div className="hidden overflow-x-auto rounded-xl border border-slate-200 bg-white md:block dark:border-white/10 dark:bg-[#15151d]">
             <table className="w-full min-w-[650px] border-collapse text-left font-nav text-sm">
               <thead className="bg-slate-100 font-nav text-xs uppercase tracking-wider text-slate-600 dark:bg-[#292b36] dark:text-gray-300">
                 <tr>
