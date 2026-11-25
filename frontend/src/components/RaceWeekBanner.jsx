@@ -5,6 +5,7 @@ import { obtenerColorEscuderia } from "../utils/coloresF1";
 import FondoVideoGP from "./FondoVideoGP";
 import CampanitaRecordatorios from "./CampanitaRecordatorios";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { SkeletonRaceWeek } from "./Skeletons";
 import {
   AlertCircle,
   ArrowRight,
@@ -13,7 +14,6 @@ import {
   ChevronRight,
   Clock3,
   Flag,
-  LoaderCircle,
   MapPin,
 } from "lucide-react";
 
@@ -228,6 +228,7 @@ function RaceWeekBanner({ onEstadoSemana }) {
   // null: mostrar automáticamente el GP de esta semana (o el siguiente).
   // Al navegar, conservar la ronda elegida hasta que se recargue Inicio.
   const [rondaSeleccionada, setRondaSeleccionada] = useState(null);
+  const [direccionNavegacion, setDireccionNavegacion] = useState(1);
 
   // Reloj actualizado cada segundo
   const [ahora, setAhora] = useState(Date.now());
@@ -354,6 +355,7 @@ function RaceWeekBanner({ onEstadoSemana }) {
     const siguienteIndice = indiceActual + desplazamiento;
     if (siguienteIndice < 0 || siguienteIndice >= carrerasOrdenadas.length)
       return;
+    setDireccionNavegacion(desplazamiento > 0 ? 1 : -1);
     setRondaSeleccionada(String(carrerasOrdenadas[siguienteIndice].round));
   }
 
@@ -524,17 +526,7 @@ function RaceWeekBanner({ onEstadoSemana }) {
   }, [temporadaCarrera, fechaGP, carrera]);
 
   // La lógica de fechas, resultados y consultas permanece igual.
-  if (cargando) {
-    return (
-      <div className={cajaMensaje} role="status">
-        <LoaderCircle
-          className="mx-auto mb-3 h-6 w-6 animate-spin text-[#e10600]"
-          aria-hidden="true"
-        />
-        Cargando calendario...
-      </div>
-    );
-  }
+  if (cargando) return <SkeletonRaceWeek />;
 
   if (error) {
     return (
@@ -663,9 +655,9 @@ function RaceWeekBanner({ onEstadoSemana }) {
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={`${temporadaCarrera}-${rondaCarrera}`}
-            initial={reducirMovimiento ? false : { opacity: 0, x: -14 }}
+            initial={reducirMovimiento ? false : { opacity: 0, x: direccionNavegacion * 18 }}
             animate={{ opacity: 1, x: 0 }}
-            exit={reducirMovimiento ? undefined : { opacity: 0, x: -10 }}
+            exit={reducirMovimiento ? undefined : { opacity: 0, x: direccionNavegacion * -18 }}
             transition={{
               duration: reducirMovimiento ? 0 : 0.36,
               ease: "easeOut",
@@ -731,6 +723,7 @@ function RaceWeekBanner({ onEstadoSemana }) {
                           alt=""
                           className="h-full w-full object-cover"
                           loading="lazy"
+                          decoding="async"
                         />
                       </span>
                     ) : (
@@ -776,6 +769,8 @@ function RaceWeekBanner({ onEstadoSemana }) {
                 <img
                   src={imagenCircuito}
                   alt={`Circuito ${carrera.Circuit?.circuitName}`}
+                  loading="eager"
+                  decoding="async"
                   className="absolute inset-0 h-full w-full object-contain"
                 />
               </div>
@@ -807,9 +802,15 @@ function RaceWeekBanner({ onEstadoSemana }) {
               Todavía no hay horarios de sesiones disponibles.
             </div>
           ) : (
-            <div
-              className={`grid min-w-0 grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 ${disenoCompacto ? "gap-2" : "gap-3"}`}
-            >
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.div
+                key={`${temporadaCarrera}-${rondaCarrera}`}
+                initial={reducirMovimiento ? false : { opacity: 0, x: direccionNavegacion * 16 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={reducirMovimiento ? undefined : { opacity: 0, x: direccionNavegacion * -16 }}
+                transition={{ duration: reducirMovimiento ? 0 : 0.26, ease: "easeOut" }}
+                className={`grid min-w-0 grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 ${disenoCompacto ? "gap-2" : "gap-3"}`}
+              >
               {sesiones.map((sesion, indice) => {
                 const esProxima = proximaSesion?.id === sesion.id;
                 const yaComenzo =
@@ -1060,7 +1061,8 @@ function RaceWeekBanner({ onEstadoSemana }) {
                   </motion.article>
                 );
               })}
-            </div>
+              </motion.div>
+            </AnimatePresence>
           )}
         </div>
       </div>

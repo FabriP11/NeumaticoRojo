@@ -9,21 +9,15 @@ import {
   ChevronDown,
   ChevronUp,
   Flag,
-  LoaderCircle,
   Trophy,
 } from "lucide-react";
 import { obtenerColorEscuderia } from "../utils/coloresF1";
 import FotoPiloto from "./FotoPiloto";
 import FondoTarjetaInicio from "./FondoTarjetaInicio";
+import NumeroAnimado from "./NumeroAnimado";
+import { SkeletonFilas } from "./Skeletons";
 
 const TEMPORADA = 2026;
-
-// Formatear los puntos usando el formato de Argentina.
-function formatearPuntos(puntos) {
-  return new Intl.NumberFormat("es-AR", {
-    maximumFractionDigits: 2,
-  }).format(Number(puntos ?? 0));
-}
 
 // Tabla reutilizable para pilotos y escuderías.
 function TablaClasificacion({ titulo, Icono, datos, tipo }) {
@@ -168,7 +162,7 @@ function TablaClasificacion({ titulo, Icono, datos, tipo }) {
 
                       {/* PUNTOS */}
                       <strong className="shrink-0 font-racing text-sm font-bold tabular-nums text-white">
-                        {formatearPuntos(elemento.puntos)}
+                        <NumeroAnimado valor={elemento.puntos} />
                       </strong>
                     </motion.li>
                   );
@@ -277,16 +271,10 @@ function TablasInicio() {
 
       {/* CARGANDO */}
       {cargando && (
-        <p
-          role="status"
-          className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white p-5 font-nav text-sm text-slate-600 dark:border-[#373944] dark:bg-[#1c1e27] dark:text-[#b8bdc9]"
-        >
-          <LoaderCircle
-            className="h-5 w-5 shrink-0 animate-spin text-[#e10600]"
-            aria-hidden="true"
-          />
-          Cargando clasificaciones...
-        </p>
+        <div className="grid grid-cols-1 gap-4 @min-[550px]:grid-cols-2">
+          <SkeletonFilas oscuro cantidad={5} etiqueta="Cargando clasificación de pilotos" />
+          <SkeletonFilas oscuro cantidad={5} etiqueta="Cargando clasificación de escuderías" />
+        </div>
       )}
 
       {/* ERROR */}

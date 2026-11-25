@@ -5,7 +5,6 @@ import {
   AlertCircle,
   ArrowRight,
   Flag,
-  LoaderCircle,
   Pencil,
   Star,
   UserRound,
@@ -15,6 +14,8 @@ import { fetchConSesion } from "../utils/fetchConSesion";
 import { obtenerColorEscuderia } from "../utils/coloresF1";
 import { fondoPiloto, fondoEscuderia } from "../utils/fondosFavoritos";
 import FondoTarjetaInicio from "./FondoTarjetaInicio";
+import NumeroAnimado from "./NumeroAnimado";
+import { SkeletonTarjetas } from "./Skeletons";
 
 const TEMPORADA = "2026";
 
@@ -100,10 +101,6 @@ function FavoritosInicio() {
   const colorPiloto = obtenerColorEscuderia(piloto?.id_escuderia);
   const colorEscuderia = obtenerColorEscuderia(escuderia?.id);
 
-  function mostrarEstadistica(valor) {
-    return valor ?? "—";
-  }
-
   const claseTarjeta =
     "group relative isolate flex min-w-0 flex-col overflow-hidden rounded-2xl border border-white/20 border-t-4 bg-[#171923] p-4 text-white shadow-[0_12px_30px_rgba(0,0,0,0.20)] sm:p-5";
 
@@ -166,16 +163,7 @@ function FavoritosInicio() {
 
       {/* CARGA Y ERROR */}
       {cargando && (
-        <p
-          role="status"
-          className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white p-5 font-nav text-sm text-slate-600 dark:border-[#373944] dark:bg-[#1c1e27] dark:text-[#b8bdc9]"
-        >
-          <LoaderCircle
-            className="h-5 w-5 shrink-0 animate-spin text-[#e10600]"
-            aria-hidden="true"
-          />
-          Cargando tus favoritos...
-        </p>
+        <SkeletonTarjetas cantidad={2} imagen={false} oscuro columnas="grid-cols-1 @min-[550px]:grid-cols-2" etiqueta="Cargando tus favoritos" />
       )}
 
       {!cargando && error && (
@@ -243,19 +231,19 @@ function FavoritosInicio() {
                     <div className={claseEstadistica}>
                       <span className={claseTituloEstadistica}>POSICIÓN</span>
                       <strong className={claseValorEstadistica}>
-                        {mostrarEstadistica(piloto.posicion)}
+                        <NumeroAnimado valor={piloto.posicion} />
                       </strong>
                     </div>
                     <div className={claseEstadistica}>
                       <span className={claseTituloEstadistica}>PUNTOS</span>
                       <strong className={claseValorEstadistica}>
-                        {mostrarEstadistica(piloto.puntos)}
+                        <NumeroAnimado valor={piloto.puntos} />
                       </strong>
                     </div>
                     <div className={claseEstadistica}>
                       <span className={claseTituloEstadistica}>VICTORIAS</span>
                       <strong className={claseValorEstadistica}>
-                        {mostrarEstadistica(piloto.victorias)}
+                        <NumeroAnimado valor={piloto.victorias} />
                       </strong>
                     </div>
                   </div>
@@ -329,19 +317,19 @@ function FavoritosInicio() {
                     <div className={claseEstadistica}>
                       <span className={claseTituloEstadistica}>POSICIÓN</span>
                       <strong className={claseValorEstadistica}>
-                        {mostrarEstadistica(escuderia.posicion)}
+                        <NumeroAnimado valor={escuderia.posicion} />
                       </strong>
                     </div>
                     <div className={claseEstadistica}>
                       <span className={claseTituloEstadistica}>PUNTOS</span>
                       <strong className={claseValorEstadistica}>
-                        {mostrarEstadistica(escuderia.puntos)}
+                        <NumeroAnimado valor={escuderia.puntos} />
                       </strong>
                     </div>
                     <div className={claseEstadistica}>
                       <span className={claseTituloEstadistica}>VICTORIAS</span>
                       <strong className={claseValorEstadistica}>
-                        {mostrarEstadistica(escuderia.victorias)}
+                        <NumeroAnimado valor={escuderia.victorias} />
                       </strong>
                     </div>
                   </div>

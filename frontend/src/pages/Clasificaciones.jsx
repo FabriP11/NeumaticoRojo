@@ -10,12 +10,13 @@ import {
   Flag,
   Globe2,
   Info,
-  LoaderCircle,
   Trophy,
   UserRound,
 } from "lucide-react";
 import { obtenerColorEscuderia } from "../utils/coloresF1";
 import FotoPiloto from "../components/FotoPiloto";
+import NumeroAnimado from "../components/NumeroAnimado";
+import { SkeletonFilas } from "../components/Skeletons";
 
 const TEMPORADAS = ["2026", "2025", "2024", "2023", "2022", "2021", "2020"];
 
@@ -92,6 +93,7 @@ function BanderaCircular({ nacionalidad }) {
           src={`https://flagcdn.com/w80/${codigo}.png`}
           alt={`Bandera correspondiente a ${nacionalidad}`}
           loading="lazy"
+          decoding="async"
           className="relative h-full w-full object-cover"
           onError={(evento) => {
             evento.currentTarget.style.display = "none";
@@ -248,52 +250,37 @@ function Clasificaciones() {
         </div>
       </div>
 
-      {/* PESTAÑAS PILOTOS / CONSTRUCTORES */}
-      <div
-        className="mb-6 flex w-full gap-2 border-b border-slate-200 dark:border-[#393c47]"
-        aria-label="Tipo de clasificación"
-      >
-        <button
-          type="button"
-          onClick={() => setTipo("pilotos")}
-          aria-pressed={tipo === "pilotos"}
-          className={`inline-flex items-center justify-center gap-2 border-b-2 px-4 py-3 font-nav text-base font-bold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e10600] sm:px-6 ${
-            tipo === "pilotos"
-              ? "border-[#e10600] text-[#e10600] dark:text-[#ff6666]"
-              : "border-transparent text-slate-500 hover:text-[#e10600] dark:text-[#aeb4c2] dark:hover:text-white"
-          }`}
-        >
-          <UserRound className="h-4 w-4 shrink-0" aria-hidden="true" />
-          Pilotos
-        </button>
-        <button
-          type="button"
-          onClick={() => setTipo("constructores")}
-          aria-pressed={tipo === "constructores"}
-          className={`inline-flex items-center justify-center gap-2 border-b-2 px-4 py-3 font-nav text-base font-bold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e10600] sm:px-6 ${
-            tipo === "constructores"
-              ? "border-[#e10600] text-[#e10600] dark:text-[#ff6666]"
-              : "border-transparent text-slate-500 hover:text-[#e10600] dark:text-[#aeb4c2] dark:hover:text-white"
-          }`}
-        >
-          <Flag className="h-4 w-4 shrink-0" aria-hidden="true" />
-          Constructores
-        </button>
+      {/* Selector animado: conserva el estado y las consultas originales. */}
+      <div className="mb-6 inline-grid w-full grid-cols-2 gap-1 rounded-xl border border-slate-200 bg-slate-100 p-1 sm:w-auto dark:border-white/10 dark:bg-[#242631]" aria-label="Tipo de clasificación">
+        {[
+          { id: "pilotos", texto: "Pilotos", Icono: UserRound },
+          { id: "constructores", texto: "Constructores", Icono: Flag },
+        ].map(({ id, texto, Icono }) => (
+          <button
+            key={id}
+            type="button"
+            onClick={() => setTipo(id)}
+            aria-pressed={tipo === id}
+            className={`relative flex min-h-11 items-center justify-center gap-2 rounded-lg px-5 py-2.5 font-nav text-base font-bold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e10600] ${
+              tipo === id ? "text-white" : "text-slate-600 hover:text-[#e10600] dark:text-slate-300 dark:hover:text-white"
+            }`}
+          >
+            {tipo === id && (
+              <motion.span
+                layoutId="indicador-tipo-clasificaciones"
+                className="absolute inset-0 rounded-lg bg-[#e10600] shadow-md"
+                transition={reducirMovimiento ? { duration: 0 } : { type: "spring", stiffness: 420, damping: 34 }}
+                aria-hidden="true"
+              />
+            )}
+            <Icono className="relative z-10 h-4 w-4 shrink-0" aria-hidden="true" />
+            <span className="relative z-10">{texto}</span>
+          </button>
+        ))}
       </div>
 
       {/* CARGANDO / ERROR */}
-      {cargando && (
-        <div
-          className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-6 font-nav text-base text-slate-600 dark:border-white/10 dark:bg-[#1c1e27] dark:text-slate-300"
-          role="status"
-        >
-          <LoaderCircle
-            className="h-5 w-5 shrink-0 animate-spin text-[#e10600]"
-            aria-hidden="true"
-          />
-          Cargando clasificaciones...
-        </div>
-      )}
+      {cargando && <SkeletonFilas cantidad={10} etiqueta="Cargando clasificaciones" />}
 
       {!cargando && error && (
         <div
@@ -399,11 +386,11 @@ function Clasificaciones() {
                     <dl className="mt-3 grid grid-cols-2 gap-2 text-center">
                       <div className="rounded-lg bg-slate-100 px-3 py-2 dark:bg-[#111219]">
                         <dt className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Victorias</dt>
-                        <dd className="mt-1 font-racing text-base font-bold tabular-nums">{piloto.wins}</dd>
+                        <dd className="mt-1 font-racing text-base font-bold tabular-nums"><NumeroAnimado valor={piloto.wins} /></dd>
                       </div>
                       <div className="rounded-lg bg-slate-100 px-3 py-2 dark:bg-[#111219]">
                         <dt className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Puntos</dt>
-                        <dd className="mt-1 font-racing text-base font-extrabold tabular-nums">{piloto.points}</dd>
+                        <dd className="mt-1 font-racing text-base font-extrabold tabular-nums"><NumeroAnimado valor={piloto.points} /></dd>
                       </div>
                     </dl>
                   </article>
@@ -444,11 +431,11 @@ function Clasificaciones() {
                     <dl className="mt-3 grid grid-cols-2 gap-2 text-center">
                       <div className="rounded-lg bg-slate-100 px-3 py-2 dark:bg-[#111219]">
                         <dt className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Victorias</dt>
-                        <dd className="mt-1 font-racing text-base font-bold tabular-nums">{constructor.wins}</dd>
+                        <dd className="mt-1 font-racing text-base font-bold tabular-nums"><NumeroAnimado valor={constructor.wins} /></dd>
                       </div>
                       <div className="rounded-lg bg-slate-100 px-3 py-2 dark:bg-[#111219]">
                         <dt className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Puntos</dt>
-                        <dd className="mt-1 font-racing text-base font-extrabold tabular-nums">{constructor.points}</dd>
+                        <dd className="mt-1 font-racing text-base font-extrabold tabular-nums"><NumeroAnimado valor={constructor.points} /></dd>
                       </div>
                     </dl>
                   </article>
@@ -577,12 +564,12 @@ function Clasificaciones() {
 
                         <td className={`${CLASE_CELDA} text-center`}>
                           <span className="font-racing text-sm font-bold tabular-nums text-[#343844] dark:text-[#e0e3eb]">
-                            {piloto.wins}
+                            <NumeroAnimado valor={piloto.wins} />
                           </span>
                         </td>
                         <td className={`${CLASE_CELDA} text-right`}>
                           <strong className="font-racing text-base font-extrabold tabular-nums text-[#15151d] dark:text-white">
-                            {piloto.points}
+                            <NumeroAnimado valor={piloto.points} />
                           </strong>
                         </td>
                       </motion.tr>
@@ -646,12 +633,12 @@ function Clasificaciones() {
 
                         <td className={`${CLASE_CELDA} text-center`}>
                           <span className="font-racing text-sm font-bold tabular-nums text-[#343844] dark:text-[#e0e3eb]">
-                            {constructor.wins}
+                            <NumeroAnimado valor={constructor.wins} />
                           </span>
                         </td>
                         <td className={`${CLASE_CELDA} text-right`}>
                           <strong className="font-racing text-base font-extrabold tabular-nums text-[#15151d] dark:text-white">
-                            {constructor.points}
+                            <NumeroAnimado valor={constructor.points} />
                           </strong>
                         </td>
                       </motion.tr>

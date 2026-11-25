@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
+import { SkeletonTarjetas } from "../components/Skeletons";
 import { Link, useSearchParams } from "react-router";
 import { obtenerColorEscuderia } from "../utils/coloresF1";
 import {
@@ -9,7 +10,6 @@ import {
   ChevronDown,
   Flag,
   Globe2,
-  LoaderCircle,
   Medal,
   Trophy,
 } from "lucide-react";
@@ -47,7 +47,7 @@ const nombresCompletos2026 = {
 };
 
 // Como Windows puede ocultar las extensiones, admitir formatos habituales.
-const EXTENSIONES = ["webp", "png", "jpg", "jpeg", "avif", "svg"];
+const EXTENSIONES = ["png", "avif", "webp", "jpg", "jpeg", "svg"];
 
 const banderasPorNacionalidad = {
   British: "gb",
@@ -80,6 +80,8 @@ function BanderaCircular({ nacionalidad }) {
     <span className="inline-flex h-5 w-5 shrink-0 overflow-hidden rounded-full border border-black/10 bg-gray-200 dark:border-white/20">
       <img
         src={`https://flagcdn.com/w40/${codigo}.png`}
+        loading="lazy"
+        decoding="async"
         alt=""
         className="h-full w-full object-cover"
         onError={() => setErrorImagen(true)}
@@ -113,6 +115,8 @@ function ImagenEscuderia({ id, nombre, color }) {
       <img
         src={`/escuderias/${archivo}.${EXTENSIONES[indiceExtension]}`}
         alt={`Imagen de ${nombre}`}
+        loading="lazy"
+        decoding="async"
         className="h-full w-full object-cover object-center scale-[1.00] transition-transform duration-500 group-hover:scale-[1.25] motion-reduce:transform-none"
         onError={() => setIndiceExtension((actual) => actual + 1)}
       />
@@ -231,18 +235,7 @@ function Escuderias() {
         </header>
 
         {/* ESTADOS */}
-        {cargando && (
-          <div
-            className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white p-5 font-nav text-gray-600 dark:border-white/10 dark:bg-[#20212b] dark:text-gray-300"
-            role="status"
-          >
-            <LoaderCircle
-              className="h-5 w-5 animate-spin text-[#e10600]"
-              aria-hidden="true"
-            />
-            Cargando escuderías...
-          </div>
-        )}
+        {cargando && <SkeletonTarjetas cantidad={6} etiqueta="Cargando escuderías" />}
         {!cargando && error && (
           <div
             className="flex items-center gap-3 rounded-xl border border-red-500/30 bg-red-50 p-5 text-red-700 dark:bg-red-950/30 dark:text-red-200"

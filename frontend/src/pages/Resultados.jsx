@@ -9,13 +9,13 @@ import {
   Clock3,
   Flag,
   Info,
-  LoaderCircle,
   MapPin,
   Trophy,
   Zap,
 } from "lucide-react";
 import { obtenerColorEscuderia } from "../utils/coloresF1";
 import FotoPiloto from "../components/FotoPiloto";
+import { SkeletonFilas } from "../components/Skeletons";
 
 const TEMPORADAS = ["2026", "2025", "2024", "2023", "2022", "2021", "2020"];
 
@@ -431,16 +431,24 @@ function Resultados() {
                   title={disponible ? nombre : motivo}
                   onClick={() => cambiarSesion(id)}
                   aria-pressed={disponible && tipoSesion === id}
-                  className={`inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-extrabold uppercase tracking-wide transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e10600] ${
+                  className={`relative inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-extrabold uppercase tracking-wide transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e10600] ${
                     !disponible
                       ? "cursor-not-allowed border-white/5 bg-[#20212a] text-slate-500 opacity-60"
                       : tipoSesion === id
-                        ? "border-[#e10600] bg-[#e10600] text-white"
+                        ? "border-[#e10600] text-white"
                         : "border-white/10 bg-[#252631] text-slate-300 hover:border-[#e10600]/50 hover:text-white"
                   }`}
                 >
-                  <Icono className="h-4 w-4 shrink-0" aria-hidden="true" />
-                  {nombre}
+                  {disponible && tipoSesion === id && (
+                    <motion.span
+                      layoutId="indicador-sesion-resultados"
+                      className="absolute inset-0 rounded-md bg-[#e10600]"
+                      transition={reducirMovimiento ? { duration: 0 } : { type: "spring", stiffness: 420, damping: 34 }}
+                      aria-hidden="true"
+                    />
+                  )}
+                  <Icono className="relative z-10 h-4 w-4 shrink-0" aria-hidden="true" />
+                  <span className="relative z-10">{nombre}</span>
                 </button>
               );
             })}
@@ -448,18 +456,7 @@ function Resultados() {
         </section>
 
         {/* ESTADOS DE CARGA Y ERROR */}
-        {estaCargando && (
-          <div
-            className="flex items-center gap-3 rounded-xl border border-white/10 bg-[#1b1c25] p-5 text-sm text-slate-300"
-            role="status"
-          >
-            <LoaderCircle
-              className="h-5 w-5 animate-spin text-[#e10600]"
-              aria-hidden="true"
-            />
-            Cargando resultados...
-          </div>
-        )}
+        {estaCargando && <SkeletonFilas oscuro cantidad={8} etiqueta="Cargando resultados" />}
 
         {!estaCargando && mensajeError && (
           <div

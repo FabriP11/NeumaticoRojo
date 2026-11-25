@@ -8,13 +8,13 @@ import {
   ChevronDown,
   Flag,
   Globe2,
-  LoaderCircle,
   Medal,
   Trophy,
   UserRound,
 } from "lucide-react";
 import { obtenerColorEscuderia } from "../utils/coloresF1";
 import { obtenerArchivoPiloto } from "../components/FotoPiloto";
+import { SkeletonTarjetas } from "../components/Skeletons";
 
 const TEMPORADAS = ["2026", "2025", "2024", "2023", "2022", "2021", "2020"];
 
@@ -265,18 +265,7 @@ function Pilotos() {
           </div>
         </header>
 
-        {cargando && (
-          <div
-            className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white p-5 font-nav text-gray-600 dark:border-white/10 dark:bg-[#20212b] dark:text-gray-300"
-            role="status"
-          >
-            <LoaderCircle
-              className="h-5 w-5 animate-spin text-[#e10600]"
-              aria-hidden="true"
-            />
-            Cargando pilotos...
-          </div>
-        )}
+        {cargando && <SkeletonTarjetas cantidad={6} etiqueta="Cargando pilotos" />}
 
         {!cargando && error && (
           <div

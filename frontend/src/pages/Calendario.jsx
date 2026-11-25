@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { motion, useReducedMotion } from "motion/react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { SkeletonTarjetas } from "../components/Skeletons";
 import { Link } from "react-router";
 import { obtenerImagenFondoGP } from "../utils/imagenesGP";
 import {
@@ -13,7 +14,6 @@ import {
   Clock3,
   Flag,
   Globe2,
-  LoaderCircle,
   MapPin,
 } from "lucide-react";
 
@@ -72,6 +72,7 @@ function BanderaCircular({ pais }) {
           src={`https://flagcdn.com/w80/${codigo}.png`}
           alt=""
           loading="lazy"
+          decoding="async"
           className="relative h-full w-full object-cover"
           onError={(evento) => {
             evento.currentTarget.style.display = "none";
@@ -170,6 +171,7 @@ function Calendario() {
   const [temporadaSeleccionada, setTemporadaSeleccionada] = useState("2026");
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState("");
+  const [horariosAbiertos, setHorariosAbiertos] = useState({});
 
   // Consultar las carreras de la temporada elegida en el backend.
   useEffect(() => {
@@ -272,13 +274,7 @@ function Calendario() {
 
       {/* ESTADOS DE CARGA, ERROR Y LISTADO */}
       {cargando ? (
-        <div className={claseMensaje} role="status">
-          <LoaderCircle
-            className="h-5 w-5 shrink-0 animate-spin text-[#e10600]"
-            aria-hidden="true"
-          />
-          Cargando calendario...
-        </div>
+        <SkeletonTarjetas cantidad={6} imagen etiqueta="Cargando calendario" />
       ) : error ? (
         <div
           className="flex items-center gap-3 rounded-2xl border border-red-200 bg-red-50 p-6 font-nav text-base text-red-700 dark:border-red-500/20 dark:bg-[#321c24] dark:text-red-300"
@@ -322,6 +318,8 @@ function Calendario() {
               const esPasada = Boolean(fecha && fecha < ahora);
               const pais = carrera.Circuit?.Location?.country;
               const sesiones = obtenerSesiones(carrera);
+              const claveHorario = `${carrera.season}-${carrera.round}`;
+              const horarioAbierto = Boolean(horariosAbiertos[claveHorario]);
               const imagenFondoGP = obtenerImagenFondoGP(carrera);
 
               // Pasar temporada y ronda para abrir directamente los resultados de este GP.
@@ -354,6 +352,7 @@ function Calendario() {
                         src={imagenFondoGP}
                         alt=""
                         loading="lazy"
+                        decoding="async"
                         className="h-full w-full scale-[1.06] object-cover object-center opacity-85 blur-[1.00px] transition-transform duration-500 group-hover:scale-[1.11] motion-reduce:transform-none dark:opacity-80"
                         onError={(evento) => {
                           evento.currentTarget.style.display = "none";
@@ -467,21 +466,40 @@ function Calendario() {
                     </div>
 
                     {/* DESPLEGABLE DE SESIONES (independiente del enlace) */}
-                    <details className="group relative z-20 mt-auto pt-5">
-                      <summary className="flex cursor-pointer list-none items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white/95 px-4 py-3 font-nav text-sm font-bold text-[#242731] transition-colors hover:border-[#e10600]/50 hover:text-[#e10600] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e10600] dark:border-[#444755] dark:bg-[#272a35]/95 dark:text-white dark:hover:bg-[#303440] [&::-webkit-details-marker]:hidden">
+                    <div className="relative z-20 mt-auto pt-5">
+                      <button
+                        type="button"
+                        aria-expanded={horarioAbierto}
+                        aria-controls={`nr-horarios-${claveHorario}`}
+                        onClick={() => setHorariosAbiertos((actual) => ({
+                          ...actual,
+                          [claveHorario]: !actual[claveHorario],
+                        }))}
+                        className="flex w-full cursor-pointer items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white/95 px-4 py-3 font-nav text-sm font-bold text-[#242731] transition-colors hover:border-[#e10600]/50 hover:text-[#e10600] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e10600] dark:border-[#444755] dark:bg-[#272a35]/95 dark:text-white dark:hover:bg-[#303440]"
+                      >
                         <span className="inline-flex items-center gap-2">
-                          <CalendarDays
-                            className="h-4 w-4 shrink-0 text-[#e10600]"
-                            aria-hidden="true"
-                          />
+                          <CalendarDays className="h-4 w-4 shrink-0 text-[#e10600]" aria-hidden="true" />
                           Ver horarios del fin de semana
                         </span>
-                        <ChevronDown
-                          className="h-4 w-4 shrink-0 transition-transform duration-200 group-open:rotate-180"
-                          aria-hidden="true"
-                        />
-                      </summary>
-
+                        <motion.span
+                          animate={{ rotate: horarioAbierto ? 180 : 0 }}
+                          transition={{ duration: reducirMovimiento ? 0 : 0.2 }}
+                          className="shrink-0"
+                        >
+                          <ChevronDown className="h-4 w-4" aria-hidden="true" />
+                        </motion.span>
+                      </button>
+                      <AnimatePresence initial={false}>
+                        {horarioAbierto && (
+                          <motion.div
+                            id={`nr-horarios-${claveHorario}`}
+                            key="contenido-horarios"
+                            initial={reducirMovimiento ? false : { height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={reducirMovimiento ? { opacity: 0 } : { height: 0, opacity: 0 }}
+                            transition={{ duration: reducirMovimiento ? 0 : 0.24, ease: "easeInOut" }}
+                            className="overflow-hidden"
+                          >
                       <div className="mt-3 overflow-hidden rounded-xl border border-slate-200 bg-white/95 dark:border-[#373944] dark:bg-[#14161f]/95">
                         {sesiones.map((sesion) => (
                           <div
@@ -497,7 +515,10 @@ function Calendario() {
                           </div>
                         ))}
                       </div>
-                    </details>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
                   </div>
                 </motion.article>
               );
