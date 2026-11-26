@@ -18,6 +18,197 @@ import { obtenerColorEscuderia } from "../utils/coloresF1";
 import { obtenerArchivoPiloto } from "../components/FotoPiloto";
 import { obtenerImagenFondoGP } from "../utils/imagenesGP";
 
+// Banderas pequeñas, sin fondo ni cápsula, como en Clasificaciones.
+const CODIGOS_NACIONALIDAD = {
+  american: "us",
+  australian: "au",
+  argentine: "ar",
+  argentinian: "ar",
+  austrian: "at",
+  belgian: "be",
+  brazilian: "br",
+  british: "gb",
+  canadian: "ca",
+  chinese: "cn",
+  danish: "dk",
+  dutch: "nl",
+  finnish: "fi",
+  french: "fr",
+  german: "de",
+  hungarian: "hu",
+  indian: "in",
+  indonesian: "id",
+  irish: "ie",
+  italian: "it",
+  japanese: "jp",
+  malaysian: "my",
+  mexican: "mx",
+  monegasque: "mc",
+  "new zealander": "nz",
+  polish: "pl",
+  portuguese: "pt",
+  russian: "ru",
+  southafrican: "za",
+  "south african": "za",
+  spanish: "es",
+  swedish: "se",
+  swiss: "ch",
+  thai: "th",
+  turkish: "tr",
+  venezuelan: "ve",
+};
+
+function BanderaNacionalidad({ nacionalidad }) {
+  const codigo =
+    CODIGOS_NACIONALIDAD[
+      String(nacionalidad || "")
+        .trim()
+        .toLowerCase()
+    ];
+  if (!codigo)
+    return <Globe2 className="h-4 w-4 shrink-0" aria-hidden="true" />;
+  return (
+    <img
+      src={`https://flagcdn.com/w80/${codigo}.png`}
+      alt=""
+      aria-hidden="true"
+      loading="lazy"
+      decoding="async"
+      className="h-3 w-[18px] shrink-0 rounded-[2px] object-cover"
+      onError={(evento) => {
+        evento.currentTarget.style.display = "none";
+      }}
+    />
+  );
+}
+
+// Banderas del historial: mismo origen y estilo que la bandera de nacionalidad del piloto.
+// La API de F1 devuelve el país del circuito (por ejemplo, "UK" para Silverstone).
+const CODIGOS_PAIS_GP = {
+  australia: "au",
+  austria: "at",
+  azerbaijan: "az",
+  bahrain: "bh",
+  bahrein: "bh",
+  belgium: "be",
+  brazil: "br",
+  brasil: "br",
+  canada: "ca",
+  china: "cn",
+  france: "fr",
+  germany: "de",
+  hungary: "hu",
+  india: "in",
+  italy: "it",
+  japan: "jp",
+  malaysia: "my",
+  mexico: "mx",
+  monaco: "mc",
+  netherlands: "nl",
+  holland: "nl",
+  portugal: "pt",
+  qatar: "qa",
+  russia: "ru",
+  saudi_arabia: "sa",
+  saudiarabia: "sa",
+  singapore: "sg",
+  spain: "es",
+  turkey: "tr",
+  turkiye: "tr",
+  united_arab_emirates: "ae",
+  uae: "ae",
+  uk: "gb",
+  britain: "gb",
+  british: "gb",
+  great_britain: "gb",
+  united_kingdom: "gb",
+  england: "gb",
+  usa: "us",
+  us: "us",
+  united_states: "us",
+  united_states_of_america: "us",
+};
+
+function BanderaGranPremio({ carrera }) {
+  const pais = carrera?.Circuit?.Location?.country || "";
+  const clave = String(pais)
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z]+/g, "_")
+    .replace(/^_|_$/g, "");
+  const codigo = CODIGOS_PAIS_GP[clave];
+  if (!codigo) return null;
+  return (
+    <img
+      src={`https://flagcdn.com/w80/${codigo}.png`}
+      alt=""
+      aria-hidden="true"
+      title={pais}
+      loading="lazy"
+      decoding="async"
+      className="h-3 w-[18px] shrink-0 rounded-[2px] object-cover"
+      onError={(evento) => {
+        evento.currentTarget.style.display = "none";
+      }}
+    />
+  );
+}
+
+// Las letras de Jolpica se muestran como estados habituales de F1.
+function formatearResultadoFinal(valor) {
+  const texto = String(valor ?? "").trim();
+  if (texto === "R") return "DNF";
+  if (texto === "W") return "DNS";
+  return texto || "—";
+}
+
+// Formato corto de puestos solo para tarjetas móviles del historial.
+function formatearPuestoMovil(valor) {
+  const texto = String(valor ?? "").trim();
+  if (!/^\d+$/.test(texto)) return texto || "—";
+  const numero = Number(texto);
+  const sufijos = {
+    1: "ro",
+    2: "do",
+    3: "ro",
+    4: "to",
+    5: "to",
+    6: "to",
+    7: "mo",
+    8: "vo",
+    9: "no",
+    10: "mo",
+  };
+  return sufijos[numero] ? `${numero}${sufijos[numero]}` : `${numero}°`;
+}
+
+// Acabado metálico inspirado en los degradados de los avatares: solo puesto final en móvil.
+const ESTILOS_PODIO_HISTORIAL = {
+  1: {
+    background:
+      "radial-gradient(circle at 25% 15%, rgba(255,245,195,.35), transparent 62%), linear-gradient(130deg, #71501d 0%, #bd872b 52%, #81531a 100%)",
+    borderColor: "rgba(255,219,141,.5)",
+    boxShadow:
+      "inset 0 1px 0 rgba(255,246,213,.34), inset 0 -12px 20px rgba(59,32,2,.24)",
+  },
+  2: {
+    background:
+      "radial-gradient(circle at 25% 15%, rgba(255,255,255,.33), transparent 62%), linear-gradient(130deg, #535e6d 0%, #929fad 52%, #56616e 100%)",
+    borderColor: "rgba(225,233,242,.48)",
+    boxShadow:
+      "inset 0 1px 0 rgba(255,255,255,.34), inset 0 -12px 20px rgba(28,35,45,.25)",
+  },
+  3: {
+    background:
+      "radial-gradient(circle at 25% 15%, rgba(255,221,183,.32), transparent 62%), linear-gradient(130deg, #76411f 0%, #af7040 52%, #78421f 100%)",
+    borderColor: "rgba(235,164,113,.5)",
+    boxShadow:
+      "inset 0 1px 0 rgba(255,222,188,.28), inset 0 -12px 20px rgba(61,28,8,.25)",
+  },
+};
+
 // Misma paleta de fondo que usamos en el perfil de las escuderías.
 const FONDOS_ESCUDERIAS = {
   mercedes: ["#034c49", "#13bea9"],
@@ -109,9 +300,10 @@ function PilotoDetalle() {
     typeof volverA === "string" &&
     /^\/escuderias\/[a-z0-9_-]+\?temporada=\d{4}$/i.test(volverA);
   const vieneDePilotos = volverA === `/pilotos?temporada=${temporada}`;
-  const destinoVolver = vieneDeEscuderia || vieneDePilotos
-    ? volverA
-    : `/clasificaciones?temporada=${temporada}`;
+  const destinoVolver =
+    vieneDeEscuderia || vieneDePilotos
+      ? volverA
+      : `/clasificaciones?temporada=${temporada}`;
   const textoVolver = vieneDeEscuderia
     ? "Volver a escudería"
     : vieneDePilotos
@@ -319,7 +511,7 @@ function PilotoDetalle() {
 
               <div className="flex min-w-0 flex-col items-start gap-2 font-nav text-xs font-semibold text-white/95 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-5 sm:gap-y-3 sm:text-base">
                 <span className="inline-flex items-center gap-2">
-                  <Globe2 className="h-4 w-4 shrink-0" aria-hidden="true" />
+                  <BanderaNacionalidad nacionalidad={piloto.nationality} />
                   {piloto.nationality}
                 </span>
                 {idEquipo ? (
@@ -360,7 +552,10 @@ function PilotoDetalle() {
                       className="min-w-0 rounded-lg border border-white/25 bg-black/25 px-1.5 py-1.5 text-white backdrop-blur-[2px]"
                     >
                       <span className="flex items-center gap-1 font-nav text-[8px] font-bold uppercase leading-tight tracking-wide text-white/85">
-                        <Icono className="h-3 w-3 shrink-0" aria-hidden="true" />
+                        <Icono
+                          className="h-3 w-3 shrink-0"
+                          aria-hidden="true"
+                        />
                         {titulo}
                       </span>
                       <strong className="mt-0.5 block truncate font-racing text-base font-extrabold leading-tight text-white">
@@ -438,6 +633,10 @@ function PilotoDetalle() {
             <div className="grid gap-2 md:hidden">
               {carreras.map((carrera) => {
                 const resultado = carrera.Results?.[0];
+                const posicionFinal =
+                  resultado?.positionText ?? resultado?.position;
+                const estiloPodio =
+                  ESTILOS_PODIO_HISTORIAL[posicionFinal] || null;
                 const imagenFondoGP = obtenerImagenFondoGP(carrera);
                 return (
                   <article
@@ -471,26 +670,48 @@ function PilotoDetalle() {
                         <p className="text-[10px] font-bold uppercase tracking-wide text-slate-500 dark:text-gray-400">
                           Gran Premio · Ronda {carrera.round}
                         </p>
-                        <h3 className="mt-0.5 break-words font-nav text-sm font-bold leading-snug text-[#15151d] dark:text-white">
-                          {carrera.raceName}
+                        <h3 className="mt-0.5 flex min-w-0 flex-wrap items-center gap-1.5 font-nav text-sm font-bold leading-snug text-[#15151d] dark:text-white">
+                          <BanderaGranPremio carrera={carrera} />
+                          <span className="min-w-0 break-words">
+                            {carrera.raceName}
+                          </span>
                         </h3>
                       </div>
                     </div>
                     <div className="relative z-10 grid grid-cols-3 gap-2">
                       <div className="min-w-0 rounded-lg bg-white px-2 py-2 text-center dark:bg-[#20212b]">
                         <span className="block text-[10px] font-bold uppercase tracking-wide text-slate-500 dark:text-gray-400">
-                          Parrilla
+                          Comenzó
                         </span>
                         <strong className="mt-1 block font-racing text-base text-[#15151d] dark:text-white">
-                          {resultado?.grid ?? "—"}
+                          {formatearPuestoMovil(resultado?.grid)}
                         </strong>
                       </div>
-                      <div className="min-w-0 rounded-lg bg-white px-2 py-2 text-center dark:bg-[#20212b]">
-                        <span className="block text-[10px] font-bold uppercase tracking-wide text-slate-500 dark:text-gray-400">
-                          Posición
+                      <div
+                        className={`min-w-0 rounded-lg px-2 py-2 text-center ${
+                          estiloPodio ? "border" : "bg-white dark:bg-[#20212b]"
+                        }`}
+                        style={estiloPodio || undefined}
+                      >
+                        <span
+                          className={`block text-[10px] font-bold uppercase tracking-wide ${
+                            estiloPodio
+                              ? "text-white/90"
+                              : "text-slate-500 dark:text-gray-400"
+                          }`}
+                        >
+                          Finalizó
                         </span>
-                        <strong className="mt-1 block font-racing text-base text-[#15151d] dark:text-white">
-                          {resultado?.positionText || "—"}
+                        <strong
+                          className={`mt-1 block font-racing text-base ${
+                            estiloPodio
+                              ? "text-white drop-shadow-sm"
+                              : "text-[#15151d] dark:text-white"
+                          }`}
+                        >
+                          {formatearPuestoMovil(
+                            formatearResultadoFinal(posicionFinal),
+                          )}
                         </strong>
                       </div>
                       <div className="min-w-0 rounded-lg bg-[#e10600]/10 px-2 py-2 text-center dark:bg-[#e10600]/15">
@@ -520,10 +741,10 @@ function PilotoDetalle() {
                     GRAN PREMIO
                   </th>
                   <th scope="col" className="px-4 py-4 font-bold sm:px-5">
-                    PARRILLA
+                    COMENZÓ
                   </th>
                   <th scope="col" className="px-4 py-4 font-bold sm:px-5">
-                    POSICIÓN
+                    FINALIZÓ
                   </th>
                   <th scope="col" className="px-4 py-4 font-bold sm:px-5">
                     PUNTOS
@@ -551,13 +772,18 @@ function PilotoDetalle() {
                         {carrera.round}
                       </td>
                       <td className="px-4 py-4 font-semibold text-[#15151d] sm:px-5 dark:text-white">
-                        {carrera.raceName}
+                        <span className="inline-flex items-center gap-2">
+                          <BanderaGranPremio carrera={carrera} />
+                          <span>{carrera.raceName}</span>
+                        </span>
                       </td>
                       <td className="px-4 py-4 text-slate-600 sm:px-5 dark:text-gray-300">
                         {resultado?.grid ?? "—"}
                       </td>
                       <td className="px-4 py-4 font-bold text-[#15151d] sm:px-5 dark:text-white">
-                        {resultado?.positionText || "—"}
+                        {formatearResultadoFinal(
+                          resultado?.positionText ?? resultado?.position,
+                        )}
                       </td>
                       <td className="px-4 py-4 sm:px-5">
                         <span className="inline-flex min-w-12 justify-center rounded-lg bg-[#e10600]/10 px-3 py-1 font-racing font-bold text-[#b90000] dark:bg-[#e10600]/15 dark:text-[#ff7772]">
