@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { HORA, MINUTO, META_PUBLICA, esGPConsolidado, vigenciaCalendario } from "../utils/cachePublica";
 import { obtenerImagenCircuito } from "../utils/imagenesCircuitos";
 import { Link } from "react-router";
 import { obtenerColorEscuderia } from "../utils/coloresF1";
@@ -220,58 +222,27 @@ function columnasSesion(cantidad, indice) {
 function RaceWeekBanner({ onEstadoSemana }) {
   const reducirMovimiento = useReducedMotion();
   // El reloj sigue actualizado cada segundo sin reiniciar las animaciones.
-  const [carreras, setCarreras] = useState([]);
-  const [cargando, setCargando] = useState(true);
-  const [error, setError] = useState(false);
-  const [resumenSesiones, setResumenSesiones] = useState(null);
-  const [resumenPracticas, setResumenPracticas] = useState(null);
   // null: mostrar automáticamente el GP de esta semana (o el siguiente).
-  // Al navegar, conservar la ronda elegida hasta que se recargue Inicio.
   const [rondaSeleccionada, setRondaSeleccionada] = useState(null);
   const [direccionNavegacion, setDireccionNavegacion] = useState(1);
-
-  // Reloj actualizado cada segundo
   const [ahora, setAhora] = useState(Date.now());
 
-  // Obtener el calendario
-  useEffect(() => {
-    const controller = new AbortController();
-
-    async function obtenerCarreras() {
-      try {
-        const respuesta = await fetch("/api/carreras?temporada=2026", {
-          signal: controller.signal,
-        });
-
-        if (!respuesta.ok) {
-          throw new Error("No se pudo consultar el calendario");
-        }
-
-        const datos = await respuesta.json();
-
-        if (!Array.isArray(datos.carreras)) {
-          throw new Error("Formato de calendario incorrecto");
-        }
-
-        if (!controller.signal.aborted) {
-          setCarreras(datos.carreras);
-        }
-      } catch (error) {
-        if (error.name !== "AbortError") {
-          console.error(error);
-          setError(true);
-        }
-      } finally {
-        if (!controller.signal.aborted) {
-          setCargando(false);
-        }
-      }
-    }
-
-    obtenerCarreras();
-
-    return () => controller.abort();
-  }, []);
+  // Misma consulta compartida con Calendario y Resultados.
+  const calendario = useQuery({
+    queryKey: ["publico", "carreras", "2026"],
+    queryFn: async ({ signal }) => {
+      const respuesta = await fetch("/api/carreras?temporada=2026", { signal });
+      if (!respuesta.ok) throw new Error("No se pudo consultar el calendario");
+      const datos = await respuesta.json();
+      if (!Array.isArray(datos?.carreras)) throw new Error("Formato de calendario incorrecto");
+      return datos;
+    },
+    staleTime: vigenciaCalendario("2026"),
+    meta: META_PUBLICA,
+  });
+  const carreras = calendario.data?.carreras ?? [];
+  const cargando = !calendario.data && calendario.isPending;
+  const error = !calendario.data && calendario.isError;
 
   // Actualizar cuenta regresiva
   useEffect(() => {
@@ -373,16 +344,6 @@ function RaceWeekBanner({ onEstadoSemana }) {
   const temporadaCarrera = carrera?.season || "2026";
   const rondaCarrera = carrera?.round;
   const fechaGP = carrera?.date;
-  const sesionesDelGP =
-    String(resumenSesiones?.temporada) === String(temporadaCarrera) &&
-    String(resumenSesiones?.ronda) === String(rondaCarrera)
-      ? resumenSesiones
-      : null;
-  const practicasDelGP =
-    String(resumenPracticas?.temporada) === String(temporadaCarrera) &&
-    resumenPracticas?.fecha === fechaGP
-      ? resumenPracticas
-      : null;
 
   // Buscar cuándo empieza la primera sesión
   // para la cual consultamos resultados.
@@ -398,132 +359,66 @@ function RaceWeekBanner({ onEstadoSemana }) {
   const primeraSesionResultados =
     fechasResultados.length > 0 ? Math.min(...fechasResultados) : null;
 
-  // Consultar el resumen de resultados
-  useEffect(() => {
-    if (!rondaCarrera) {
-      setResumenSesiones(null);
-      return;
-    }
+  // Solo se congela la caché si el GP terminó Y los resultados están publicados.
+  // Se aplica por ronda, incluso a carreras anteriores de la temporada 2026.
+  const consolidado = esGPConsolidado(carrera);
+  const sesionesEsperadas = ["clasificacion", "carrera", ...(carrera?.Sprint ? ["sprint"] : [])];
+  const resumenCompleto = (data, tipos) => tipos.length > 0 && tipos.every(
+    (tipo) => Array.isArray(data?.resultados?.[tipo]) && data.resultados[tipo].length > 0,
+  );
+  const consultaSesiones = useQuery({
+    queryKey: ["publico", "resumen-sesiones", temporadaCarrera, String(rondaCarrera)],
+    enabled: Boolean(rondaCarrera) && (primeraSesionResultados === null || ahora >= primeraSesionResultados),
+    queryFn: async ({ signal }) => {
+      const respuesta = await fetch(`/api/resumen-sesiones?temporada=${temporadaCarrera}&ronda=${rondaCarrera}`, { signal });
+      if (!respuesta.ok) throw new Error("No se pudieron consultar los resultados");
+      return respuesta.json();
+    },
+    staleTime: (consulta) =>
+      consolidado && resumenCompleto(consulta.state.data, sesionesEsperadas)
+        ? Infinity
+        : consolidado ? 12 * HORA : 2 * MINUTO,
+    refetchInterval: consolidado ? false : 2 * MINUTO,
+    meta: META_PUBLICA,
+  });
 
-    const controller = new AbortController();
-
-    setResumenSesiones(null);
-
-    async function consultarResultados() {
-      // No consultar resultados antes de la
-      // primera sesión soportada.
-      if (
-        primeraSesionResultados !== null &&
-        Date.now() < primeraSesionResultados
-      ) {
-        return;
-      }
-
-      try {
-        const respuesta = await fetch(
-          `/api/resumen-sesiones?temporada=${temporadaCarrera}&ronda=${rondaCarrera}`,
-          {
-            signal: controller.signal,
-          },
-        );
-
-        if (!respuesta.ok) {
-          throw new Error("No se pudieron consultar los resultados");
-        }
-
-        const datos = await respuesta.json();
-
-        if (!controller.signal.aborted) {
-          setResumenSesiones(datos);
-        }
-      } catch (error) {
-        if (error.name !== "AbortError") {
-          console.error("Error cargando resultados:", error.message);
-        }
-      }
-    }
-
-    consultarResultados();
-
-    // Actualizar cada dos minutos
-    const intervalo = setInterval(consultarResultados, 120000);
-
-    return () => {
-      controller.abort();
-      clearInterval(intervalo);
-    };
-  }, [temporadaCarrera, rondaCarrera, primeraSesionResultados]);
-
-  // Obtener resultados de FP1, FP2, FP3
-  // y clasificación Sprint desde OpenF1
-  useEffect(() => {
-    if (!fechaGP || !carrera) {
-      setResumenPracticas(null);
-      return;
-    }
-
-    const controller = new AbortController();
-
-    setResumenPracticas(null);
-
-    async function consultarPracticas() {
-      // Esperar a que los resultados puedan estar disponibles.
-      const tiposPractica = [
-        "FirstPractice",
-        "SecondPractice",
-        "ThirdPractice",
-        "SprintQualifying",
-        "SprintShootout",
-      ];
-
-      const momentosConsulta = obtenerSesiones(carrera)
+  const tiposPractica = ["FirstPractice", "SecondPractice", "ThirdPractice", "SprintQualifying", "SprintShootout"];
+  const momentosPractica = carrera
+    ? obtenerSesiones(carrera)
         .filter((sesion) => tiposPractica.includes(sesion.id) && sesion.inicio)
-        .map((sesion) => sesion.inicio.getTime() + 105 * 60 * 1000);
+        .map((sesion) => sesion.inicio.getTime() + 105 * MINUTO)
+    : [];
+  const inicioConsultaPracticas = momentosPractica.length ? Math.min(...momentosPractica) : null;
+  const practicasEsperadas = [...new Set(
+    obtenerSesiones(carrera || {})
+      .filter((sesion) => tiposPractica.includes(sesion.id))
+      .map((sesion) => TIPOS_RESULTADO[sesion.id])
+      .filter(Boolean),
+  )];
+  const consultaPracticas = useQuery({
+    queryKey: ["publico", "resumen-practicas", temporadaCarrera, fechaGP],
+    enabled: Boolean(fechaGP && carrera && inicioConsultaPracticas !== null && ahora >= inicioConsultaPracticas),
+    queryFn: async ({ signal }) => {
+      const respuesta = await fetch(`/api/resumen-practicas?temporada=${temporadaCarrera}&fecha=${fechaGP}`, { signal });
+      if (!respuesta.ok) throw new Error("No se pudieron consultar las prácticas");
+      return respuesta.json();
+    },
+    staleTime: (consulta) =>
+      consolidado && resumenCompleto(consulta.state.data, practicasEsperadas)
+        ? Infinity
+        : consolidado ? 12 * HORA : 2 * MINUTO,
+    refetchInterval: consolidado ? false : 2 * MINUTO,
+    meta: META_PUBLICA,
+  });
 
-      if (momentosConsulta.length === 0) {
-        return;
-      }
-
-      const inicioConsulta = Math.min(...momentosConsulta);
-
-      if (Date.now() < inicioConsulta) {
-        return;
-      }
-
-      try {
-        const respuesta = await fetch(
-          `/api/resumen-practicas?temporada=${temporadaCarrera}&fecha=${fechaGP}`,
-          {
-            signal: controller.signal,
-          },
-        );
-
-        if (!respuesta.ok) {
-          throw new Error("No se pudieron consultar las prácticas");
-        }
-
-        const datos = await respuesta.json();
-
-        if (!controller.signal.aborted) {
-          setResumenPracticas(datos);
-        }
-      } catch (error) {
-        if (error.name !== "AbortError") {
-          console.error("Error cargando prácticas:", error.message);
-        }
-      }
-    }
-
-    consultarPracticas();
-
-    // Actualizar cada dos minutos.
-    const intervalo = setInterval(consultarPracticas, 120000);
-
-    return () => {
-      controller.abort();
-      clearInterval(intervalo);
-    };
-  }, [temporadaCarrera, fechaGP, carrera]);
+  const resumenSesiones = consultaSesiones.data;
+  const resumenPracticas = consultaPracticas.data;
+  const sesionesDelGP =
+    String(resumenSesiones?.temporada) === String(temporadaCarrera) &&
+    String(resumenSesiones?.ronda) === String(rondaCarrera) ? resumenSesiones : null;
+  const practicasDelGP =
+    String(resumenPracticas?.temporada) === String(temporadaCarrera) &&
+    resumenPracticas?.fecha === fechaGP ? resumenPracticas : null;
 
   // La lógica de fechas, resultados y consultas permanece igual.
   if (cargando) return <SkeletonRaceWeek />;

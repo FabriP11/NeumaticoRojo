@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { DIA, MINUTO, META_PUBLICA, esGPConsolidado, esTemporadaHistorica, vigenciaCalendario } from "../utils/cachePublica";
 import { motion, useReducedMotion } from "motion/react";
 import { Link, useSearchParams } from "react-router";
 import {
@@ -162,258 +164,110 @@ function Resultados() {
   );
   const esClasificacionSprint = tipoSesion === "clasificacion_sprint";
 
-  // ESTADOS
-
-  const [carreras, setCarreras] = useState([]);
-  const [datos, setDatos] = useState(null);
-
-  const [cargandoCarreras, setCargandoCarreras] = useState(true);
-  const [cargandoResultados, setCargandoResultados] = useState(true);
-
-  const [errorCarreras, setErrorCarreras] = useState("");
-  const [errorResultados, setErrorResultados] = useState("");
-  const [sinResultados, setSinResultados] = useState(false);
-
-  const [disponibilidad, setDisponibilidad] = useState({
-    clave: null,
-    comprobando: true,
-    estados: {},
+  const calendario = useQuery({
+    queryKey: ["publico", "carreras", temporada],
+    queryFn: async ({ signal }) => {
+      const respuesta = await fetch(`/api/carreras?temporada=${temporada}`, { signal });
+      if (!respuesta.ok) throw new Error("No se pudo cargar el calendario");
+      const resultado = await respuesta.json();
+      if (!Array.isArray(resultado?.carreras)) throw new Error("Formato de calendario inválido");
+      return resultado;
+    },
+    staleTime: vigenciaCalendario(temporada),
+    meta: META_PUBLICA,
   });
-
-  const claveGP = `${temporada}-${ronda}`;
-  const carreraSeleccionada = carreras.find(
-    (carrera) => String(carrera.round) === ronda,
-  );
+  const carreras = calendario.data?.carreras ?? [];
+  const cargandoCarreras = !calendario.data && calendario.isPending;
+  const errorCarreras = !calendario.data && calendario.isError ? calendario.error?.message || "No se pudo cargar el calendario" : "";
+  const carreraSeleccionada = carreras.find((carrera) => String(carrera.round) === ronda);
   const paisGP = carreraSeleccionada?.Circuit?.Location?.country;
   const banderaGP = archivoBanderaPais(paisGP);
-  const disponibilidadLista =
-    disponibilidad.clave === claveGP && !disponibilidad.comprobando;
-  const estadosSesion = disponibilidadLista ? disponibilidad.estados : {};
+  const consolidado = esGPConsolidado(carreraSeleccionada);
+  const temporadaHistorica = esTemporadaHistorica(temporada);
 
-  // 1. OBTENER EL CALENDARIO
-  useEffect(() => {
-    const controller = new AbortController();
-
-    async function obtenerCarreras() {
-      setCargandoCarreras(true);
-      setErrorCarreras("");
-      setCarreras([]);
-
-      try {
-        const respuesta = await fetch(`/api/carreras?temporada=${temporada}`, {
-          signal: controller.signal,
-        });
-
-        if (!respuesta.ok) {
-          throw new Error("No se pudo cargar el calendario");
-        }
-
-        const resultado = await respuesta.json();
-
-        if (!Array.isArray(resultado.carreras)) {
-          throw new Error("Formato de calendario inválido");
-        }
-
-        setCarreras(resultado.carreras);
-      } catch (error) {
-        if (error.name !== "AbortError") {
-          setErrorCarreras(error.message);
-        }
-      } finally {
-        if (!controller.signal.aborted) {
-          setCargandoCarreras(false);
-        }
-      }
-    }
-
-    obtenerCarreras();
-
-    return () => controller.abort();
-  }, [temporada]);
-
-  // 2. COMPROBAR QUÉ SESIONES TIENEN RESULTADOS PUBLICADOS
-  // Se reutilizan las dos rutas de resumen que ya existen para Race Week.
-  useEffect(() => {
-    const controller = new AbortController();
-    const clave = `${temporada}-${ronda}`;
-
-    if (cargandoCarreras || errorCarreras || !carreraSeleccionada) {
-      setDisponibilidad({
-        clave,
-        comprobando: Boolean(cargandoCarreras),
-        estados: {},
-      });
-      return () => controller.abort();
-    }
-
-    setDisponibilidad({ clave, comprobando: true, estados: {} });
-
-    async function obtenerResumen(url) {
-      const respuesta = await fetch(url, { signal: controller.signal });
-      if (!respuesta.ok)
-        throw new Error(
-          `Error consultando disponibilidad (${respuesta.status})`,
-        );
-      return respuesta.json();
-    }
-
-    async function comprobarResultados() {
+  // Guarda por temporada y ronda qué sesiones están publicadas.
+  // Durante un fin de semana activo sigue comprobando cada dos minutos.
+  const disponibilidad = useQuery({
+    queryKey: ["publico", "disponibilidad-sesiones", temporada, ronda],
+    enabled: Boolean(carreraSeleccionada),
+    queryFn: async ({ signal }) => {
+      const obtenerResumen = async (url) => {
+        const respuesta = await fetch(url, { signal });
+        if (!respuesta.ok) throw new Error(`Error comprobando resultados (${respuesta.status})`);
+        return respuesta.json();
+      };
       const consultas = [
-        obtenerResumen(
-          `/api/resumen-sesiones?temporada=${temporada}&ronda=${ronda}`,
-        ),
+        obtenerResumen(`/api/resumen-sesiones?temporada=${temporada}&ronda=${ronda}`),
         Number(temporada) >= 2023
-          ? obtenerResumen(
-              `/api/resumen-practicas?temporada=${temporada}&fecha=${carreraSeleccionada.date}`,
-            )
+          ? obtenerResumen(`/api/resumen-practicas?temporada=${temporada}&fecha=${carreraSeleccionada.date}`)
           : Promise.resolve(null),
       ];
-
       const [sesiones, practicas] = await Promise.allSettled(consultas);
-      if (controller.signal.aborted) return;
-
       const estado = (respuesta, tipo) =>
-        respuesta.status === "rejected"
-          ? "error"
-          : hayPodio(respuesta.value, tipo)
-            ? "disponible"
-            : "pendiente";
+        respuesta.status === "rejected" ? "error" : hayPodio(respuesta.value, tipo) ? "disponible" : "pendiente";
+      return {
+        fp1: Number(temporada) < 2023 ? "sin_cobertura" : estado(practicas, "fp1"),
+        fp2: Number(temporada) < 2023 ? "sin_cobertura" : estado(practicas, "fp2"),
+        fp3: Number(temporada) < 2023 ? "sin_cobertura" : estado(practicas, "fp3"),
+        clasificacion_sprint: Number(temporada) < 2023 ? "sin_cobertura" : estado(practicas, "clasificacion_sprint"),
+        clasificacion: estado(sesiones, "clasificacion"),
+        sprint: estado(sesiones, "sprint"),
+        carrera: estado(sesiones, "carrera"),
+      };
+    },
+    // No congelar una respuesta «pendiente» antigua: al publicarse una carrera
+    // las pestañas deben habilitarse incluso si se visitó el GP días antes.
+    staleTime: (consulta) => {
+      const publicados = consulta.state.data;
+      const esenciales = ["clasificacion", "carrera"];
+      if (carreraSeleccionada?.Sprint) esenciales.push("sprint");
+      const completo = esenciales.every((tipo) => publicados?.[tipo] === "disponible");
+      if (completo && (temporadaHistorica || consolidado)) return Infinity;
+      return temporadaHistorica ? DIA : 2 * MINUTO;
+    },
+    refetchInterval: temporadaHistorica || consolidado ? false : 2 * MINUTO,
+    meta: META_PUBLICA,
+  });
+  const disponibilidadLista = Boolean(disponibilidad.data);
+  const estadosSesion = disponibilidad.data ?? {};
 
-      setDisponibilidad({
-        clave,
-        comprobando: false,
-        estados: {
-          fp1:
-            Number(temporada) < 2023
-              ? "sin_cobertura"
-              : estado(practicas, "fp1"),
-          fp2:
-            Number(temporada) < 2023
-              ? "sin_cobertura"
-              : estado(practicas, "fp2"),
-          fp3:
-            Number(temporada) < 2023
-              ? "sin_cobertura"
-              : estado(practicas, "fp3"),
-          clasificacion_sprint:
-            Number(temporada) < 2023
-              ? "sin_cobertura"
-              : estado(practicas, "clasificacion_sprint"),
-          clasificacion: estado(sesiones, "clasificacion"),
-          sprint: estado(sesiones, "sprint"),
-          carrera: estado(sesiones, "carrera"),
-        },
-      });
-    }
-
-    comprobarResultados();
-    // Una vez publicados los resultados, la pestaña se habilita sin recargar.
-    // Las rutas de resumen tienen caché en el backend para proteger las APIs.
-    const intervalo =
-      Number(temporada) >= new Date().getUTCFullYear()
-        ? setInterval(comprobarResultados, 120000)
-        : null;
-
-    return () => {
-      controller.abort();
-      if (intervalo) clearInterval(intervalo);
-    };
-  }, [
-    temporada,
-    ronda,
-    carreraSeleccionada?.date,
-    cargandoCarreras,
-    errorCarreras,
-  ]);
-
-  // 3. OBTENER LOS RESULTADOS DE LA SESIÓN (solo si ya se publicaron)
-  useEffect(() => {
-    const controller = new AbortController();
-
-    async function obtenerResultados() {
-      setCargandoResultados(true);
-      setErrorResultados("");
-      setDatos(null);
-      setSinResultados(false);
-
-      // Una sesión futura o sin datos no debe lanzar una consulta ni dejar
-      // una sección vacía. Si hubo un error verificando las APIs, tampoco
-      // asumimos que hay resultados disponibles.
-      if (!disponibilidadLista || estadosSesion[tipoSesion] !== "disponible") {
-        setCargandoResultados(false);
-        return;
+  // Cada sesión publicada se guarda por temporada, ronda y tipo de sesión.
+  // También ocurre con las rondas pasadas de 2026, no solo con 2020-2025.
+  const disponibles = disponibilidadLista && estadosSesion[tipoSesion] === "disponible";
+  const resultados = useQuery({
+    queryKey: ["publico", "resultados", temporada, ronda, tipoSesion],
+    enabled: disponibles,
+    queryFn: async ({ signal }) => {
+      const url = tipoSesion === "carrera"
+        ? `/api/resultados?temporada=${temporada}&ronda=${ronda}`
+        : esPractica
+          ? `/api/resultados-practica?temporada=${temporada}&ronda=${ronda}&tipo=${tipoSesion}`
+          : `/api/resultados-sesion?temporada=${temporada}&ronda=${ronda}&tipo=${tipoSesion}`;
+      const respuesta = await fetch(url, { signal });
+      if (respuesta.status === 404) {
+        const error = new Error("No hay resultados disponibles de esta sesión");
+        error.status = 404;
+        throw error;
       }
+      if (!respuesta.ok) throw new Error("No se pudieron cargar los resultados");
+      const resultado = await respuesta.json();
+      if (!Array.isArray(resultado?.resultados)) throw new Error("Formato de resultados inválido");
+      return resultado;
+    },
+    staleTime: temporadaHistorica || consolidado ? Infinity : 5 * MINUTO,
+    retry: (intentos, error) => error?.status !== 404 && intentos < 1,
+    meta: META_PUBLICA,
+  });
+  const datos = resultados.data ?? null;
+  const cargandoResultados = disponibles && !datos && resultados.isPending;
+  const sinResultados = !datos && resultados.error?.status === 404;
+  const errorResultados = !datos && resultados.isError && !sinResultados
+    ? resultados.error?.message || "No se pudieron cargar los resultados"
+    : "";
 
-      // Elegir el endpoint según la pestaña
-      const url =
-        tipoSesion === "carrera"
-          ? `/api/resultados?temporada=${temporada}&ronda=${ronda}`
-          : esPractica
-            ? `/api/resultados-practica?temporada=${temporada}&ronda=${ronda}&tipo=${tipoSesion}`
-            : `/api/resultados-sesion?temporada=${temporada}&ronda=${ronda}&tipo=${tipoSesion}`;
-
-      try {
-        const respuesta = await fetch(url, {
-          signal: controller.signal,
-        });
-
-        // La API no tiene resultados de esa sesión
-        if (respuesta.status === 404) {
-          setSinResultados(true);
-          // El resumen pudo haberse publicado antes que la tabla completa.
-          // Hasta que la API la tenga, esta pestaña no estará habilitada.
-          setDisponibilidad((anterior) =>
-            anterior.clave === claveGP
-              ? {
-                  ...anterior,
-                  estados: { ...anterior.estados, [tipoSesion]: "pendiente" },
-                }
-              : anterior,
-          );
-          return;
-        }
-
-        if (!respuesta.ok) {
-          throw new Error("No se pudieron cargar los resultados");
-        }
-
-        const resultado = await respuesta.json();
-
-        if (!Array.isArray(resultado.resultados)) {
-          throw new Error("Formato de resultados inválido");
-        }
-
-        setDatos(resultado);
-      } catch (error) {
-        if (error.name !== "AbortError") {
-          setErrorResultados(error.message);
-        }
-      } finally {
-        if (!controller.signal.aborted) {
-          setCargandoResultados(false);
-        }
-      }
-    }
-
-    obtenerResultados();
-
-    return () => controller.abort();
-  }, [
-    temporada,
-    ronda,
-    tipoSesion,
-    esPractica,
-    disponibilidadLista,
-    estadosSesion[tipoSesion],
-  ]);
-
-  // 3. CAMBIAR TEMPORADA
+  // CAMBIAR TEMPORADA
   function cambiarTemporada(evento) {
-    setParametros({
-      temporada: evento.target.value,
-      ronda: "1",
-      tipo: "carrera",
-    });
+    setParametros({ temporada: evento.target.value, ronda: "1", tipo: "carrera" });
   }
 
   // 4. CAMBIAR GRAN PREMIO
@@ -455,8 +309,10 @@ function Resultados() {
   };
 
   const estaCargando =
-    cargandoCarreras || !disponibilidadLista || cargandoResultados;
-  const mensajeError = errorCarreras || errorResultados;
+    cargandoCarreras || (Boolean(carreraSeleccionada) && !disponibilidadLista && disponibilidad.isPending) || cargandoResultados;
+  const mensajeError = errorCarreras ||
+    (!disponibilidad.data && disponibilidad.isError ? "No se pudo comprobar la disponibilidad de sesiones" : "") ||
+    errorResultados;
 
   const pestanas = [
     ...(carreraSeleccionada?.FirstPractice

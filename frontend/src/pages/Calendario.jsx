@@ -1,4 +1,6 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { META_PUBLICA, vigenciaCalendario } from "../utils/cachePublica";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { SkeletonTarjetas } from "../components/Skeletons";
 import { Link } from "react-router";
@@ -167,52 +169,25 @@ const claseMensaje =
 
 function Calendario() {
   const reducirMovimiento = useReducedMotion();
-  const [carreras, setCarreras] = useState([]);
   const [temporadaSeleccionada, setTemporadaSeleccionada] = useState("2026");
-  const [cargando, setCargando] = useState(true);
-  const [error, setError] = useState("");
   const [horariosAbiertos, setHorariosAbiertos] = useState({});
 
-  // Consultar las carreras de la temporada elegida en el backend.
-  useEffect(() => {
-    const controller = new AbortController();
-
-    async function obtenerCalendario() {
-      setCargando(true);
-      setError("");
-
-      try {
-        const respuesta = await fetch(
-          `/api/carreras?temporada=${temporadaSeleccionada}`,
-          { signal: controller.signal },
-        );
-
-        if (!respuesta.ok) {
-          throw new Error("No se pudo obtener el calendario");
-        }
-
-        const datos = await respuesta.json();
-        if (!Array.isArray(datos.carreras)) {
-          throw new Error("Formato de datos incorrecto");
-        }
-
-        if (!controller.signal.aborted) {
-          setCarreras(datos.carreras);
-        }
-      } catch (error) {
-        if (!controller.signal.aborted) {
-          setError(error.message);
-        }
-      } finally {
-        if (!controller.signal.aborted) {
-          setCargando(false);
-        }
-      }
-    }
-
-    obtenerCalendario();
-    return () => controller.abort();
-  }, [temporadaSeleccionada]);
+  // Se comparte con Inicio y Resultados. Una temporada histórica no se vuelve a pedir.
+  const calendario = useQuery({
+    queryKey: ["publico", "carreras", temporadaSeleccionada],
+    queryFn: async ({ signal }) => {
+      const respuesta = await fetch(`/api/carreras?temporada=${temporadaSeleccionada}`, { signal });
+      if (!respuesta.ok) throw new Error("No se pudo obtener el calendario");
+      const datos = await respuesta.json();
+      if (!Array.isArray(datos?.carreras)) throw new Error("Formato de datos incorrecto");
+      return datos;
+    },
+    staleTime: vigenciaCalendario(temporadaSeleccionada),
+    meta: META_PUBLICA,
+  });
+  const carreras = calendario.data?.carreras ?? [];
+  const cargando = !calendario.data && calendario.isPending;
+  const error = !calendario.data && calendario.isError ? calendario.error?.message || "No se pudo cargar el calendario" : "";
 
   const ahora = new Date();
   const proximaCarrera = carreras.find((carrera) => {
