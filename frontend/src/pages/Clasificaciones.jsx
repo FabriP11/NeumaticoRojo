@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import { useQuery } from "@tanstack/react-query";
+import { META_PUBLICA, esTemporadaHistorica } from "../utils/cachePublica";
 import { Link } from "react-router";
 import {
   AlertCircle,
@@ -194,7 +195,7 @@ function Clasificaciones() {
   const reducirMovimiento = useReducedMotion();
   const [temporada, setTemporada] = useState("2026");
   const [tipo, setTipo] = useState("pilotos");
-  const esTemporadaActual = temporada === "2026";
+  const esTemporadaActual = !esTemporadaHistorica(temporada);
 
   // Una entrada de caché independiente para cada temporada.
   const clasificaciones = useQuery({
@@ -218,8 +219,8 @@ function Clasificaciones() {
       }
       return datos;
     },
-    staleTime: esTemporadaActual ? 5 * 60 * 1000 : 24 * 60 * 60 * 1000,
-    gcTime: 24 * 60 * 60 * 1000,
+    staleTime: esTemporadaActual ? 5 * 60 * 1000 : Infinity,
+    meta: META_PUBLICA,
     refetchInterval: esTemporadaActual ? 5 * 60 * 1000 : false,
     refetchIntervalInBackground: false,
   });
@@ -246,8 +247,8 @@ function Clasificaciones() {
       }
       return datos.pilotos;
     },
-    staleTime: esTemporadaActual ? 30 * 60 * 1000 : 24 * 60 * 60 * 1000,
-    gcTime: 24 * 60 * 60 * 1000,
+    staleTime: esTemporadaActual ? 30 * 60 * 1000 : Infinity,
+    meta: META_PUBLICA,
     retry: 0,
   });
 

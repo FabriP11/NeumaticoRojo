@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { META_PUBLICA, esTemporadaHistorica } from "../utils/cachePublica";
 import { Link } from "react-router";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import {
@@ -302,9 +303,11 @@ function TablasInicio() {
       }
       return resultado;
     },
-    staleTime: 5 * 60 * 1000,
-    gcTime: 24 * 60 * 60 * 1000,
-    refetchInterval: 5 * 60 * 1000,
+    // Mientras transcurra 2026, actualizar ambas tablas cada 5 minutos.
+    // Una vez terminada la temporada, conservar la clasificación final.
+    staleTime: esTemporadaHistorica(TEMPORADA) ? Infinity : 5 * 60 * 1000,
+    meta: META_PUBLICA,
+    refetchInterval: esTemporadaHistorica(TEMPORADA) ? false : 5 * 60 * 1000,
     refetchIntervalInBackground: false,
   });
 
