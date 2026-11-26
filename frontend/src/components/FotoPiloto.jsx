@@ -104,7 +104,11 @@ function FotoPiloto({
   return (
     <span
       className={`relative inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full border border-black/10 shadow-sm ring-1 ring-black/5 dark:border-white/20 dark:ring-white/10 ${TAMANOS[tamano] || TAMANOS.sm} ${className}`}
-      style={{ backgroundColor: colorEquipo || "#475569" }}
+      style={{
+        backgroundColor: colorEquipo || "#475569",
+        backgroundImage:
+          "radial-gradient(circle at 30% 20%, rgba(255,255,255,0.26), transparent 58%), linear-gradient(150deg, transparent 35%, rgba(0,0,0,0.32) 100%)",
+      }}
       aria-hidden="true"
     >
       {archivo && !imagenFallida && (
@@ -124,6 +128,17 @@ function FotoPiloto({
           onError={() => setImagenFallida(true)}
         />
       )}
+      {/* Relieve sutil sobre el retrato sin ocultar el color de la escudería. */}
+      <span
+        className="pointer-events-none absolute inset-0 rounded-full"
+        style={{
+          background:
+            "linear-gradient(145deg, rgba(255,255,255,0.09) 0%, transparent 42%, rgba(0,0,0,0.22) 100%)",
+          boxShadow:
+            "inset 0 1px 2px rgba(255,255,255,0.15), inset 0 -3px 7px rgba(0,0,0,0.22)",
+        }}
+        aria-hidden="true"
+      />
     </span>
   );
 }

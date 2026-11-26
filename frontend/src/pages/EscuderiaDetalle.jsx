@@ -66,6 +66,89 @@ const fondos = {
   cadillac: ["#1b2431", "#56617a"],
 };
 
+// Bandera rectangular de la nacionalidad, con el mismo estilo de Clasificaciones.
+const CODIGOS_NACIONALIDAD = {
+  american: "us",
+  australian: "au",
+  argentine: "ar",
+  argentinian: "ar",
+  austrian: "at",
+  belgian: "be",
+  brazilian: "br",
+  british: "gb",
+  canadian: "ca",
+  chinese: "cn",
+  danish: "dk",
+  dutch: "nl",
+  finnish: "fi",
+  french: "fr",
+  german: "de",
+  hungarian: "hu",
+  indian: "in",
+  indonesian: "id",
+  irish: "ie",
+  italian: "it",
+  japanese: "jp",
+  malaysian: "my",
+  mexican: "mx",
+  monegasque: "mc",
+  "new zealander": "nz",
+  "new zealand": "nz",
+  polish: "pl",
+  portuguese: "pt",
+  russian: "ru",
+  southafrican: "za",
+  "south african": "za",
+  spanish: "es",
+  swedish: "se",
+  swiss: "ch",
+  thai: "th",
+  turkish: "tr",
+  venezuelan: "ve",
+  // También se contemplan algunos nombres de países.
+  australia: "au",
+  brazil: "br",
+  france: "fr",
+  germany: "de",
+  italy: "it",
+  japan: "jp",
+  monaco: "mc",
+  netherlands: "nl",
+  spain: "es",
+  "united kingdom": "gb",
+  "united states": "us",
+};
+
+function BanderaEscuderia({ nacionalidad }) {
+  const codigo =
+    CODIGOS_NACIONALIDAD[
+      String(nacionalidad || "")
+        .trim()
+        .toLowerCase()
+    ];
+
+  return (
+    <span
+      className="relative inline-flex h-3 w-[18px] shrink-0 items-center justify-center overflow-hidden rounded-[2px] border border-white/20 bg-black/20"
+      aria-hidden="true"
+    >
+      <Globe2 className="absolute h-3 w-3 text-white/85" />
+      {codigo && (
+        <img
+          src={`https://flagcdn.com/w80/${codigo}.png`}
+          alt=""
+          loading="lazy"
+          decoding="async"
+          className="relative h-full w-full object-cover"
+          onError={(evento) => {
+            evento.currentTarget.style.display = "none";
+          }}
+        />
+      )}
+    </span>
+  );
+}
+
 // Pilotos titulares de 2026: no dependen del orden en el que llega
 // el array "pilotos" (que también puede incluir pilotos de reserva).
 // Haas: Bearman y Câmara desde el GP de São Paulo de noviembre de 2026.
@@ -303,7 +386,8 @@ function EscuderiaDetalle() {
               </h1>
               <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 font-nav text-sm font-semibold text-white/90">
                 <span className="inline-flex items-center gap-2">
-                  <Globe2 className="h-4 w-4" /> {escuderia.nationality}
+                  <BanderaEscuderia nacionalidad={escuderia.nationality} />{" "}
+                  {escuderia.nationality}
                 </span>
                 <span className="inline-flex items-center gap-2">
                   <CalendarDays className="h-4 w-4" /> Temporada {temporada}
@@ -311,12 +395,17 @@ function EscuderiaDetalle() {
               </div>
 
               {pilotosEncabezado.length > 0 && (
-                <div className="mt-3 flex flex-wrap gap-2" aria-label="Perfiles de pilotos">
+                <div
+                  className="mt-3 flex flex-wrap gap-2"
+                  aria-label="Perfiles de pilotos"
+                >
                   {pilotosEncabezado.map((piloto) => (
                     <Link
                       key={piloto.driverId}
                       to={`/pilotos/${piloto.driverId}?temporada=${temporada}`}
-                      state={{ volverA: `/escuderias/${id}?temporada=${temporada}` }}
+                      state={{
+                        volverA: `/escuderias/${id}?temporada=${temporada}`,
+                      }}
                       aria-label={`Ver perfil de ${piloto.givenName} ${piloto.familyName}`}
                       className="group inline-flex min-h-11 max-w-full items-center gap-1.5 rounded-full border border-white/20 bg-black/30 py-1 pl-1 pr-2.5 text-white no-underline backdrop-blur-sm transition-colors hover:border-white/60 hover:bg-black/50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
                     >
@@ -429,7 +518,6 @@ function EscuderiaDetalle() {
             </motion.div>
           ))}
         </section>
-
       </div>
     </main>
   );

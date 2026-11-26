@@ -18,6 +18,98 @@ import { SkeletonTarjetas } from "../components/Skeletons";
 
 const TEMPORADAS = ["2026", "2025", "2024", "2023", "2022", "2021", "2020"];
 
+// Misma correspondencia de nacionalidades que usa Clasificaciones.jsx.
+const CODIGOS_NACIONALIDAD = {
+  american: "us",
+  australian: "au",
+  argentine: "ar",
+  argentinian: "ar",
+  austrian: "at",
+  belgian: "be",
+  brazilian: "br",
+  british: "gb",
+  canadian: "ca",
+  chinese: "cn",
+  danish: "dk",
+  dutch: "nl",
+  finnish: "fi",
+  french: "fr",
+  german: "de",
+  hungarian: "hu",
+  indian: "in",
+  indonesian: "id",
+  irish: "ie",
+  italian: "it",
+  japanese: "jp",
+  malaysian: "my",
+  mexican: "mx",
+  monegasque: "mc",
+  "new zealander": "nz",
+  "new zealand": "nz",
+  polish: "pl",
+  portuguese: "pt",
+  russian: "ru",
+  southafrican: "za",
+  "south african": "za",
+  spanish: "es",
+  swedish: "se",
+  swiss: "ch",
+  thai: "th",
+  turkish: "tr",
+  venezuelan: "ve",
+  australia: "au",
+  brazil: "br",
+  france: "fr",
+  germany: "de",
+  italy: "it",
+  japan: "jp",
+  monaco: "mc",
+  netherlands: "nl",
+  spain: "es",
+  "united kingdom": "gb",
+  "united states": "us",
+};
+
+function BanderaNacionalidad({ nacionalidad, circular = false }) {
+  const codigo =
+    CODIGOS_NACIONALIDAD[
+      String(nacionalidad || "")
+        .trim()
+        .toLowerCase()
+    ];
+  const IconoAlternativo = circular ? Globe2 : Flag;
+
+  if (!codigo) {
+    return (
+      <IconoAlternativo
+        className="h-3.5 w-3.5 shrink-0 text-[#e10600]"
+        aria-hidden="true"
+      />
+    );
+  }
+
+  return (
+    <span
+      className={`relative inline-flex shrink-0 items-center justify-center overflow-hidden border border-black/10 bg-gray-100 dark:border-white/15 dark:bg-[#313540] ${
+        circular ? "h-4 w-4 rounded-full" : "h-3 w-[18px] rounded-[2px]"
+      }`}
+      title={nacionalidad}
+      aria-hidden="true"
+    >
+      <img
+        src={`https://flagcdn.com/w80/${codigo}.png`}
+        alt=""
+        loading="lazy"
+        decoding="async"
+        className="h-full w-full object-cover"
+        onError={(evento) => {
+          evento.currentTarget.style.display = "none";
+        }}
+      />
+    </span>
+  );
+}
+
 // Mismos degradados que las cabeceras de PilotoDetalle y EscuderiaDetalle.
 const FONDOS_ESCUDERIAS = {
   mercedes: ["#034c49", "#13bea9"],
@@ -265,7 +357,9 @@ function Pilotos() {
           </div>
         </header>
 
-        {cargando && <SkeletonTarjetas cantidad={6} etiqueta="Cargando pilotos" />}
+        {cargando && (
+          <SkeletonTarjetas cantidad={6} etiqueta="Cargando pilotos" />
+        )}
 
         {!cargando && error && (
           <div
@@ -305,6 +399,9 @@ function Pilotos() {
                 NOMBRES_ESCUDERIAS[idEquipo] ||
                 piloto.Constructors?.[0]?.name ||
                 "Sin escudería";
+              const nacionalidadEquipo =
+                equipoEnTemporada?.nationality ||
+                piloto.Constructors?.[0]?.nationality;
 
               return (
                 <Link
@@ -359,18 +456,17 @@ function Pilotos() {
                       </div>
 
                       <p className="m-0 flex min-w-0 items-center gap-2 font-nav text-sm text-gray-600 dark:text-gray-400">
-                        <Flag
-                          className="h-4 w-4 shrink-0 text-[#e10600]"
-                          aria-hidden="true"
+                        <BanderaNacionalidad
+                          nacionalidad={nacionalidadEquipo}
                         />
                         <span className="min-w-0 break-words">
                           {nombreEscuderia}
                         </span>
                       </p>
                       <p className="m-0 flex items-center gap-2 font-nav text-xs text-gray-500 dark:text-gray-400">
-                        <Globe2
-                          className="h-3.5 w-3.5 shrink-0"
-                          aria-hidden="true"
+                        <BanderaNacionalidad
+                          nacionalidad={piloto.Driver.nationality}
+                          circular
                         />
                         {piloto.Driver.nationality ||
                           "Nacionalidad no disponible"}
