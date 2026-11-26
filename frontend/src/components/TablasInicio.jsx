@@ -19,6 +19,74 @@ import { SkeletonFilas } from "./Skeletons";
 
 const TEMPORADA = 2026;
 
+// Logos monocromos con fondo transparente para los avatares de escuderías.
+// Se incluyen los logos incorporados de Alpine y Haas.
+const LOGOS_ESCUDERIAS = {
+  alpine: "alpine",
+  haas: "haas",
+  aston_martin: "aston_martin",
+  aston: "aston_martin",
+  audi: "audi",
+  sauber: "audi",
+  cadillac: "cadillac",
+  ferrari: "ferrari",
+  mclaren: "mclaren",
+  mercedes: "mercedes",
+  rb: "rb",
+  racing_bulls: "rb",
+  red_bull: "red_bull",
+  red_bull_racing: "red_bull",
+  williams: "williams",
+};
+
+function LogoEscuderia({ idEscuderia, nombre, colorEquipo }) {
+  const [imagenFallida, setImagenFallida] = useState(false);
+  const clave = String(idEscuderia ?? "").toLowerCase();
+  const archivo = LOGOS_ESCUDERIAS[clave];
+  const inicial = String(nombre || "E")
+    .trim()
+    .charAt(0)
+    .toUpperCase();
+
+  return (
+    <span
+      className="relative inline-flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full"
+      style={{
+        backgroundColor: colorEquipo,
+        backgroundImage:
+          "radial-gradient(circle at 30% 20%, rgba(255,255,255,0.26), transparent 58%), linear-gradient(150deg, transparent 35%, rgba(0,0,0,0.32) 100%)",
+      }}
+      aria-hidden="true"
+    >
+      {archivo && !imagenFallida ? (
+        <img
+          src={`/images/escuderias/iconos/${archivo}.avif`}
+          alt=""
+          loading="lazy"
+          decoding="async"
+          className="h-6 w-6 object-contain"
+          onError={() => setImagenFallida(true)}
+        />
+      ) : (
+        <span className="font-racing text-sm font-extrabold text-white">
+          {inicial}
+        </span>
+      )}
+      {/* Iluminación y profundidad sutiles, sin halo exterior. */}
+      <span
+        className="pointer-events-none absolute inset-0 rounded-full"
+        style={{
+          background:
+            "linear-gradient(145deg, rgba(255,255,255,0.09) 0%, transparent 42%, rgba(0,0,0,0.22) 100%)",
+          boxShadow:
+            "inset 0 1px 2px rgba(255,255,255,0.15), inset 0 -3px 7px rgba(0,0,0,0.22)",
+        }}
+        aria-hidden="true"
+      />
+    </span>
+  );
+}
+
 // Tabla reutilizable para pilotos y escuderías.
 function TablaClasificacion({ titulo, Icono, datos, tipo }) {
   const [expandido, setExpandido] = useState(false);
@@ -124,12 +192,13 @@ function TablaClasificacion({ titulo, Icono, datos, tipo }) {
                           {elemento.posicion}°
                         </span>
 
-                        {/* INDICADOR DEL EQUIPO */}
+                        {/* LOGO CIRCULAR DE LA ESCUDERÍA */}
                         {!esPiloto && (
-                          <span
-                            className="h-2.5 w-2.5 shrink-0 rounded-full"
-                            style={{ backgroundColor: colorEquipo }}
-                            aria-hidden="true"
+                          <LogoEscuderia
+                            key={elemento.id_escuderia}
+                            idEscuderia={elemento.id_escuderia}
+                            nombre={elemento.nombre}
+                            colorEquipo={colorEquipo}
                           />
                         )}
 
@@ -272,8 +341,16 @@ function TablasInicio() {
       {/* CARGANDO */}
       {cargando && (
         <div className="grid grid-cols-1 gap-4 @min-[550px]:grid-cols-2">
-          <SkeletonFilas oscuro cantidad={5} etiqueta="Cargando clasificación de pilotos" />
-          <SkeletonFilas oscuro cantidad={5} etiqueta="Cargando clasificación de escuderías" />
+          <SkeletonFilas
+            oscuro
+            cantidad={5}
+            etiqueta="Cargando clasificación de pilotos"
+          />
+          <SkeletonFilas
+            oscuro
+            cantidad={5}
+            etiqueta="Cargando clasificación de escuderías"
+          />
         </div>
       )}
 

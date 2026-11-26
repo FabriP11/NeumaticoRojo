@@ -21,7 +21,7 @@ import { SkeletonFilas } from "../components/Skeletons";
 const TEMPORADAS = ["2026", "2025", "2024", "2023", "2022", "2021", "2020"];
 
 // Nacionalidades que devuelve la API de F1 (Jolpica/Ergast).
-// Los códigos ISO permiten mostrar las banderas de manera circular.
+// Los códigos ISO permiten mostrar banderas pequeñas y rectangulares.
 const CODIGOS_NACIONALIDAD = {
   american: "us",
   australian: "au",
@@ -74,7 +74,7 @@ const CODIGOS_NACIONALIDAD = {
   "united states": "us",
 };
 
-function BanderaCircular({ nacionalidad }) {
+function BanderaRectangular({ nacionalidad }) {
   const clave = String(nacionalidad || "")
     .trim()
     .toLowerCase();
@@ -85,7 +85,7 @@ function BanderaCircular({ nacionalidad }) {
   return (
     <span
       title={nacionalidad}
-      className="relative inline-flex h-6 w-6 shrink-0 items-center justify-center overflow-hidden rounded-full border border-slate-200 bg-slate-100 text-slate-500 shadow-sm dark:border-white/15 dark:bg-[#313540] dark:text-slate-300"
+      className="relative inline-flex h-3 w-[18px] shrink-0 items-center justify-center overflow-hidden rounded-[2px] border border-slate-200/70 bg-slate-100 text-slate-500 dark:border-white/15 dark:bg-[#313540] dark:text-slate-300"
     >
       <Globe2 className="absolute h-3.5 w-3.5" aria-hidden="true" />
       {codigo && (
@@ -112,6 +112,75 @@ function ColorEscuderia({ id, nombre }) {
       style={{ backgroundColor: obtenerColorEscuderia(id) }}
       aria-hidden="true"
     />
+  );
+}
+
+// Logos utilizados en la temporada 2026.
+// Las temporadas anteriores mantienen sus indicadores originales.
+const LOGOS_ESCUDERIAS_2026 = {
+  alpine: "alpine",
+  aston_martin: "aston_martin",
+  aston: "aston_martin",
+  audi: "audi",
+  sauber: "audi",
+  cadillac: "cadillac",
+  ferrari: "ferrari",
+  haas: "haas",
+  mclaren: "mclaren",
+  mercedes: "mercedes",
+  rb: "rb",
+  racing_bulls: "rb",
+  red_bull: "red_bull",
+  red_bull_racing: "red_bull",
+  williams: "williams",
+};
+
+function LogoEscuderia({ id, nombre }) {
+  const [imagenFallida, setImagenFallida] = useState(false);
+  const archivo = LOGOS_ESCUDERIAS_2026[String(id ?? "").toLowerCase()];
+  const colorEquipo = obtenerColorEscuderia(id);
+  const inicial = String(nombre || "E")
+    .trim()
+    .charAt(0)
+    .toUpperCase();
+
+  return (
+    <span
+      className="relative inline-flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full"
+      style={{
+        backgroundColor: colorEquipo,
+        backgroundImage:
+          "radial-gradient(circle at 30% 20%, rgba(255,255,255,0.26), transparent 58%), linear-gradient(150deg, transparent 35%, rgba(0,0,0,0.32) 100%)",
+      }}
+      title={nombre || "Escudería"}
+      aria-hidden="true"
+    >
+      {archivo && !imagenFallida ? (
+        <img
+          src={`/images/escuderias/iconos/${archivo}.avif`}
+          alt=""
+          loading="lazy"
+          decoding="async"
+          className="h-6 w-6 object-contain"
+          onError={() => setImagenFallida(true)}
+        />
+      ) : (
+        <span className="font-racing text-sm font-extrabold text-white">
+          {inicial}
+        </span>
+      )}
+      {/* Iluminación y profundidad sutiles, sin halo exterior. */}
+      <span
+        className="pointer-events-none absolute inset-0 rounded-full"
+        style={{
+          background:
+            "linear-gradient(145deg, rgba(255,255,255,0.09) 0%, transparent 42%, rgba(0,0,0,0.22) 100%)",
+          boxShadow:
+            "inset 0 1px 2px rgba(255,255,255,0.15), inset 0 -3px 7px rgba(0,0,0,0.22)",
+        }}
+        aria-hidden="true"
+      />
+    </span>
   );
 }
 
@@ -251,7 +320,10 @@ function Clasificaciones() {
       </div>
 
       {/* Selector animado: conserva el estado y las consultas originales. */}
-      <div className="mb-6 inline-grid w-full grid-cols-2 gap-1 rounded-xl border border-slate-200 bg-slate-100 p-1 sm:w-auto dark:border-white/10 dark:bg-[#242631]" aria-label="Tipo de clasificación">
+      <div
+        className="mb-6 inline-grid w-full grid-cols-2 gap-1 rounded-xl border border-slate-200 bg-slate-100 p-1 sm:w-auto dark:border-white/10 dark:bg-[#242631]"
+        aria-label="Tipo de clasificación"
+      >
         {[
           { id: "pilotos", texto: "Pilotos", Icono: UserRound },
           { id: "constructores", texto: "Constructores", Icono: Flag },
@@ -262,25 +334,36 @@ function Clasificaciones() {
             onClick={() => setTipo(id)}
             aria-pressed={tipo === id}
             className={`relative flex min-h-11 items-center justify-center gap-2 rounded-lg px-5 py-2.5 font-nav text-base font-bold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e10600] ${
-              tipo === id ? "text-white" : "text-slate-600 hover:text-[#e10600] dark:text-slate-300 dark:hover:text-white"
+              tipo === id
+                ? "text-white"
+                : "text-slate-600 hover:text-[#e10600] dark:text-slate-300 dark:hover:text-white"
             }`}
           >
             {tipo === id && (
               <motion.span
                 layoutId="indicador-tipo-clasificaciones"
                 className="absolute inset-0 rounded-lg bg-[#e10600] shadow-md"
-                transition={reducirMovimiento ? { duration: 0 } : { type: "spring", stiffness: 420, damping: 34 }}
+                transition={
+                  reducirMovimiento
+                    ? { duration: 0 }
+                    : { type: "spring", stiffness: 420, damping: 34 }
+                }
                 aria-hidden="true"
               />
             )}
-            <Icono className="relative z-10 h-4 w-4 shrink-0" aria-hidden="true" />
+            <Icono
+              className="relative z-10 h-4 w-4 shrink-0"
+              aria-hidden="true"
+            />
             <span className="relative z-10">{texto}</span>
           </button>
         ))}
       </div>
 
       {/* CARGANDO / ERROR */}
-      {cargando && <SkeletonFilas cantidad={10} etiqueta="Cargando clasificaciones" />}
+      {cargando && (
+        <SkeletonFilas cantidad={10} etiqueta="Cargando clasificaciones" />
+      )}
 
       {!cargando && error && (
         <div
@@ -333,7 +416,8 @@ function Clasificaciones() {
                 const idPiloto = piloto.Driver.driverId;
                 const detalles = detallesPilotos[idPiloto] || {};
                 const idEquipo =
-                  detalles.id_escuderia || piloto.Constructors?.[0]?.constructorId;
+                  detalles.id_escuderia ||
+                  piloto.Constructors?.[0]?.constructorId;
                 const numero = detalles.numero ?? piloto.Driver.permanentNumber;
                 const colorEquipo = obtenerColorEscuderia(idEquipo);
                 const nombre = `${piloto.Driver.givenName} ${piloto.Driver.familyName}`;
@@ -356,7 +440,9 @@ function Clasificaciones() {
                           tamano="md"
                         />
                       ) : (
-                        <BanderaCircular nacionalidad={piloto.Driver.nationality} />
+                        <BanderaRectangular
+                          nacionalidad={piloto.Driver.nationality}
+                        />
                       )}
                       <div className="min-w-0 flex-1">
                         <Link
@@ -364,16 +450,27 @@ function Clasificaciones() {
                           className="inline-flex min-w-0 items-start gap-1 break-words font-nav text-sm font-bold text-[#242731] no-underline hover:text-[#e10600] dark:text-white dark:hover:text-[#ff6b6b]"
                         >
                           {nombre}
-                          <ArrowUpRight className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                          <ArrowUpRight
+                            className="mt-0.5 h-3.5 w-3.5 shrink-0"
+                            aria-hidden="true"
+                          />
                         </Link>
                         <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500 dark:text-[#aeb4c2]">
                           {numero != null && String(numero).trim() !== "" && (
-                            <strong style={{ color: colorEquipo }}>#{numero}</strong>
+                            <strong style={{ color: colorEquipo }}>
+                              #{numero}
+                            </strong>
                           )}
                           {piloto.Constructors?.length > 0 ? (
                             piloto.Constructors.map((equipo) => (
-                              <span key={equipo.constructorId} className="inline-flex items-center gap-1">
-                                <ColorEscuderia id={equipo.constructorId} nombre={equipo.name} />
+                              <span
+                                key={equipo.constructorId}
+                                className="inline-flex items-center gap-1"
+                              >
+                                <ColorEscuderia
+                                  id={equipo.constructorId}
+                                  nombre={equipo.name}
+                                />
                                 {equipo.name}
                               </span>
                             ))
@@ -385,12 +482,20 @@ function Clasificaciones() {
                     </div>
                     <dl className="mt-3 grid grid-cols-2 gap-2 text-center">
                       <div className="rounded-lg bg-slate-100 px-3 py-2 dark:bg-[#111219]">
-                        <dt className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Victorias</dt>
-                        <dd className="mt-1 font-racing text-base font-bold tabular-nums"><NumeroAnimado valor={piloto.wins} /></dd>
+                        <dt className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                          Victorias
+                        </dt>
+                        <dd className="mt-1 font-racing text-base font-bold tabular-nums">
+                          <NumeroAnimado valor={piloto.wins} />
+                        </dd>
                       </div>
                       <div className="rounded-lg bg-slate-100 px-3 py-2 dark:bg-[#111219]">
-                        <dt className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Puntos</dt>
-                        <dd className="mt-1 font-racing text-base font-extrabold tabular-nums"><NumeroAnimado valor={piloto.points} /></dd>
+                        <dt className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                          Puntos
+                        </dt>
+                        <dd className="mt-1 font-racing text-base font-extrabold tabular-nums">
+                          <NumeroAnimado valor={piloto.points} />
+                        </dd>
                       </div>
                     </dl>
                   </article>
@@ -411,18 +516,37 @@ function Clasificaciones() {
                       <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-slate-100 font-racing text-lg font-extrabold text-[#e10600] dark:bg-[#292b35]">
                         {constructor.position}
                       </span>
-                      <span className="h-7 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: obtenerColorEscuderia(idEquipo) }} aria-hidden="true" />
+                      {temporada === "2026" ? (
+                        <LogoEscuderia
+                          key={`${temporada}-${idEquipo}`}
+                          id={idEquipo}
+                          nombre={equipo.name}
+                        />
+                      ) : (
+                        <span
+                          className="h-7 w-1.5 shrink-0 rounded-full"
+                          style={{
+                            backgroundColor: obtenerColorEscuderia(idEquipo),
+                          }}
+                          aria-hidden="true"
+                        />
+                      )}
                       <div className="min-w-0 flex-1">
                         <Link
                           to={`/escuderias/${idEquipo}?temporada=${temporada}`}
                           className="inline-flex min-w-0 items-start gap-1 break-words font-nav text-sm font-bold text-[#242731] no-underline hover:text-[#e10600] dark:text-white dark:hover:text-[#ff6b6b]"
                         >
                           {equipo.name}
-                          <ArrowUpRight className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                          <ArrowUpRight
+                            className="mt-0.5 h-3.5 w-3.5 shrink-0"
+                            aria-hidden="true"
+                          />
                         </Link>
                         {equipo.nationality && (
                           <div className="mt-1 flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
-                            <BanderaCircular nacionalidad={equipo.nationality} />
+                            <BanderaRectangular
+                              nacionalidad={equipo.nationality}
+                            />
                             {equipo.nationality}
                           </div>
                         )}
@@ -430,12 +554,20 @@ function Clasificaciones() {
                     </div>
                     <dl className="mt-3 grid grid-cols-2 gap-2 text-center">
                       <div className="rounded-lg bg-slate-100 px-3 py-2 dark:bg-[#111219]">
-                        <dt className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Victorias</dt>
-                        <dd className="mt-1 font-racing text-base font-bold tabular-nums"><NumeroAnimado valor={constructor.wins} /></dd>
+                        <dt className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                          Victorias
+                        </dt>
+                        <dd className="mt-1 font-racing text-base font-bold tabular-nums">
+                          <NumeroAnimado valor={constructor.wins} />
+                        </dd>
                       </div>
                       <div className="rounded-lg bg-slate-100 px-3 py-2 dark:bg-[#111219]">
-                        <dt className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Puntos</dt>
-                        <dd className="mt-1 font-racing text-base font-extrabold tabular-nums"><NumeroAnimado valor={constructor.points} /></dd>
+                        <dt className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                          Puntos
+                        </dt>
+                        <dd className="mt-1 font-racing text-base font-extrabold tabular-nums">
+                          <NumeroAnimado valor={constructor.points} />
+                        </dd>
                       </div>
                     </dl>
                   </article>
@@ -525,7 +657,7 @@ function Clasificaciones() {
                                 tamano="md"
                               />
                             ) : (
-                              <BanderaCircular
+                              <BanderaRectangular
                                 nacionalidad={piloto.Driver.nationality}
                               />
                             )}
@@ -605,10 +737,18 @@ function Clasificaciones() {
 
                         <td className={CLASE_CELDA}>
                           <div className="flex min-w-0 flex-wrap items-center gap-3">
-                            <ColorEscuderia
-                              id={idEquipo}
-                              nombre={equipo.name}
-                            />
+                            {temporada === "2026" ? (
+                              <LogoEscuderia
+                                key={`${temporada}-${idEquipo}`}
+                                id={idEquipo}
+                                nombre={equipo.name}
+                              />
+                            ) : (
+                              <ColorEscuderia
+                                id={idEquipo}
+                                nombre={equipo.name}
+                              />
+                            )}
                             <Link
                               to={`/escuderias/${idEquipo}?temporada=${temporada}`}
                               className="group inline-flex min-w-0 items-center gap-1 font-nav text-base font-bold text-[#242731] no-underline transition-colors hover:text-[#e10600] dark:text-[#edf0f7] dark:hover:text-[#ff6b6b]"
@@ -623,7 +763,7 @@ function Clasificaciones() {
 
                           {equipo.nationality && (
                             <div className="mt-1.5 flex items-center gap-2 font-nav text-xs text-slate-500 dark:text-[#aeb4c2]">
-                              <BanderaCircular
+                              <BanderaRectangular
                                 nacionalidad={equipo.nationality}
                               />
                               <span>{equipo.nationality}</span>
