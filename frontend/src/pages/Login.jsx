@@ -69,19 +69,19 @@ function Login() {
   }
 
   return (
-    <main className="min-h-[calc(100vh-100px)] bg-[#101015] px-4 py-10 text-white sm:px-6 lg:py-16">
+    <main className="min-h-[calc(100vh-100px)] bg-[#f3f4f8] px-4 py-10 text-[#15151d] sm:px-6 lg:py-16 dark:bg-[#101015] dark:text-white">
       <div className="mx-auto max-w-5xl">
         <Link
           to="/"
-          className="mb-7 inline-flex items-center gap-2 text-sm font-semibold text-[#b8b8c2] no-underline transition-colors hover:text-white"
+          className="mb-7 inline-flex items-center gap-2 text-sm font-semibold text-slate-600 no-underline transition-colors hover:text-[#e10600] dark:text-[#b8b8c2] dark:hover:text-white"
         >
           <ArrowLeft className="h-4 w-4" aria-hidden="true" />
           Volver al inicio
         </Link>
 
-        <div className="grid overflow-hidden rounded-2xl border border-white/10 bg-[#1b1b23] shadow-[0_24px_80px_rgba(0,0,0,0.4)] lg:grid-cols-[0.9fr_1.1fr]">
+        <div className="grid overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_18px_55px_rgba(30,41,59,0.10)] lg:grid-cols-[0.9fr_1.1fr] dark:border-white/10 dark:bg-[#1b1b23] dark:shadow-[0_24px_80px_rgba(0,0,0,0.4)]">
           {/* PANEL DE PRESENTACIÓN */}
-          <aside className="relative hidden min-h-[560px] flex-col justify-between overflow-hidden border-r border-white/10 bg-[#e10600] p-10 lg:flex">
+          <aside className="relative hidden min-h-[560px] flex-col justify-between overflow-hidden border-r border-white/10 bg-[#e10600] p-10 text-white lg:flex">
             {/* Elementos decorativos, sin imágenes externas */}
             <div
               className="pointer-events-none absolute -right-28 -top-24 h-80 w-80 rounded-full border-[52px] border-white/10"
@@ -120,20 +120,20 @@ function Login() {
           {/* FORMULARIO DE INICIO DE SESIÓN */}
           <section className="p-6 sm:p-10 lg:p-12">
             <div className="mb-9">
-              <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl border border-[#e10600]/35 bg-[#e10600]/10 text-[#ff4141]">
+              <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl border border-[#e10600]/30 bg-[#e10600]/10 text-[#e10600] dark:border-[#e10600]/35 dark:text-[#ff4141]">
                 <LockKeyhole
                   className="h-6 w-6"
                   strokeWidth={2}
                   aria-hidden="true"
                 />
               </div>
-              <p className="mb-2 text-xs font-extrabold uppercase tracking-[0.2em] text-[#ff4444]">
+              <p className="mb-2 text-xs font-extrabold uppercase tracking-[0.2em] text-[#c51d18] dark:text-[#ff4444]">
                 Acceso de usuarios
               </p>
-              <h1 className="m-0 text-3xl font-black uppercase italic tracking-tight text-white sm:text-4xl">
+              <h1 className="m-0 text-3xl font-black uppercase italic tracking-tight text-[#15151d] sm:text-4xl dark:text-white">
                 Iniciar sesión
               </h1>
-              <p className="mt-3 max-w-md text-sm leading-relaxed text-[#a9a9b4]">
+              <p className="mt-3 max-w-md text-sm leading-relaxed text-slate-600 dark:text-[#a9a9b4]">
                 Bienvenido de nuevo a NeumaticoRojo. Accedé a tu cuenta para
                 personalizar tu experiencia en Fórmula 1.
               </p>
@@ -144,7 +144,7 @@ function Login() {
               <div>
                 <div className="relative nr-campo-flotante">
                   <UserRound
-                    className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#888894]"
+                    className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-500 dark:text-[#888894]"
                     aria-hidden="true"
                   />
                   <input
@@ -156,9 +156,9 @@ function Login() {
                     autoComplete="username"
                     disabled={cargando}
                     required
-                    className="nr-input-flotante box-border w-full rounded-xl border border-white/15 bg-[#111117] py-3.5 pl-12 pr-4 text-base sm:text-sm text-white outline-none transition-colors placeholder:text-[#777783] focus:border-[#e10600] focus:ring-2 focus:ring-[#e10600]/20 disabled:opacity-60"
+                    className="nr-input-flotante box-border w-full rounded-xl border border-slate-300 bg-[#f8fafc] dark:border-white/15 dark:bg-[#111117] py-3.5 pl-12 pr-4 text-base text-[#15151d] outline-none transition-colors placeholder:text-slate-400 sm:text-sm dark:text-white dark:placeholder:text-[#777783] focus:border-[#e10600] focus:ring-2 focus:ring-[#e10600]/20 disabled:opacity-60"
                   />
-                  <label htmlFor="login-correo" className="nr-label-flotante">Usuario o correo electrónico</label>
+                  <label htmlFor="login-correo" className="nr-label-flotante text-slate-600 dark:text-[#aaaab5]">Usuario o correo electrónico</label>
                 </div>
               </div>
 
@@ -166,7 +166,7 @@ function Login() {
               <div>
                 <div className="relative nr-campo-flotante">
                   <LockKeyhole
-                    className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#888894]"
+                    className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-500 dark:text-[#888894]"
                     aria-hidden="true"
                   />
                   <input
@@ -178,15 +178,15 @@ function Login() {
                     autoComplete="current-password"
                     disabled={cargando}
                     required
-                    className="nr-input-flotante box-border w-full rounded-xl border border-white/15 bg-[#111117] py-3.5 pl-12 pr-12 text-base sm:text-sm text-white outline-none transition-colors placeholder:text-[#777783] focus:border-[#e10600] focus:ring-2 focus:ring-[#e10600]/20 disabled:opacity-60"
+                    className="nr-input-flotante box-border w-full rounded-xl border border-slate-300 bg-[#f8fafc] dark:border-white/15 dark:bg-[#111117] py-3.5 pl-12 pr-12 text-base text-[#15151d] outline-none transition-colors placeholder:text-slate-400 sm:text-sm dark:text-white dark:placeholder:text-[#777783] focus:border-[#e10600] focus:ring-2 focus:ring-[#e10600]/20 disabled:opacity-60"
                   />
-                  <label htmlFor="login-contrasena" className="nr-label-flotante">Contraseña</label>
+                  <label htmlFor="login-contrasena" className="nr-label-flotante text-slate-600 dark:text-[#aaaab5]">Contraseña</label>
                   <button
                     type="button"
                     onClick={() =>
                       setMostrarContrasena((anterior) => !anterior)
                     }
-                    className="absolute right-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-lg text-[#aaaab5] transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e10600]"
+                    className="absolute right-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-[#15151d] focus-visible:outline-2 dark:text-[#aaaab5] dark:hover:bg-white/10 dark:hover:text-white focus-visible:outline-offset-2 focus-visible:outline-[#e10600]"
                     aria-label={
                       mostrarContrasena
                         ? "Ocultar contraseña"
@@ -206,7 +206,7 @@ function Login() {
               {/* ERROR DEL SERVIDOR */}
               {error && (
                 <div
-                  className="flex items-start gap-3 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200"
+                  className="flex items-start gap-3 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-700 dark:text-red-200"
                   role="alert"
                 >
                   <AlertCircle
@@ -220,7 +220,7 @@ function Login() {
               {/* CONFIRMACIÓN DE INGRESO */}
               {usuario && (
                 <div
-                  className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200"
+                  className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-800 dark:text-emerald-200"
                   role="status"
                 >
                   <div className="flex items-center gap-2 font-bold">
@@ -230,7 +230,7 @@ function Login() {
                   <p className="mb-2 mt-1">Iniciaste sesión correctamente.</p>
                   <Link
                     to="/"
-                    className="inline-flex items-center gap-1 font-semibold text-emerald-200 hover:text-white"
+                    className="inline-flex items-center gap-1 font-semibold text-emerald-800 hover:text-emerald-950 dark:text-emerald-200 dark:hover:text-white"
                   >
                     Ir al inicio{" "}
                     <ArrowRight className="h-4 w-4" aria-hidden="true" />
@@ -261,11 +261,11 @@ function Login() {
               </button>
 
               {/* ENLACE AL REGISTRO */}
-              <p className="m-0 border-t border-white/10 pt-6 text-center text-sm text-[#aaaab5]">
+              <p className="m-0 border-t border-slate-200 pt-6 text-center text-sm text-slate-600 dark:border-white/10 dark:text-[#aaaab5]">
                 ¿Todavía no tenés una cuenta?{" "}
                 <Link
                   to="/registro"
-                  className="font-bold text-[#ff4b45] no-underline transition-colors hover:text-white"
+                  className="font-bold text-[#d3201a] no-underline transition-colors hover:text-[#a51c16] dark:text-[#ff4b45] dark:hover:text-white"
                 >
                   Registrate
                 </Link>

@@ -102,9 +102,10 @@ function TablaClasificacion({ titulo, Icono, datos, tipo }) {
       viewport={{ once: true, amount: 0.12 }}
       whileHover={reducirMovimiento ? undefined : { y: -2 }}
       transition={{ duration: reducirMovimiento ? 0 : 0.42, ease: "easeOut" }}
-      className="group relative isolate flex min-w-0 flex-col overflow-hidden rounded-2xl border border-white/20 border-t-4 border-t-[#e10600] bg-[#171923] p-4 text-white shadow-[0_12px_30px_rgba(0,0,0,0.20)] sm:p-5"
+      className="group relative isolate flex min-w-0 flex-col overflow-hidden rounded-2xl border border-slate-200 border-t-4 border-t-[#e10600] bg-white p-4 text-[#15151d] shadow-sm sm:p-5 dark:border-white/20 dark:bg-[#171923] dark:text-white dark:shadow-[0_12px_30px_rgba(0,0,0,0.20)]"
     >
       <FondoTarjetaInicio
+        adaptarTema
         src={
           esPiloto
             ? "/images/inicio/clasificaciones/pilotos.jpg"
@@ -125,7 +126,7 @@ function TablaClasificacion({ titulo, Icono, datos, tipo }) {
       <div className="relative z-10 flex h-full flex-col">
         {/* ENCABEZADO */}
         <div className="mb-5 flex flex-wrap items-center justify-between gap-2">
-          <h3 className="flex min-w-0 items-center gap-2 font-racing text-lg font-bold text-white">
+          <h3 className="flex min-w-0 items-center gap-2 font-racing text-lg font-bold text-[#15151d] dark:text-white">
             <Icono
               className="h-5 w-5 shrink-0 text-[#e10600]"
               strokeWidth={2.2}
@@ -134,20 +135,20 @@ function TablaClasificacion({ titulo, Icono, datos, tipo }) {
             {titulo}
           </h3>
 
-          <span className="rounded-md border border-white/15 bg-black/30 px-2 py-1 font-nav text-xs font-semibold text-white/85 backdrop-blur-sm">
+          <span className="rounded-md border border-slate-200/90 bg-white/80 px-2 py-1 font-nav text-xs font-semibold text-slate-700 backdrop-blur-sm dark:border-white/15 dark:bg-black/30 dark:text-white/85">
             Mundial {TEMPORADA}
           </span>
         </div>
 
         {/* CONTENIDO DE LA TABLA */}
         {datos.length === 0 ? (
-          <p className="rounded-lg border border-white/10 bg-black/35 p-4 font-nav text-sm text-white/80">
+          <p className="rounded-lg border border-slate-200 bg-white/80 p-4 font-nav text-sm text-slate-600 dark:border-white/10 dark:bg-black/35 dark:text-white/80">
             No hay clasificaciones disponibles.
           </p>
         ) : (
           <>
             {/* ENCABEZADO DE COLUMNAS */}
-            <div className="flex items-center justify-between gap-3 border-b border-white/20 pb-3 font-nav text-xs font-bold uppercase tracking-[0.12em] text-white/70">
+            <div className="flex items-center justify-between gap-3 border-b border-slate-300/80 pb-3 font-nav text-xs font-bold uppercase tracking-[0.12em] text-slate-600 dark:border-white/20 dark:text-white/70">
               <span>{esPiloto ? "PILOTO" : "ESCUDERÍA"}</span>
               <span>PTS</span>
             </div>
@@ -182,7 +183,7 @@ function TablaClasificacion({ titulo, Icono, datos, tipo }) {
                           : { opacity: 0, height: 0 }
                       }
                       transition={{ duration: reducirMovimiento ? 0 : 0.22 }}
-                      className="flex min-w-0 items-center justify-between gap-3 overflow-hidden border-b border-white/15 py-3 transition-colors hover:bg-white/10"
+                      className="flex min-w-0 items-center justify-between gap-3 overflow-hidden border-b border-slate-300/70 py-3 transition-colors hover:bg-white/35 dark:border-white/15 dark:hover:bg-white/10"
                     >
                       <Link
                         to={destino}
@@ -225,13 +226,13 @@ function TablaClasificacion({ titulo, Icono, datos, tipo }) {
                         )}
 
                         {/* NOMBRE */}
-                        <span className="min-w-0 break-words font-nav text-sm font-bold leading-tight text-white transition-colors group-hover:text-[#ff8883]">
+                        <span className="min-w-0 break-words font-nav text-sm font-bold leading-tight text-[#15151d] transition-colors group-hover:text-[#b91c1c] dark:text-white dark:group-hover:text-[#ff8883]">
                           {elemento.nombre}
                         </span>
                       </Link>
 
                       {/* PUNTOS */}
-                      <strong className="shrink-0 font-racing text-sm font-bold tabular-nums text-white">
+                      <strong className="shrink-0 font-racing text-sm font-bold tabular-nums text-[#15151d] dark:text-white">
                         <NumeroAnimado valor={elemento.puntos} />
                       </strong>
                     </motion.li>
@@ -246,7 +247,7 @@ function TablaClasificacion({ titulo, Icono, datos, tipo }) {
                 type="button"
                 onClick={() => setExpandido((anterior) => !anterior)}
                 aria-expanded={expandido}
-                className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-white/20 bg-black/35 px-4 py-2.5 font-nav text-sm font-bold text-white backdrop-blur-sm transition-colors hover:border-[#ff6660] hover:bg-black/50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e10600]"
+                className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white/85 px-4 py-2.5 font-nav text-sm font-bold text-[#15151d] backdrop-blur-sm transition-colors hover:border-[#e10600]/50 hover:bg-white dark:border-white/20 dark:bg-black/35 dark:text-white dark:hover:border-[#ff6660] dark:hover:bg-black/50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e10600]"
               >
                 {expandido
                   ? "Mostrar Top 5"
@@ -267,7 +268,7 @@ function TablaClasificacion({ titulo, Icono, datos, tipo }) {
         {/* CLASIFICACIÓN COMPLETA */}
         <Link
           to="/clasificaciones"
-          className="group mt-auto inline-flex w-fit items-center gap-2 pt-5 font-nav text-sm font-bold text-[#ff8b86] no-underline transition-colors hover:text-white"
+          className="group mt-auto inline-flex w-fit items-center gap-2 pt-5 font-nav text-sm font-bold text-[#bc2420] no-underline transition-colors hover:text-[#e10600] dark:text-[#ff8b86] dark:hover:text-white"
         >
           Ver clasificación completa
           <ArrowRight

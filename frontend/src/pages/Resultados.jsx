@@ -1,6 +1,13 @@
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { DIA, MINUTO, META_PUBLICA, esGPConsolidado, esTemporadaHistorica, vigenciaCalendario } from "../utils/cachePublica";
+import {
+  DIA,
+  MINUTO,
+  META_PUBLICA,
+  esGPConsolidado,
+  esTemporadaHistorica,
+  vigenciaCalendario,
+} from "../utils/cachePublica";
 import { motion, useReducedMotion } from "motion/react";
 import { Link, useSearchParams } from "react-router";
 import {
@@ -121,8 +128,8 @@ function BanderaFondoGP({ archivo }) {
         setLista(false);
         setIndice((actual) => actual + 1);
       }}
-      className={`pointer-events-none absolute inset-0 h-full w-full object-cover saturate-75 transition-opacity duration-300 ${
-        lista ? "opacity-45" : "opacity-0"
+      className={`pointer-events-none absolute inset-0 h-full w-full scale-[1.06] object-cover saturate-75 blur-[1px] transition-opacity duration-300 dark:scale-100 dark:blur-none ${
+        lista ? "opacity-85 dark:opacity-45" : "opacity-0"
       }`}
     />
   );
@@ -167,10 +174,13 @@ function Resultados() {
   const calendario = useQuery({
     queryKey: ["publico", "carreras", temporada],
     queryFn: async ({ signal }) => {
-      const respuesta = await fetch(`/api/carreras?temporada=${temporada}`, { signal });
+      const respuesta = await fetch(`/api/carreras?temporada=${temporada}`, {
+        signal,
+      });
       if (!respuesta.ok) throw new Error("No se pudo cargar el calendario");
       const resultado = await respuesta.json();
-      if (!Array.isArray(resultado?.carreras)) throw new Error("Formato de calendario inválido");
+      if (!Array.isArray(resultado?.carreras))
+        throw new Error("Formato de calendario inválido");
       return resultado;
     },
     staleTime: vigenciaCalendario(temporada),
@@ -178,8 +188,13 @@ function Resultados() {
   });
   const carreras = calendario.data?.carreras ?? [];
   const cargandoCarreras = !calendario.data && calendario.isPending;
-  const errorCarreras = !calendario.data && calendario.isError ? calendario.error?.message || "No se pudo cargar el calendario" : "";
-  const carreraSeleccionada = carreras.find((carrera) => String(carrera.round) === ronda);
+  const errorCarreras =
+    !calendario.data && calendario.isError
+      ? calendario.error?.message || "No se pudo cargar el calendario"
+      : "";
+  const carreraSeleccionada = carreras.find(
+    (carrera) => String(carrera.round) === ronda,
+  );
   const paisGP = carreraSeleccionada?.Circuit?.Location?.country;
   const banderaGP = archivoBanderaPais(paisGP);
   const consolidado = esGPConsolidado(carreraSeleccionada);
@@ -193,23 +208,38 @@ function Resultados() {
     queryFn: async ({ signal }) => {
       const obtenerResumen = async (url) => {
         const respuesta = await fetch(url, { signal });
-        if (!respuesta.ok) throw new Error(`Error comprobando resultados (${respuesta.status})`);
+        if (!respuesta.ok)
+          throw new Error(`Error comprobando resultados (${respuesta.status})`);
         return respuesta.json();
       };
       const consultas = [
-        obtenerResumen(`/api/resumen-sesiones?temporada=${temporada}&ronda=${ronda}`),
+        obtenerResumen(
+          `/api/resumen-sesiones?temporada=${temporada}&ronda=${ronda}`,
+        ),
         Number(temporada) >= 2023
-          ? obtenerResumen(`/api/resumen-practicas?temporada=${temporada}&fecha=${carreraSeleccionada.date}`)
+          ? obtenerResumen(
+              `/api/resumen-practicas?temporada=${temporada}&fecha=${carreraSeleccionada.date}`,
+            )
           : Promise.resolve(null),
       ];
       const [sesiones, practicas] = await Promise.allSettled(consultas);
       const estado = (respuesta, tipo) =>
-        respuesta.status === "rejected" ? "error" : hayPodio(respuesta.value, tipo) ? "disponible" : "pendiente";
+        respuesta.status === "rejected"
+          ? "error"
+          : hayPodio(respuesta.value, tipo)
+            ? "disponible"
+            : "pendiente";
       return {
-        fp1: Number(temporada) < 2023 ? "sin_cobertura" : estado(practicas, "fp1"),
-        fp2: Number(temporada) < 2023 ? "sin_cobertura" : estado(practicas, "fp2"),
-        fp3: Number(temporada) < 2023 ? "sin_cobertura" : estado(practicas, "fp3"),
-        clasificacion_sprint: Number(temporada) < 2023 ? "sin_cobertura" : estado(practicas, "clasificacion_sprint"),
+        fp1:
+          Number(temporada) < 2023 ? "sin_cobertura" : estado(practicas, "fp1"),
+        fp2:
+          Number(temporada) < 2023 ? "sin_cobertura" : estado(practicas, "fp2"),
+        fp3:
+          Number(temporada) < 2023 ? "sin_cobertura" : estado(practicas, "fp3"),
+        clasificacion_sprint:
+          Number(temporada) < 2023
+            ? "sin_cobertura"
+            : estado(practicas, "clasificacion_sprint"),
         clasificacion: estado(sesiones, "clasificacion"),
         sprint: estado(sesiones, "sprint"),
         carrera: estado(sesiones, "carrera"),
@@ -221,7 +251,9 @@ function Resultados() {
       const publicados = consulta.state.data;
       const esenciales = ["clasificacion", "carrera"];
       if (carreraSeleccionada?.Sprint) esenciales.push("sprint");
-      const completo = esenciales.every((tipo) => publicados?.[tipo] === "disponible");
+      const completo = esenciales.every(
+        (tipo) => publicados?.[tipo] === "disponible",
+      );
       if (completo && (temporadaHistorica || consolidado)) return Infinity;
       return temporadaHistorica ? DIA : 2 * MINUTO;
     },
@@ -233,25 +265,29 @@ function Resultados() {
 
   // Cada sesión publicada se guarda por temporada, ronda y tipo de sesión.
   // También ocurre con las rondas pasadas de 2026, no solo con 2020-2025.
-  const disponibles = disponibilidadLista && estadosSesion[tipoSesion] === "disponible";
+  const disponibles =
+    disponibilidadLista && estadosSesion[tipoSesion] === "disponible";
   const resultados = useQuery({
     queryKey: ["publico", "resultados", temporada, ronda, tipoSesion],
     enabled: disponibles,
     queryFn: async ({ signal }) => {
-      const url = tipoSesion === "carrera"
-        ? `/api/resultados?temporada=${temporada}&ronda=${ronda}`
-        : esPractica
-          ? `/api/resultados-practica?temporada=${temporada}&ronda=${ronda}&tipo=${tipoSesion}`
-          : `/api/resultados-sesion?temporada=${temporada}&ronda=${ronda}&tipo=${tipoSesion}`;
+      const url =
+        tipoSesion === "carrera"
+          ? `/api/resultados?temporada=${temporada}&ronda=${ronda}`
+          : esPractica
+            ? `/api/resultados-practica?temporada=${temporada}&ronda=${ronda}&tipo=${tipoSesion}`
+            : `/api/resultados-sesion?temporada=${temporada}&ronda=${ronda}&tipo=${tipoSesion}`;
       const respuesta = await fetch(url, { signal });
       if (respuesta.status === 404) {
         const error = new Error("No hay resultados disponibles de esta sesión");
         error.status = 404;
         throw error;
       }
-      if (!respuesta.ok) throw new Error("No se pudieron cargar los resultados");
+      if (!respuesta.ok)
+        throw new Error("No se pudieron cargar los resultados");
       const resultado = await respuesta.json();
-      if (!Array.isArray(resultado?.resultados)) throw new Error("Formato de resultados inválido");
+      if (!Array.isArray(resultado?.resultados))
+        throw new Error("Formato de resultados inválido");
       return resultado;
     },
     staleTime: temporadaHistorica || consolidado ? Infinity : 5 * MINUTO,
@@ -261,13 +297,18 @@ function Resultados() {
   const datos = resultados.data ?? null;
   const cargandoResultados = disponibles && !datos && resultados.isPending;
   const sinResultados = !datos && resultados.error?.status === 404;
-  const errorResultados = !datos && resultados.isError && !sinResultados
-    ? resultados.error?.message || "No se pudieron cargar los resultados"
-    : "";
+  const errorResultados =
+    !datos && resultados.isError && !sinResultados
+      ? resultados.error?.message || "No se pudieron cargar los resultados"
+      : "";
 
   // CAMBIAR TEMPORADA
   function cambiarTemporada(evento) {
-    setParametros({ temporada: evento.target.value, ronda: "1", tipo: "carrera" });
+    setParametros({
+      temporada: evento.target.value,
+      ronda: "1",
+      tipo: "carrera",
+    });
   }
 
   // 4. CAMBIAR GRAN PREMIO
@@ -309,9 +350,16 @@ function Resultados() {
   };
 
   const estaCargando =
-    cargandoCarreras || (Boolean(carreraSeleccionada) && !disponibilidadLista && disponibilidad.isPending) || cargandoResultados;
-  const mensajeError = errorCarreras ||
-    (!disponibilidad.data && disponibilidad.isError ? "No se pudo comprobar la disponibilidad de sesiones" : "") ||
+    cargandoCarreras ||
+    (Boolean(carreraSeleccionada) &&
+      !disponibilidadLista &&
+      disponibilidad.isPending) ||
+    cargandoResultados;
+  const mensajeError =
+    errorCarreras ||
+    (!disponibilidad.data && disponibilidad.isError
+      ? "No se pudo comprobar la disponibilidad de sesiones"
+      : "") ||
     errorResultados;
 
   const pestanas = [
@@ -361,7 +409,7 @@ function Resultados() {
   );
 
   return (
-    <main className="min-h-screen bg-[#101117] px-4 py-5 text-slate-100 sm:px-6 sm:py-7 lg:px-8">
+    <main className="min-h-screen bg-[#f4f5f9] px-4 py-5 text-[#15151d] dark:bg-[#101117] dark:text-slate-100 sm:px-6 sm:py-7 lg:px-8">
       <div className="mx-auto w-full max-w-7xl space-y-3 sm:space-y-4">
         {/* ENCABEZADO COMPACTO */}
         <header className="flex items-center gap-3 border-l-4 border-[#e10600] py-1 pl-4">
@@ -373,7 +421,7 @@ function Resultados() {
             <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.2em] text-[#e10600]">
               FÓRMULA 1 · TEMPORADA {temporada}
             </p>
-            <h1 className="m-0 font-racing text-2xl font-extrabold uppercase italic tracking-tight text-white sm:text-3xl">
+            <h1 className="m-0 font-racing text-2xl font-extrabold uppercase italic tracking-tight text-[#15151d] dark:text-white sm:text-3xl">
               Resultados
             </h1>
           </div>
@@ -382,13 +430,13 @@ function Resultados() {
         {/* SELECCIÓN DE EVENTO Y SESIÓN EN UN SOLO RECUADRO */}
         <section
           aria-label="Seleccionar evento y sesión"
-          className="rounded-xl border border-white/10 bg-[#1b1c25] p-3 shadow-lg sm:p-4"
+          className="rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#1b1c25] p-3 shadow-lg sm:p-4"
         >
           <div className="grid gap-3 md:grid-cols-2">
             <div className="min-w-0">
               <label
                 htmlFor="resultados-temporada"
-                className="mb-1.5 flex items-center gap-2 text-[11px] font-bold uppercase tracking-wide text-slate-300"
+                className="mb-1.5 flex items-center gap-2 text-[11px] font-bold uppercase tracking-wide text-slate-600 dark:text-slate-300"
               >
                 <CalendarDays
                   className="h-4 w-4 text-[#e10600]"
@@ -401,7 +449,7 @@ function Resultados() {
                   id="resultados-temporada"
                   value={temporada}
                   onChange={cambiarTemporada}
-                  className="w-full appearance-none rounded-lg border border-white/10 bg-[#101117] px-3 py-2.5 pr-10 text-base sm:text-sm font-semibold text-white outline-none transition-colors hover:border-white/25 focus:border-[#e10600] focus:ring-2 focus:ring-[#e10600]/20"
+                  className="w-full appearance-none rounded-lg border border-slate-300 bg-white dark:border-white/10 dark:bg-[#101117] px-3 py-2.5 pr-10 text-base sm:text-sm font-semibold text-[#15151d] dark:text-white outline-none transition-colors hover:border-slate-400 dark:hover:border-white/25 focus:border-[#e10600] focus:ring-2 focus:ring-[#e10600]/20"
                 >
                   {TEMPORADAS.map((anio) => (
                     <option key={anio} value={anio}>
@@ -410,7 +458,7 @@ function Resultados() {
                   ))}
                 </select>
                 <ChevronDown
-                  className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
+                  className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500 dark:text-slate-400"
                   aria-hidden="true"
                 />
               </div>
@@ -419,7 +467,7 @@ function Resultados() {
             <div className="min-w-0">
               <label
                 htmlFor="resultados-gp"
-                className="mb-1.5 flex items-center gap-2 text-[11px] font-bold uppercase tracking-wide text-slate-300"
+                className="mb-1.5 flex items-center gap-2 text-[11px] font-bold uppercase tracking-wide text-slate-600 dark:text-slate-300"
               >
                 <MapPin className="h-4 w-4 text-[#e10600]" aria-hidden="true" />
                 Gran Premio
@@ -430,7 +478,7 @@ function Resultados() {
                   value={ronda}
                   onChange={cambiarRonda}
                   disabled={cargandoCarreras || carreras.length === 0}
-                  className="w-full appearance-none rounded-lg border border-white/10 bg-[#101117] px-3 py-2.5 pr-10 text-base sm:text-sm font-semibold text-white outline-none transition-colors hover:border-white/25 focus:border-[#e10600] focus:ring-2 focus:ring-[#e10600]/20 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="w-full appearance-none rounded-lg border border-slate-300 bg-white dark:border-white/10 dark:bg-[#101117] px-3 py-2.5 pr-10 text-base sm:text-sm font-semibold text-[#15151d] dark:text-white outline-none transition-colors hover:border-slate-400 dark:hover:border-white/25 focus:border-[#e10600] focus:ring-2 focus:ring-[#e10600]/20 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {carreras.length === 0 && (
                     <option value="1">Sin Grandes Premios disponibles</option>
@@ -442,7 +490,7 @@ function Resultados() {
                   ))}
                 </select>
                 <ChevronDown
-                  className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
+                  className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500 dark:text-slate-400"
                   aria-hidden="true"
                 />
               </div>
@@ -451,7 +499,7 @@ function Resultados() {
 
           {/* Pestañas debajo de los selectores, sin otro bloque alto */}
           <div
-            className="mt-3 flex flex-wrap items-center gap-2 border-t border-white/10 pt-3"
+            className="mt-3 flex flex-wrap items-center gap-2 border-t border-slate-200 dark:border-white/10 pt-3"
             role="group"
             aria-label="Tipo de sesión"
           >
@@ -474,10 +522,10 @@ function Resultados() {
                   aria-pressed={disponible && tipoSesion === id}
                   className={`relative inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-extrabold uppercase tracking-wide transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e10600] ${
                     !disponible
-                      ? "cursor-not-allowed border-white/5 bg-[#20212a] text-slate-500 opacity-60"
+                      ? "cursor-not-allowed border-slate-100 dark:border-white/5 bg-slate-100 dark:bg-[#20212a] text-slate-500 opacity-60"
                       : tipoSesion === id
                         ? "border-[#e10600] text-white"
-                        : "border-white/10 bg-[#252631] text-slate-300 hover:border-[#e10600]/50 hover:text-white"
+                        : "border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-[#252631] text-slate-600 dark:text-slate-300 hover:border-[#e10600]/50 hover:text-[#15151d] dark:hover:text-white"
                   }`}
                 >
                   {disponible && tipoSesion === id && (
@@ -505,12 +553,23 @@ function Resultados() {
 
         {/* ESTADOS DE CARGA Y ERROR */}
         {estaCargando && (
-          <SkeletonFilas oscuro cantidad={8} etiqueta="Cargando resultados" />
+          <>
+            <div className="dark:hidden">
+              <SkeletonFilas cantidad={8} etiqueta="Cargando resultados" />
+            </div>
+            <div className="hidden dark:block">
+              <SkeletonFilas
+                oscuro
+                cantidad={8}
+                etiqueta="Cargando resultados"
+              />
+            </div>
+          </>
         )}
 
         {!estaCargando && mensajeError && (
           <div
-            className="flex items-center gap-3 rounded-xl border border-red-500/30 bg-red-950/20 p-5 text-sm text-red-200"
+            className="flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 p-5 text-sm text-red-700 dark:border-red-500/30 dark:bg-red-950/20 dark:text-red-200"
             role="alert"
           >
             <AlertCircle className="h-5 w-5 shrink-0" aria-hidden="true" />
@@ -520,7 +579,7 @@ function Resultados() {
 
         {!estaCargando && !mensajeError && !hayResultadosPublicados && (
           <div
-            className="flex items-center gap-3 rounded-xl border border-white/10 bg-[#1b1c25] p-5 text-sm text-slate-300"
+            className="flex items-center gap-3 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#1b1c25] p-5 text-sm text-slate-600 dark:text-slate-300"
             role="status"
           >
             <Clock3
@@ -538,7 +597,7 @@ function Resultados() {
           hayResultadosPublicados &&
           sinResultados && (
             <div
-              className="flex items-center gap-3 rounded-xl border border-white/10 bg-[#1b1c25] p-5 text-sm text-slate-300"
+              className="flex items-center gap-3 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#1b1c25] p-5 text-sm text-slate-600 dark:text-slate-300"
               role="status"
             >
               <Info
@@ -565,13 +624,13 @@ function Resultados() {
               className="space-y-3"
             >
               {/* GRAN PREMIO: FRANJA PEQUEÑA SOBRE LA TABLA */}
-              <section className="relative isolate flex min-h-[104px] items-center overflow-hidden rounded-xl border border-white/10 bg-[#1b1c25] px-4 py-4 shadow-sm sm:min-h-[92px] sm:px-5">
-                {/* Bandera del GP: encuadre proporcional con degradado oscuro. */}
+              <section className="relative isolate flex min-h-[104px] items-center overflow-hidden rounded-xl border border-slate-200 bg-white px-4 py-4 shadow-sm dark:border-white/10 dark:bg-[#1b1c25] sm:min-h-[92px] sm:px-5">
+                {/* Bandera del GP: efecto claro y suave como Calendario; oscuro original en dark. */}
                 {banderaGP && (
                   <>
                     <BanderaFondoGP key={banderaGP} archivo={banderaGP} />
                     <div
-                      className="pointer-events-none absolute inset-0 bg-gradient-to-r from-[#11121a]/85 via-[#11121a]/60 to-[#11121a]/80"
+                      className="pointer-events-none absolute inset-0 bg-white/75 dark:bg-gradient-to-r dark:from-[#11121a]/85 dark:via-[#11121a]/60 dark:to-[#11121a]/80"
                       aria-hidden="true"
                     />
                   </>
@@ -582,14 +641,14 @@ function Resultados() {
                 />
                 <div className="relative z-10 flex w-full flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-5">
                   <div className="min-w-0">
-                    <p className="m-0 text-[10px] font-extrabold uppercase tracking-[0.16em] text-[#ff4b47]">
+                    <p className="m-0 text-[10px] font-extrabold uppercase tracking-[0.16em] text-[#c9211b] dark:text-[#ff4b47]">
                       {nombresSesion[tipoSesion]}
                     </p>
-                    <h2 className="m-0 mt-1 font-racing text-lg font-extrabold uppercase italic leading-tight text-white sm:text-xl">
+                    <h2 className="m-0 mt-1 font-racing text-lg font-extrabold uppercase italic leading-tight text-[#15151d] dark:text-white sm:text-xl">
                       {datos.nombre}
                     </h2>
                   </div>
-                  <div className="flex shrink-0 flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-300">
+                  <div className="flex shrink-0 flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-600 dark:text-slate-300">
                     <span className="inline-flex items-center gap-1.5">
                       <MapPin
                         className="h-3.5 w-3.5 shrink-0 text-[#e10600]"
@@ -611,24 +670,24 @@ function Resultados() {
               </section>
 
               <section
-                className="overflow-hidden rounded-2xl border border-white/10 bg-[#1b1c25] shadow-xl"
+                className="overflow-hidden rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-[#1b1c25] shadow-xl"
                 aria-label="Tabla de resultados"
               >
-                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 px-4 py-3 sm:px-5">
-                  <h3 className="flex items-center gap-2 text-sm font-extrabold uppercase tracking-wider text-white">
+                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 dark:border-white/10 px-4 py-3 sm:px-5">
+                  <h3 className="flex items-center gap-2 text-sm font-extrabold uppercase tracking-wider text-[#15151d] dark:text-white">
                     <Trophy
                       className="h-5 w-5 text-[#e10600]"
                       aria-hidden="true"
                     />
                     Clasificación de la sesión
                   </h3>
-                  <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-slate-400">
+                  <span className="rounded-full border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-white/5 px-3 py-1 text-xs font-medium text-slate-500 dark:text-slate-400">
                     {datos.resultados.length} pilotos
                   </span>
                 </div>
 
                 {/* MÓVIL: cada resultado se lee completo, sin scroll horizontal. */}
-                <div className="divide-y divide-white/10 md:hidden">
+                <div className="divide-y divide-slate-200 dark:divide-white/10 md:hidden">
                   {datos.resultados.map((resultado, indice) => {
                     const idPiloto = esPractica
                       ? null
@@ -674,11 +733,11 @@ function Resultados() {
                     return (
                       <article
                         key={idPiloto || resultado.numero || indice}
-                        className={`p-4 ${podio ? "bg-[#e10600]/[0.055]" : ""}`}
+                        className={`p-4 ${podio ? "bg-[#e10600]/[0.045] dark:bg-[#e10600]/[0.055]" : ""}`}
                       >
                         <div className="flex min-w-0 items-center gap-3">
                           <span
-                            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-[#292b35] font-racing text-base font-extrabold text-white"
+                            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-[#292b35] font-racing text-base font-extrabold text-[#15151d] dark:text-white"
                             style={
                               tipoSesion === "carrera"
                                 ? ESTILOS_PODIO_CARRERA[puesto]
@@ -707,13 +766,13 @@ function Resultados() {
                           ) : null}
                           <div className="min-w-0 flex-1">
                             {esPractica ? (
-                              <strong className="block break-words text-sm text-white">
+                              <strong className="block break-words text-sm text-[#15151d] dark:text-white">
                                 {nombrePiloto}
                               </strong>
                             ) : (
                               <Link
                                 to={`/pilotos/${idPiloto}?temporada=${temporada}`}
-                                className="inline-flex items-start gap-1 break-words text-sm font-bold text-white no-underline hover:text-[#ff4b47]"
+                                className="inline-flex items-start gap-1 break-words text-sm font-bold text-[#15151d] dark:text-white no-underline hover:text-[#ff4b47]"
                               >
                                 {nombrePiloto}
                                 <ArrowUpRight
@@ -722,7 +781,7 @@ function Resultados() {
                                 />
                               </Link>
                             )}
-                            <p className="mt-1 flex items-center gap-2 text-xs text-slate-400">
+                            <p className="mt-1 flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
                               <span
                                 className="h-2.5 w-2.5 shrink-0 rounded-full"
                                 style={{ backgroundColor: colorEquipo }}
@@ -740,12 +799,12 @@ function Resultados() {
                           {metricas.map(([etiqueta, valor]) => (
                             <div
                               key={etiqueta}
-                              className="min-w-0 rounded-lg bg-[#111219] px-2.5 py-2"
+                              className="min-w-0 rounded-lg bg-slate-100 dark:bg-[#111219] px-2.5 py-2"
                             >
-                              <dt className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
+                              <dt className="text-[10px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                                 {etiqueta}
                               </dt>
-                              <dd className="mt-1 break-words font-mono text-xs font-semibold tabular-nums text-white">
+                              <dd className="mt-1 break-words font-mono text-xs font-semibold tabular-nums text-[#15151d] dark:text-white">
                                 {valor !== null &&
                                 valor !== undefined &&
                                 valor !== ""
@@ -763,7 +822,7 @@ function Resultados() {
                 {/* TABLET Y PC: mantener la tabla original sin cambios. */}
                 <div className="hidden overflow-x-auto md:block">
                   <table className="w-full min-w-[740px] border-collapse text-left text-sm">
-                    <thead className="bg-[#111219] text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                    <thead className="bg-slate-100 dark:bg-[#111219] text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                       <tr>
                         <th
                           scope="col"
@@ -839,7 +898,7 @@ function Resultados() {
                         )}
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-white/5">
+                    <tbody className="divide-y divide-slate-100 dark:divide-white/5">
                       {datos.resultados.map((resultado, indice) => {
                         const idPiloto = esPractica
                           ? null
@@ -868,11 +927,11 @@ function Resultados() {
                                 ? 0
                                 : Math.min(indice, 10) * 0.025,
                             }}
-                            className={`transition-colors hover:bg-white/5 ${podio ? "bg-[#e10600]/[0.055]" : ""}`}
+                            className={`transition-colors hover:bg-slate-50 dark:hover:bg-white/5 ${podio ? "bg-[#e10600]/[0.045] dark:bg-[#e10600]/[0.055]" : ""}`}
                           >
                             <td className="px-4 py-4 text-center sm:px-6">
                               <span
-                                className="inline-flex min-w-9 items-center justify-center rounded-lg border border-white/10 bg-[#292b35] px-2 py-1.5 font-black text-white"
+                                className="inline-flex min-w-9 items-center justify-center rounded-lg border border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-[#292b35] px-2 py-1.5 font-black text-[#15151d] dark:text-white"
                                 style={
                                   tipoSesion === "carrera"
                                     ? ESTILOS_PODIO_CARRERA[puesto]
@@ -904,13 +963,13 @@ function Resultados() {
                                 ) : null}
                                 <div className="min-w-0">
                                   {esPractica ? (
-                                    <span className="font-bold text-white">
+                                    <span className="font-bold text-[#15151d] dark:text-white">
                                       {nombrePiloto}
                                     </span>
                                   ) : (
                                     <Link
                                       to={`/pilotos/${idPiloto}?temporada=${temporada}`}
-                                      className="group inline-flex items-center gap-1.5 font-bold text-white no-underline transition-colors hover:text-[#ff4b47]"
+                                      className="group inline-flex items-center gap-1.5 font-bold text-[#15151d] dark:text-white no-underline transition-colors hover:text-[#ff4b47]"
                                     >
                                       {nombrePiloto}
                                       <ArrowUpRight
@@ -919,7 +978,7 @@ function Resultados() {
                                       />
                                     </Link>
                                   )}
-                                  <div className="mt-1.5 flex items-center gap-2 text-xs text-slate-400">
+                                  <div className="mt-1.5 flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
                                     <span
                                       className="h-2.5 w-2.5 shrink-0 rounded-full"
                                       style={{ backgroundColor: colorEquipo }}
@@ -937,56 +996,56 @@ function Resultados() {
                             {esPractica ? (
                               esClasificacionSprint ? (
                                 <>
-                                  <td className="px-4 py-4 font-mono text-xs tabular-nums text-slate-300">
+                                  <td className="px-4 py-4 font-mono text-xs tabular-nums text-slate-600 dark:text-slate-300">
                                     {resultado.sq1 || "—"}
                                   </td>
-                                  <td className="px-4 py-4 font-mono text-xs tabular-nums text-slate-300">
+                                  <td className="px-4 py-4 font-mono text-xs tabular-nums text-slate-600 dark:text-slate-300">
                                     {resultado.sq2 || "—"}
                                   </td>
-                                  <td className="px-4 py-4 font-mono text-xs tabular-nums text-slate-300">
+                                  <td className="px-4 py-4 font-mono text-xs tabular-nums text-slate-600 dark:text-slate-300">
                                     {resultado.sq3 || "—"}
                                   </td>
-                                  <td className="px-4 py-4 text-right font-bold tabular-nums text-white sm:pr-6">
+                                  <td className="px-4 py-4 text-right font-bold tabular-nums text-[#15151d] dark:text-white sm:pr-6">
                                     {resultado.vueltas ?? "—"}
                                   </td>
                                 </>
                               ) : (
                                 <>
-                                  <td className="px-4 py-4 font-mono text-xs tabular-nums font-bold text-white">
+                                  <td className="px-4 py-4 font-mono text-xs tabular-nums font-bold text-[#15151d] dark:text-white">
                                     {resultado.mejorVuelta || "—"}
                                   </td>
-                                  <td className="px-4 py-4 font-mono text-xs tabular-nums text-slate-300">
+                                  <td className="px-4 py-4 font-mono text-xs tabular-nums text-slate-600 dark:text-slate-300">
                                     {resultado.diferencia || "—"}
                                   </td>
-                                  <td className="px-4 py-4 text-right font-bold tabular-nums text-white sm:pr-6">
+                                  <td className="px-4 py-4 text-right font-bold tabular-nums text-[#15151d] dark:text-white sm:pr-6">
                                     {resultado.vueltas ?? "—"}
                                   </td>
                                 </>
                               )
                             ) : esClasificacion ? (
                               <>
-                                <td className="px-4 py-4 font-mono text-xs tabular-nums text-slate-300">
+                                <td className="px-4 py-4 font-mono text-xs tabular-nums text-slate-600 dark:text-slate-300">
                                   {resultado.Q1 || "—"}
                                 </td>
-                                <td className="px-4 py-4 font-mono text-xs tabular-nums text-slate-300">
+                                <td className="px-4 py-4 font-mono text-xs tabular-nums text-slate-600 dark:text-slate-300">
                                   {resultado.Q2 || "—"}
                                 </td>
-                                <td className="px-4 py-4 font-mono text-xs tabular-nums text-slate-300">
+                                <td className="px-4 py-4 font-mono text-xs tabular-nums text-slate-600 dark:text-slate-300">
                                   {resultado.Q3 || "—"}
                                 </td>
                               </>
                             ) : (
                               <>
-                                <td className="px-4 py-4 font-semibold tabular-nums text-slate-300">
+                                <td className="px-4 py-4 font-semibold tabular-nums text-slate-600 dark:text-slate-300">
                                   {resultado.grid ?? "—"}
                                 </td>
-                                <td className="px-4 py-4 text-slate-300">
+                                <td className="px-4 py-4 text-slate-600 dark:text-slate-300">
                                   {resultado.Time?.time ||
                                     resultado.status ||
                                     "—"}
                                 </td>
-                                <td className="px-4 py-4 text-right font-black tabular-nums text-white sm:pr-6">
-                                  <span className="rounded-lg bg-[#e10600]/15 px-3 py-1.5 text-[#ff5b56]">
+                                <td className="px-4 py-4 text-right font-black tabular-nums text-[#15151d] dark:text-white sm:pr-6">
+                                  <span className="rounded-lg bg-[#e10600]/15 px-3 py-1.5 text-[#ba1f19] dark:text-[#ff5b56]">
                                     {resultado.points ?? "—"}
                                   </span>
                                 </td>
@@ -999,7 +1058,7 @@ function Resultados() {
                   </table>
                 </div>
                 {datos.resultados.length === 0 && (
-                  <p className="border-t border-white/10 p-6 text-center text-sm text-slate-400">
+                  <p className="border-t border-slate-200 dark:border-white/10 p-6 text-center text-sm text-slate-500 dark:text-slate-400">
                     No hay resultados disponibles para esta sesión.
                   </p>
                 )}
