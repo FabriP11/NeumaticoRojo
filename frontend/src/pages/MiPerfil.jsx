@@ -12,6 +12,9 @@ import {
   ArrowUpRight,
   CheckCircle2,
   ChevronDown,
+  BellRing,
+  Send,
+  RefreshCw,
   Flag,
   LoaderCircle,
   LockKeyhole,
@@ -25,9 +28,9 @@ import { useAuth } from "../context/AuthContext";
 import { fetchConSesion } from "../utils/fetchConSesion";
 
 const TARJETA =
-  "rounded-2xl border border-white/10 bg-[#1b1c25] shadow-[0_14px_35px_rgba(0,0,0,0.18)]";
+  "rounded-2xl border border-slate-200 bg-white shadow-[0_14px_35px_rgba(0,0,0,0.09)] dark:border-white/10 dark:bg-[#1b1c25] dark:shadow-[0_14px_35px_rgba(0,0,0,0.18)]";
 const SELECT =
-  "w-full appearance-none rounded-xl border border-white/15 bg-[#111219] px-4 py-2.5 pr-11 text-base sm:text-sm text-white outline-none transition-colors focus:border-[#e10600] focus:ring-2 focus:ring-[#e10600]/20 disabled:cursor-not-allowed disabled:opacity-60";
+  "w-full appearance-none rounded-xl border border-slate-300 bg-slate-50 px-4 py-2.5 pr-11 text-base sm:text-sm text-[#15151d] outline-none transition-colors focus:border-[#e10600] focus:ring-2 focus:ring-[#e10600]/20 disabled:cursor-not-allowed disabled:opacity-60 dark:border-white/15 dark:bg-[#111219] dark:text-white";
 
 function MiPerfil() {
   const { usuario, comprobandoSesion, iniciarSesion } = useAuth();
@@ -45,6 +48,138 @@ function MiPerfil() {
   const [errorAvatar, setErrorAvatar] = useState("");
   const [mensajeAvatar, setMensajeAvatar] = useState("");
   const [avatarSeleccionado, setAvatarSeleccionado] = useState("");
+
+  // Canal de Telegram: configuración independiente de las sesiones de Race Week.
+  const [canales, setCanales] = useState(null);
+  const [eleccionCanales, setEleccionCanales] = useState({ correo: true, telegram: false });
+  const [cargandoCanales, setCargandoCanales] = useState(true);
+  const [guardandoCanales, setGuardandoCanales] = useState(false);
+  const [enlaceTelegram, setEnlaceTelegram] = useState("");
+  const [gestionandoTelegram, setGestionandoTelegram] = useState(false);
+  const [probandoTelegram, setProbandoTelegram] = useState(false);
+  const [errorTelegram, setErrorTelegram] = useState("");
+
+  async function actualizarCanales() {
+    const respuesta = await fetchConSesion("/api/notificaciones/canales", {
+      credentials: "include",
+      cache: "no-store",
+    });
+    const datos = await respuesta.json();
+    if (!respuesta.ok) throw new Error(datos.mensaje || "No se pudieron cargar los canales");
+    setCanales(datos);
+    setEleccionCanales({ correo: Boolean(datos.correo), telegram: Boolean(datos.telegram) });
+    if (datos.vinculado) setEnlaceTelegram("");
+    return datos;
+  }
+
+  useEffect(() => {
+    if (!usuario) return;
+    let vigente = true;
+    async function comprobar() {
+      try {
+        await actualizarCanales();
+      } catch (error) {
+        if (vigente) setErrorTelegram(error.message);
+      } finally {
+        if (vigente) setCargandoCanales(false);
+      }
+    }
+    void comprobar();
+    // Al volver de Telegram, comprobar si el usuario pulsó Iniciar.
+    function alVolver() {
+      if (document.visibilityState === "visible") void comprobar();
+    }
+    window.addEventListener("focus", alVolver);
+    document.addEventListener("visibilitychange", alVolver);
+    return () => {
+      vigente = false;
+      window.removeEventListener("focus", alVolver);
+      document.removeEventListener("visibilitychange", alVolver);
+    };
+  }, [usuario?.id_usuario]);
+
+  async function crearEnlaceTelegram() {
+    setGestionandoTelegram(true);
+    setErrorTelegram("");
+    try {
+      const respuesta = await fetchConSesion("/api/notificaciones/telegram/enlace", {
+        method: "POST",
+        credentials: "include",
+      });
+      const datos = await respuesta.json();
+      if (!respuesta.ok) throw new Error(datos.mensaje || "No se pudo crear el enlace");
+      setEnlaceTelegram(datos.url);
+      toast.success("Enlace preparado. Abrí Telegram y pulsá Iniciar.");
+    } catch (error) {
+      setErrorTelegram(error.message);
+      toast.error(error.message);
+    } finally {
+      setGestionandoTelegram(false);
+    }
+  }
+
+  async function guardarCanalesTelegram() {
+    setGuardandoCanales(true);
+    setErrorTelegram("");
+    try {
+      const respuesta = await fetchConSesion("/api/notificaciones/canales", {
+        method: "PUT",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(eleccionCanales),
+      });
+      const datos = await respuesta.json();
+      if (!respuesta.ok) throw new Error(datos.mensaje || "No se pudieron guardar los canales");
+      await actualizarCanales();
+      toast.success("Canales de notificación guardados");
+    } catch (error) {
+      setErrorTelegram(error.message);
+      toast.error(error.message);
+    } finally {
+      setGuardandoCanales(false);
+    }
+  }
+
+  async function probarMensajeTelegram() {
+    setProbandoTelegram(true);
+    setErrorTelegram("");
+    try {
+      const respuesta = await fetchConSesion("/api/notificaciones/telegram/prueba", {
+        method: "POST",
+        credentials: "include",
+      });
+      const datos = await respuesta.json();
+      if (!respuesta.ok) throw new Error(datos.mensaje || "No se pudo enviar la prueba");
+      toast.success("Mensaje de prueba enviado a Telegram");
+    } catch (error) {
+      setErrorTelegram(error.message);
+      toast.error(error.message);
+    } finally {
+      setProbandoTelegram(false);
+    }
+  }
+
+  async function quitarVinculacionTelegram() {
+    if (!window.confirm("¿Querés desvincular Telegram de tu cuenta?")) return;
+    setGestionandoTelegram(true);
+    setErrorTelegram("");
+    try {
+      const respuesta = await fetchConSesion("/api/notificaciones/telegram", {
+        method: "DELETE",
+        credentials: "include",
+      });
+      const datos = await respuesta.json();
+      if (!respuesta.ok) throw new Error(datos.mensaje || "No se pudo desvincular Telegram");
+      setEnlaceTelegram("");
+      await actualizarCanales();
+      toast.success("Telegram desvinculado correctamente");
+    } catch (error) {
+      setErrorTelegram(error.message);
+      toast.error(error.message);
+    } finally {
+      setGestionandoTelegram(false);
+    }
+  }
 
   const pilotoAvatar = pilotos.find(
     (piloto) => String(piloto.id_piloto) === String(usuario?.id_piloto_avatar),
@@ -227,9 +362,9 @@ function MiPerfil() {
 
   if (comprobandoSesion) {
     return (
-      <main className="flex min-h-[70vh] items-center justify-center bg-[#111218] px-4 text-white">
+      <main className="flex min-h-[70vh] items-center justify-center bg-[#f3f4f7] px-4 text-[#15151d] dark:bg-[#111218] dark:text-white">
         <p
-          className="flex items-center gap-3 text-sm text-gray-300"
+          className="flex items-center gap-3 text-sm text-slate-600 dark:text-gray-300"
           role="status"
         >
           <LoaderCircle
@@ -244,7 +379,7 @@ function MiPerfil() {
 
   if (!usuario) {
     return (
-      <main className="flex min-h-[70vh] items-center justify-center bg-[#111218] px-4 py-12 text-white">
+      <main className="flex min-h-[70vh] items-center justify-center bg-[#f3f4f7] px-4 py-12 text-[#15151d] dark:bg-[#111218] dark:text-white">
         <div className={`${TARJETA} w-full max-w-md p-7 text-center sm:p-9`}>
           <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#e10600]/15 text-[#e10600]">
             <LockKeyhole className="h-7 w-7" aria-hidden="true" />
@@ -252,7 +387,7 @@ function MiPerfil() {
           <h2 className="text-2xl font-black uppercase italic tracking-tight">
             Iniciá sesión para ver tu perfil
           </h2>
-          <p className="mt-3 text-sm leading-6 text-gray-400">
+          <p className="mt-3 text-sm leading-6 text-slate-500 dark:text-gray-400">
             Necesitás una cuenta para acceder a tus datos y favoritos.
           </p>
           <Link
@@ -268,7 +403,7 @@ function MiPerfil() {
   }
 
   return (
-    <main className="min-h-screen bg-[#111218] px-4 py-5 text-white sm:px-6 sm:py-7 lg:px-8">
+    <main className="min-h-screen bg-[#f3f4f7] px-4 py-5 text-[#15151d] dark:bg-[#111218] dark:text-white sm:px-6 sm:py-7 lg:px-8">
       <div className="mx-auto max-w-6xl space-y-5">
         {/* ENCABEZADO COMPACTO */}
         <header className="flex flex-col gap-2 border-l-4 border-[#e10600] pl-4 sm:flex-row sm:items-center sm:justify-between">
@@ -279,13 +414,13 @@ function MiPerfil() {
             <h1 className="m-0 font-racing text-2xl font-black uppercase italic tracking-tight sm:text-3xl">
               Mi perfil
             </h1>
-            <p className="mt-1 text-xs text-gray-400 sm:text-sm">
+            <p className="mt-1 text-xs text-slate-500 dark:text-gray-400 sm:text-sm">
               Administrá tu cuenta y tus favoritos.
             </p>
           </div>
           <Link
             to="/"
-            className="inline-flex w-fit items-center gap-1.5 text-xs font-semibold text-gray-300 no-underline transition-colors hover:text-white sm:text-sm"
+            className="inline-flex w-fit items-center gap-1.5 text-xs font-semibold text-slate-600 dark:text-gray-300 no-underline transition-colors hover:text-[#c5221d] dark:hover:text-white sm:text-sm"
           >
             <ArrowLeft className="h-4 w-4" aria-hidden="true" />
             Volver al inicio
@@ -316,7 +451,7 @@ function MiPerfil() {
               </div>
             )}
             <div className="min-w-0 flex-1">
-              <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#ff6862]">
+              <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#c92420] dark:text-[#ff6862]">
                 Cuenta personal
               </p>
               <h2
@@ -325,69 +460,69 @@ function MiPerfil() {
               >
                 {usuario.nombre_usuario}
               </h2>
-              <p className="mt-0.5 break-all text-xs text-gray-400 sm:text-sm">
+              <p className="mt-0.5 break-all text-xs text-slate-500 dark:text-gray-400 sm:text-sm">
                 {usuario.correo}
               </p>
             </div>
           </div>
-          <div className="grid gap-px border-t border-white/10 bg-white/10 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="min-w-0 bg-[#1b1c25] px-4 py-3 sm:px-5">
-              <p className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-gray-400">
+          <div className="grid gap-px border-t border-slate-200 bg-slate-200/70 dark:border-white/10 dark:bg-white/10 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="min-w-0 bg-white px-4 py-3 dark:bg-[#1b1c25] sm:px-5">
+              <p className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-gray-400">
                 <UserRound
                   className="h-4 w-4 shrink-0 text-[#e10600]"
                   aria-hidden="true"
                 />
                 Nombre de usuario
               </p>
-              <strong className="mt-1 block break-words text-sm font-bold text-white">
+              <strong className="mt-1 block break-words text-sm font-bold text-[#15151d] dark:text-white">
                 {usuario.nombre_usuario}
               </strong>
             </div>
-            <div className="min-w-0 bg-[#1b1c25] px-4 py-3 sm:px-5">
-              <p className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-gray-400">
+            <div className="min-w-0 bg-white px-4 py-3 dark:bg-[#1b1c25] sm:px-5">
+              <p className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-gray-400">
                 <Mail
                   className="h-4 w-4 shrink-0 text-[#e10600]"
                   aria-hidden="true"
                 />
                 Correo electrónico
               </p>
-              <strong className="mt-1 block break-all text-sm font-bold text-white">
+              <strong className="mt-1 block break-all text-sm font-bold text-[#15151d] dark:text-white">
                 {usuario.correo}
               </strong>
             </div>
-            <div className="min-w-0 bg-[#1b1c25] px-4 py-3 sm:px-5">
-              <p className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-gray-400">
+            <div className="min-w-0 bg-white px-4 py-3 dark:bg-[#1b1c25] sm:px-5">
+              <p className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-gray-400">
                 <UsersRound
                   className="h-4 w-4 shrink-0 text-[#e10600]"
                   aria-hidden="true"
                 />
                 Tipo de cuenta
               </p>
-              <strong className="mt-1 block text-sm font-bold text-white">
+              <strong className="mt-1 block text-sm font-bold text-[#15151d] dark:text-white">
                 {usuario.rol === "admin" ? "Administrador" : "Usuario"}
               </strong>
             </div>
             <a
               href="#personalizar-favoritos"
-              className="group block min-w-0 bg-[#1b1c25] px-4 py-3 text-white no-underline transition-colors hover:bg-[#252632] focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#e10600] sm:px-5"
+              className="group block min-w-0 bg-white px-4 py-3 text-[#15151d] no-underline transition-colors hover:bg-slate-50 dark:bg-[#1b1c25] dark:text-white dark:hover:bg-[#252632] focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[#e10600] sm:px-5"
               aria-label="Ir a cambiar mi piloto favorito"
               title="Ir a cambiar mi piloto favorito"
             >
-              <span className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-gray-400 group-hover:text-gray-200">
+              <span className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500 group-hover:text-slate-700 dark:text-gray-400 dark:group-hover:text-gray-200">
                 <UserRound
                   className="h-4 w-4 shrink-0 text-[#e10600]"
                   aria-hidden="true"
                 />
                 Piloto favorito
               </span>
-              <span className="mt-1 flex items-center gap-2 text-sm font-bold text-white group-hover:text-[#ff7772]">
+              <span className="mt-1 flex items-center gap-2 text-sm font-bold text-[#15151d] group-hover:text-[#b91c1c] dark:text-white dark:group-hover:text-[#ff7772]">
                 <span className="min-w-0 truncate">
                   {pilotoFavorito
                     ? `${pilotoFavorito.nombre} ${pilotoFavorito.apellido}`
                     : usuario.id_piloto_favorito || "Elegir piloto"}
                 </span>
                 <ArrowDownRight
-                  className="h-4 w-4 shrink-0 text-[#ff7772]"
+                  className="h-4 w-4 shrink-0 text-[#c92420] dark:text-[#ff7772]"
                   aria-hidden="true"
                 />
               </span>
@@ -401,7 +536,7 @@ function MiPerfil() {
             Elegir foto de perfil
           </h2>
 
-          <p className="mt-2 text-sm text-gray-400">
+          <p className="mt-2 text-sm text-slate-500 dark:text-gray-400">
             Seleccioná un piloto de 2026 y guardá los cambios.
           </p>
 
@@ -434,11 +569,11 @@ function MiPerfil() {
                           setErrorAvatar("");
                         }}
                         aria-pressed={seleccionado}
-                        className={`flex w-[calc(50%-0.375rem)] flex-col items-center gap-3 rounded-xl border p-3 transition-all hover:brightness-125 disabled:opacity-60 sm:w-[calc(33.333%-0.5rem)] lg:w-[calc(16.666%-0.625rem)] ${
+                        className={`flex w-[calc(50%-0.375rem)] flex-col items-center gap-3 rounded-xl border p-3 transition-all hover:brightness-105 dark:hover:brightness-125 disabled:opacity-60 [--avatar-fondo:#f8fafc] dark:[--avatar-fondo:#1b1c25] sm:w-[calc(33.333%-0.5rem)] lg:w-[calc(16.666%-0.625rem)] ${
                           seleccionado ? "ring-2 ring-[#e10600]" : ""
                         }`}
                         style={{
-                          backgroundImage: `linear-gradient(145deg, ${color}55, #1b1c25 85%)`,
+                          backgroundImage: `linear-gradient(145deg, ${color}55, var(--avatar-fondo, #1b1c25) 85%)`,
                           borderColor: seleccionado ? "#e10600" : `${color}88`,
                         }}
                       >
@@ -451,7 +586,7 @@ function MiPerfil() {
                           className="!h-20 !w-20"
                         />
 
-                        <span className="text-center text-xs font-semibold text-white">
+                        <span className="text-center text-xs font-semibold text-[#15151d] dark:text-white">
                           {piloto.nombre} {piloto.apellido}
                         </span>
                       </button>
@@ -459,7 +594,7 @@ function MiPerfil() {
                   })}
               </div>
 
-              <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-white/10 pt-5">
+              <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 pt-5 dark:border-white/10">
                 <button
                   type="button"
                   onClick={() => {
@@ -468,7 +603,7 @@ function MiPerfil() {
                     setErrorAvatar("");
                   }}
                   disabled={guardandoAvatar}
-                  className="rounded-lg border border-white/20 px-4 py-2 text-sm font-semibold text-white hover:bg-white/10 disabled:opacity-60"
+                  className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-[#15151d] hover:bg-slate-100 dark:border-white/20 dark:text-white dark:hover:bg-white/10 disabled:opacity-60"
                 >
                   Quitar foto de perfil
                 </button>
@@ -495,23 +630,23 @@ function MiPerfil() {
           )}
 
           {cargandoDatos && (
-            <p className="mt-4 text-sm text-gray-400">Cargando pilotos...</p>
+            <p className="mt-4 text-sm text-slate-500 dark:text-gray-400">Cargando pilotos...</p>
           )}
 
           {errorCarga && (
-            <p className="mt-4 text-sm text-red-400" role="alert">
+            <p className="mt-4 text-sm text-red-700 dark:text-red-400" role="alert">
               {errorCarga}
             </p>
           )}
 
           {mensajeAvatar && (
-            <p className="mt-4 text-sm text-emerald-400" role="status">
+            <p className="mt-4 text-sm text-emerald-700 dark:text-emerald-400" role="status">
               {mensajeAvatar}
             </p>
           )}
 
           {errorAvatar && (
-            <p className="mt-4 text-sm text-red-400" role="alert">
+            <p className="mt-4 text-sm text-red-700 dark:text-red-400" role="alert">
               {errorAvatar}
             </p>
           )}
@@ -530,7 +665,7 @@ function MiPerfil() {
               >
                 Mis favoritos
               </h2>
-              <p className="mt-0.5 text-xs text-gray-400 sm:text-sm">
+              <p className="mt-0.5 text-xs text-slate-500 dark:text-gray-400 sm:text-sm">
                 Tu piloto y escudería favoritos.
               </p>
             </div>
@@ -651,7 +786,7 @@ function MiPerfil() {
             >
               <h3
                 id="personalizar-titulo"
-                className="flex items-center gap-2 text-sm font-black uppercase italic tracking-tight text-white"
+                className="flex items-center gap-2 text-sm font-black uppercase italic tracking-tight text-[#15151d] dark:text-white"
               >
                 <Star
                   className="h-4 w-4 shrink-0 text-[#e10600]"
@@ -662,7 +797,7 @@ function MiPerfil() {
               <form onSubmit={guardarFavoritos} className="mt-3">
                 {cargandoDatos && (
                   <p
-                    className="flex items-center gap-2 text-sm text-gray-300"
+                    className="flex items-center gap-2 text-sm text-slate-600 dark:text-gray-300"
                     role="status"
                   >
                     <LoaderCircle
@@ -675,7 +810,7 @@ function MiPerfil() {
 
                 {errorCarga && (
                   <p
-                    className="flex items-start gap-2 rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-xs text-red-200"
+                    className="flex items-start gap-2 rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-xs text-red-700 dark:text-red-200"
                     role="alert"
                   >
                     <AlertCircle
@@ -692,7 +827,7 @@ function MiPerfil() {
                       <div className="min-w-0">
                         <label
                           htmlFor="piloto-favorito"
-                          className="mb-1 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-gray-300"
+                          className="mb-1 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-slate-600 dark:text-gray-300"
                         >
                           <UserRound
                             className="h-3.5 w-3.5 text-[#e10600]"
@@ -722,7 +857,7 @@ function MiPerfil() {
                             ))}
                           </select>
                           <ChevronDown
-                            className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
+                            className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500 dark:text-gray-400"
                             aria-hidden="true"
                           />
                         </div>
@@ -731,7 +866,7 @@ function MiPerfil() {
                       <div className="min-w-0">
                         <label
                           htmlFor="escuderia-favorita"
-                          className="mb-1 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-gray-300"
+                          className="mb-1 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-slate-600 dark:text-gray-300"
                         >
                           <Flag
                             className="h-3.5 w-3.5 text-[#e10600]"
@@ -761,7 +896,7 @@ function MiPerfil() {
                             ))}
                           </select>
                           <ChevronDown
-                            className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
+                            className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500 dark:text-gray-400"
                             aria-hidden="true"
                           />
                         </div>
@@ -770,7 +905,7 @@ function MiPerfil() {
 
                     {errorGuardado && (
                       <p
-                        className="mt-3 flex items-center gap-2 rounded-lg border border-red-500/30 bg-red-500/10 p-2.5 text-xs text-red-200"
+                        className="mt-3 flex items-center gap-2 rounded-lg border border-red-500/30 bg-red-500/10 p-2.5 text-xs text-red-700 dark:text-red-200"
                         role="alert"
                       >
                         <AlertCircle
@@ -783,7 +918,7 @@ function MiPerfil() {
 
                     {mensaje && (
                       <p
-                        className="mt-3 flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-2.5 text-xs text-emerald-300"
+                        className="mt-3 flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-2.5 text-xs text-emerald-700 dark:text-emerald-300"
                         role="status"
                       >
                         <CheckCircle2
@@ -794,7 +929,7 @@ function MiPerfil() {
                       </p>
                     )}
 
-                    <div className="mt-3 flex justify-end border-t border-white/10 pt-3">
+                    <div className="mt-3 flex justify-end border-t border-slate-200 pt-3 dark:border-white/10">
                       <button
                         type="submit"
                         disabled={guardando}
@@ -816,6 +951,123 @@ function MiPerfil() {
               </form>
             </section>
           </div>
+        </section>
+
+        {/* TELEGRAM: canales de notificación sin almacenar datos personales. */}
+        <section className={`${TARJETA} scroll-mt-28 p-5 sm:p-7`} aria-labelledby="perfil-notificaciones">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 id="perfil-notificaciones" className="flex items-center gap-2 font-racing text-xl font-black uppercase italic sm:text-2xl">
+                <BellRing className="h-5 w-5 text-[#e10600]" aria-hidden="true" />
+                Notificaciones
+              </h2>
+              <p className="mt-2 text-sm text-slate-600 dark:text-gray-300">
+                Elegí si querés recibir los recordatorios por correo, Telegram o ambos.
+              </p>
+            </div>
+            {canales?.vinculado && (
+              <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-bold text-emerald-700 dark:text-emerald-300">
+                Telegram vinculado
+              </span>
+            )}
+          </div>
+
+          {cargandoCanales ? (
+            <p className="mt-5 flex items-center gap-2 text-sm text-slate-600 dark:text-gray-300">
+              <LoaderCircle className="h-4 w-4 animate-spin text-[#e10600]" /> Consultando notificaciones...
+            </p>
+          ) : canales ? (
+            <div className="mt-5 space-y-4">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-white/10 dark:bg-[#111219]">
+                  <input
+                    type="checkbox"
+                    checked={eleccionCanales.correo}
+                    onChange={(e) => setEleccionCanales((anterior) => ({ ...anterior, correo: e.target.checked }))}
+                    className="h-4 w-4 accent-[#e10600]"
+                  />
+                  <Mail className="h-5 w-5 text-[#e10600]" aria-hidden="true" />
+                  <span className="text-sm font-semibold">Correo electrónico</span>
+                </label>
+                <label className={`flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-white/10 dark:bg-[#111219] ${canales.vinculado ? "cursor-pointer" : "opacity-60"}`}>
+                  <input
+                    type="checkbox"
+                    checked={eleccionCanales.telegram}
+                    disabled={!canales.vinculado || !canales.bot_disponible}
+                    onChange={(e) => setEleccionCanales((anterior) => ({ ...anterior, telegram: e.target.checked }))}
+                    className="h-4 w-4 accent-[#e10600]"
+                  />
+                  <Send className="h-5 w-5 text-[#229ed9]" aria-hidden="true" />
+                  <span className="text-sm font-semibold">Telegram</span>
+                </label>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <button type="button" onClick={guardarCanalesTelegram} disabled={guardandoCanales}
+                  className="inline-flex items-center gap-2 rounded-xl bg-[#e10600] px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-[#b90500] disabled:opacity-50">
+                  {guardandoCanales ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                  Guardar canales
+                </button>
+                {!canales.vinculado && canales.bot_disponible && (
+                  <button type="button" onClick={crearEnlaceTelegram} disabled={gestionandoTelegram}
+                    className="rounded-xl border border-[#229ed9]/40 px-4 py-2.5 text-sm font-bold text-[#177cb3] hover:bg-[#229ed9]/10 disabled:opacity-50 dark:text-[#7ad1ff]">
+                    Vincular Telegram
+                  </button>
+                )}
+                {canales.vinculado && (
+                  <button type="button" onClick={probarMensajeTelegram} disabled={probandoTelegram}
+                    className="rounded-xl border border-[#229ed9]/40 px-4 py-2.5 text-sm font-bold text-[#177cb3] hover:bg-[#229ed9]/10 disabled:opacity-50 dark:text-[#7ad1ff]">
+                    {probandoTelegram ? "Enviando..." : "Enviar prueba"}
+                  </button>
+                )}
+                {canales.vinculado && (
+                  <button type="button" onClick={quitarVinculacionTelegram} disabled={gestionandoTelegram}
+                    className="rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-100 disabled:opacity-50 dark:border-white/20 dark:text-gray-200 dark:hover:bg-white/10">
+                    Desvincular Telegram
+                  </button>
+                )}
+                <button type="button" onClick={() => { setErrorTelegram(""); void actualizarCanales().catch(e => setErrorTelegram(e.message)); }}
+                  className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 dark:text-gray-300 dark:hover:bg-white/10">
+                  <RefreshCw className="h-4 w-4" /> Comprobar vinculación
+                </button>
+              </div>
+              {enlaceTelegram && !canales.vinculado && (
+                <div className="rounded-xl border border-[#229ed9]/25 bg-[#229ed9]/5 p-3 text-sm dark:bg-[#229ed9]/10">
+                  <p className="mb-2 text-slate-700 dark:text-gray-200">
+                    Abrí el bot, pulsá <strong>Iniciar</strong> y regresá a esta página. El enlace vence en 10 minutos.
+                  </p>
+                  <a href={enlaceTelegram} target="_blank" rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 font-bold text-[#177cb3] underline dark:text-[#7ad1ff]">
+                    <Send className="h-4 w-4" /> Abrir bot de Telegram
+                  </a>
+                </div>
+              )}
+              {!canales.bot_disponible && (
+                <p className="text-xs text-amber-700 dark:text-amber-300">
+                  El bot todavía no está configurado en Railway.
+                </p>
+              )}
+              {!canales.envio_habilitado && (
+                <p className="text-xs text-amber-700 dark:text-amber-300">
+                  El envío automático está deshabilitado en Railway (RECORDATORIOS_HABILITADOS).
+                </p>
+              )}
+              {!eleccionCanales.correo && !eleccionCanales.telegram && (
+                <p className="text-xs text-amber-700 dark:text-amber-300">
+                  No seleccionaste ningún canal: no recibirás avisos.
+                </p>
+              )}
+              <p className="text-xs text-slate-600 dark:text-gray-400">
+                {canales.activo && canales.sesiones_configuradas
+                  ? "Tus sesiones están configuradas. Los avisos se enviarán por los canales que guardes arriba."
+                  : "Para recibir avisos, activá las sesiones y elegí 5 o 10 minutos desde la campanita de Race Week."}
+              </p>
+              {errorTelegram && <p role="alert" className="text-sm text-red-700 dark:text-red-300">{errorTelegram}</p>}
+            </div>
+          ) : (
+            <p role="alert" className="mt-4 text-sm text-red-700 dark:text-red-300">
+              {errorTelegram || "No se pudieron consultar las notificaciones"}
+            </p>
+          )}
         </section>
       </div>
     </main>

@@ -495,10 +495,15 @@ function RaceWeekBanner({ onEstadoSemana }) {
 
   return (
     <section
-      className={`relative isolate w-full min-w-0 overflow-hidden rounded-2xl bg-[#0c0e16] text-white ${disenoCompacto ? "p-3 sm:p-3.5 xl:p-4" : "p-3 sm:p-4 xl:p-5"}`}
+      className={`relative isolate w-full min-w-0 overflow-hidden rounded-2xl border border-[#dde1e9] bg-[#f4f5f9] text-[#171923] shadow-[0_12px_30px_rgba(25,28,40,0.08)] dark:border-0 dark:bg-[#0c0e16] dark:text-white dark:shadow-none ${disenoCompacto ? "p-3 sm:p-3.5 xl:p-4" : "p-3 sm:p-4 xl:p-5"}`}
     >
       {/* El video cubre todo el banner; el contenido queda por encima. */}
       <FondoVideoGP esSemanaCarrera={esCarreraActual} />
+      {/* En modo claro, suavizar el video de fondo sin alterar el modo oscuro. */}
+      <div
+        className="pointer-events-none absolute inset-0 z-[1] bg-[#f4f5f9]/90 backdrop-blur-[3px] dark:hidden"
+        aria-hidden="true"
+      />
 
       {/* Navegar entre Grandes Premios sin salir de Inicio. */}
       <nav
@@ -515,12 +520,12 @@ function RaceWeekBanner({ onEstadoSemana }) {
               ? carrerasOrdenadas[indiceActual - 1].raceName
               : "Primer Gran Premio"
           }
-          className="inline-flex items-center gap-1 rounded-lg border border-white/20 bg-black/55 px-3 py-2 font-nav text-xs font-bold text-white transition-colors hover:border-[#e10600] hover:bg-[#e10600] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:border-white/20 disabled:hover:bg-black/55 sm:text-sm"
+          className="inline-flex items-center gap-1 rounded-lg border border-[#d7dce6] bg-white/90 px-3 py-2 font-nav text-xs font-bold text-[#292d37] shadow-sm transition-colors hover:border-[#e10600] hover:bg-[#e10600] hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e10600] disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:border-[#d7dce6] disabled:hover:bg-white/90 sm:text-sm dark:border-white/20 dark:bg-black/55 dark:text-white dark:shadow-none dark:hover:bg-[#e10600] dark:focus-visible:outline-white dark:disabled:hover:border-white/20 dark:disabled:hover:bg-black/55"
         >
           <ChevronLeft className="h-4 w-4" aria-hidden="true" />
           <span className="hidden sm:inline">Anterior</span>
         </button>
-        <span className="rounded-full border border-white/15 bg-black/45 px-3 py-1.5 font-nav text-xs font-semibold text-white/85 backdrop-blur-sm">
+        <span className="rounded-full border border-[#d7dce6] bg-white/85 px-3 py-1.5 font-nav text-xs font-semibold text-[#4b5364] backdrop-blur-sm dark:border-white/15 dark:bg-black/45 dark:text-white/85">
           GP {indiceActual + 1} de {carrerasOrdenadas.length}
         </span>
         <div className="flex items-center gap-2">
@@ -534,7 +539,7 @@ function RaceWeekBanner({ onEstadoSemana }) {
                 ? carrerasOrdenadas[indiceActual + 1].raceName
                 : "Último Gran Premio"
             }
-            className="inline-flex items-center gap-1 rounded-lg border border-white/20 bg-black/55 px-3 py-2 font-nav text-xs font-bold text-white transition-colors hover:border-[#e10600] hover:bg-[#e10600] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:border-white/20 disabled:hover:bg-black/55 sm:text-sm"
+            className="inline-flex items-center gap-1 rounded-lg border border-[#d7dce6] bg-white/90 px-3 py-2 font-nav text-xs font-bold text-[#292d37] shadow-sm transition-colors hover:border-[#e10600] hover:bg-[#e10600] hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e10600] disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:border-[#d7dce6] disabled:hover:bg-white/90 sm:text-sm dark:border-white/20 dark:bg-black/55 dark:text-white dark:shadow-none dark:hover:bg-[#e10600] dark:focus-visible:outline-white dark:disabled:hover:border-white/20 dark:disabled:hover:bg-black/55"
           >
             <span className="hidden sm:inline">Siguiente</span>
             <ChevronRight className="h-4 w-4" aria-hidden="true" />
@@ -564,13 +569,13 @@ function RaceWeekBanner({ onEstadoSemana }) {
             }
           >
             <div
-              className={`rounded-xl border border-white/15 bg-black/45 backdrop-blur-[3px] ${disenoCompacto ? "p-3 sm:p-4" : "p-4 sm:p-5"}`}
+              className={`rounded-xl border border-[#dfe3ec] bg-white/85 shadow-sm backdrop-blur-[3px] dark:border-white/15 dark:bg-black/45 dark:shadow-none ${disenoCompacto ? "p-3 sm:p-4" : "p-4 sm:p-5"}`}
             >
               <span
                 className={`inline-flex w-fit max-w-full items-center gap-2 rounded-full px-4 py-2 font-nav text-sm font-bold uppercase tracking-wider ${
                   esCarreraActual
                     ? "bg-[#e10600] text-white"
-                    : "border border-white/20 bg-white/10 text-white"
+                    : "border border-[#d4d9e3] bg-[#f2f4f8] text-[#3d4452] dark:border-white/20 dark:bg-white/10 dark:text-white"
                 }`}
               >
                 {esCarreraActual ? (
@@ -597,7 +602,7 @@ function RaceWeekBanner({ onEstadoSemana }) {
               </h2>
 
               <div
-                className={`flex flex-col font-nav text-base font-semibold text-white/85 ${disenoCompacto ? "gap-2" : "gap-3"}`}
+                className={`flex flex-col font-nav text-base font-semibold text-[#4c5361] dark:text-white/85 ${disenoCompacto ? "gap-2" : "gap-3"}`}
               >
                 <p className="m-0 flex items-start gap-2">
                   <MapPin
@@ -660,7 +665,7 @@ function RaceWeekBanner({ onEstadoSemana }) {
             </div>
 
             {imagenCircuito && (
-              <div className="relative min-h-0 w-full overflow-hidden rounded-xl border border-white/20 bg-[#121218]/85 shadow-lg">
+              <div className="relative min-h-0 w-full overflow-hidden rounded-xl border border-[#d6dae3] bg-[#16141d] shadow-md dark:border-white/20 dark:bg-[#121218]/85 dark:shadow-lg">
                 <img
                   src={imagenCircuito}
                   alt={`Circuito ${carrera.Circuit?.circuitName}`}
@@ -682,18 +687,18 @@ function RaceWeekBanner({ onEstadoSemana }) {
               <h3 className="m-0 font-racing text-xl font-bold uppercase leading-tight sm:text-2xl">
                 Programa del fin de semana
               </h3>
-              <p className="mb-0 mt-2 font-nav text-sm font-semibold text-white/75">
+              <p className="mb-0 mt-2 font-nav text-sm font-semibold text-[#667085] dark:text-white/75">
                 Horarios de Argentina (ART · UTC-3)
               </p>
             </div>
 
-            <span className="inline-flex shrink-0 rounded-full border border-white/20 bg-black/40 px-3 py-1 font-nav text-sm font-semibold text-white/90 backdrop-blur-sm">
+            <span className="inline-flex shrink-0 rounded-full border border-[#d6dce6] bg-white/80 px-3 py-1 font-nav text-sm font-semibold text-[#505869] backdrop-blur-sm dark:border-white/20 dark:bg-black/40 dark:text-white/90">
               {sesiones.length} sesiones
             </span>
           </div>
 
           {sesiones.length === 0 ? (
-            <div className="rounded-xl border border-white/15 bg-[#151720]/75 p-5 font-nav text-white/75 backdrop-blur-md">
+            <div className="rounded-xl border border-[#dfe3eb] bg-white/85 p-5 font-nav text-[#657082] backdrop-blur-md dark:border-white/15 dark:bg-[#151720]/75 dark:text-white/75">
               Todavía no hay horarios de sesiones disponibles.
             </div>
           ) : (
@@ -748,8 +753,8 @@ function RaceWeekBanner({ onEstadoSemana }) {
                     }}
                     className={`relative isolate flex min-w-0 flex-col overflow-hidden rounded-xl border transition-[border-color,background-color,box-shadow] ${disenoCompacto ? "p-2.5 sm:p-3" : "p-3.5 sm:p-4"} duration-200 ${columnasSesion(sesiones.length, indice)} ${
                       esProxima
-                        ? "border-[#e10600] bg-[#34171f]/85 shadow-[0_0_0_1px_rgba(225,6,0,0.25)] backdrop-blur-[8px]"
-                        : "border-white/20 bg-[#181b26]/75 backdrop-blur-[8px] hover:border-[#e10600]/70 hover:bg-[#202431]/85"
+                        ? "border-[#e10600] bg-[#fff1f1]/95 shadow-[0_0_0_1px_rgba(225,6,0,0.13)] backdrop-blur-[8px] dark:bg-[#34171f]/85 dark:shadow-[0_0_0_1px_rgba(225,6,0,0.25)]"
+                        : "border-[#dce1e9] bg-white/90 shadow-sm backdrop-blur-[8px] hover:border-[#e10600]/70 hover:bg-white dark:border-white/20 dark:bg-[#181b26]/75 dark:shadow-none dark:hover:bg-[#202431]/85"
                     }`}
                   >
                     {/* Brillo de contorno solo para la próxima sesión, sin tapar el texto. */}
@@ -768,12 +773,12 @@ function RaceWeekBanner({ onEstadoSemana }) {
                     <div
                       className={`relative z-10 flex flex-wrap items-center justify-between gap-2 ${disenoCompacto ? "mb-1.5" : "mb-3"}`}
                     >
-                      <span className="inline-flex rounded-md bg-white/15 px-2.5 py-1 font-racing text-xs font-extrabold text-white">
+                      <span className="inline-flex rounded-md bg-[#edf0f5] px-2.5 py-1 font-racing text-xs font-extrabold text-[#374151] dark:bg-white/15 dark:text-white">
                         {sesion.abreviatura}
                       </span>
                       {esEnCursoEstimado && (
                         <span
-                          className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/30 bg-emerald-500/10 px-2 py-1 font-nav text-[10px] font-bold uppercase tracking-wide text-emerald-300"
+                          className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/30 bg-emerald-500/10 px-2 py-1 font-nav text-[10px] font-bold uppercase tracking-wide text-emerald-700 dark:text-emerald-300"
                           title="Estimación basada en el horario programado; no es transmisión en directo"
                         >
                           <span
@@ -792,7 +797,7 @@ function RaceWeekBanner({ onEstadoSemana }) {
                           }
                           animate={{ opacity: 1, scale: 1 }}
                           transition={{ duration: reducirMovimiento ? 0 : 0.2 }}
-                          className="font-nav text-xs font-extrabold uppercase tracking-wider text-[#ff6762]"
+                          className="font-nav text-xs font-extrabold uppercase tracking-wider text-[#c60804] dark:text-[#ff6762]"
                         >
                           PRÓXIMA
                         </motion.span>
@@ -806,7 +811,7 @@ function RaceWeekBanner({ onEstadoSemana }) {
                     </h4>
 
                     <div
-                      className={`relative z-10 flex flex-col font-nav text-sm font-semibold text-white/85 ${disenoCompacto ? "gap-1 xl:flex-row xl:flex-wrap xl:items-center xl:gap-x-3 xl:gap-y-1" : "gap-2"}`}
+                      className={`relative z-10 flex flex-col font-nav text-sm font-semibold text-[#505a6b] dark:text-white/85 ${disenoCompacto ? "gap-1 xl:flex-row xl:flex-wrap xl:items-center xl:gap-x-3 xl:gap-y-1" : "gap-2"}`}
                     >
                       <span className="flex items-center gap-2">
                         <CalendarDays
@@ -855,10 +860,10 @@ function RaceWeekBanner({ onEstadoSemana }) {
                         >
                           {hayResultados ? (
                             <div
-                              className={`${disenoCompacto ? "mt-2 pt-2" : "mt-4 pt-3"} border-t border-white/20`}
+                              className={`${disenoCompacto ? "mt-2 pt-2" : "mt-4 pt-3"} border-t border-[#dce1e9] dark:border-white/20`}
                             >
                               <p
-                                className={`m-0 font-nav font-bold uppercase tracking-wider text-white/65 ${disenoCompacto ? "text-[10px]" : "text-[11px]"}`}
+                                className={`m-0 font-nav font-bold uppercase tracking-wider text-[#6b7280] dark:text-white/65 ${disenoCompacto ? "text-[10px]" : "text-[11px]"}`}
                               >
                                 Resultados disponibles
                               </p>
@@ -891,7 +896,7 @@ function RaceWeekBanner({ onEstadoSemana }) {
                                       }}
                                       className={`flex min-w-0 items-center font-nav ${disenoCompacto ? "gap-1.5 text-xs sm:text-[13px]" : "gap-2 text-sm"}`}
                                     >
-                                      <span className="w-5 shrink-0 font-bold text-white/75">
+                                      <span className="w-5 shrink-0 font-bold text-[#555e6c] dark:text-white/75">
                                         {piloto.posicion}°
                                       </span>
                                       {piloto.numero != null && (
@@ -911,7 +916,7 @@ function RaceWeekBanner({ onEstadoSemana }) {
                               </div>
                               <Link
                                 to={`/resultados?temporada=${temporadaCarrera}&ronda=${rondaCarrera}&tipo=${tipoResultado}`}
-                                className={`${disenoCompacto ? "mt-2 text-xs" : "mt-4 text-sm"} inline-flex items-center gap-1.5 font-nav font-bold text-[#ff7772] no-underline hover:underline`}
+                                className={`${disenoCompacto ? "mt-2 text-xs" : "mt-4 text-sm"} inline-flex items-center gap-1.5 font-nav font-bold text-[#bf0d08] no-underline hover:underline dark:text-[#ff7772]`}
                               >
                                 Ver resultados completos
                                 <ArrowRight
@@ -922,14 +927,14 @@ function RaceWeekBanner({ onEstadoSemana }) {
                             </div>
                           ) : (
                             <div
-                              className={`${disenoCompacto ? "mt-2 pt-2" : "mt-4 pt-3"} border-t border-white/20`}
+                              className={`${disenoCompacto ? "mt-2 pt-2" : "mt-4 pt-3"} border-t border-[#dce1e9] dark:border-white/20`}
                             >
                               {!sesion.inicio ? (
-                                <span className="font-nav text-sm text-white/75">
+                                <span className="font-nav text-sm text-[#697283] dark:text-white/75">
                                   Horario por confirmar
                                 </span>
                               ) : yaComenzo ? (
-                                <span className="font-nav text-sm text-white/75">
+                                <span className="font-nav text-sm text-[#697283] dark:text-white/75">
                                   {esEnCursoEstimado
                                     ? "Sesión en curso (estimado)"
                                     : tipoResultado
@@ -938,10 +943,10 @@ function RaceWeekBanner({ onEstadoSemana }) {
                                 </span>
                               ) : (
                                 <>
-                                  <span className="block font-nav text-[11px] font-bold uppercase tracking-wider text-white/65">
+                                  <span className="block font-nav text-[11px] font-bold uppercase tracking-wider text-[#717a89] dark:text-white/65">
                                     Comienza en
                                   </span>
-                                  <strong className="mt-1 block font-racing text-base font-extrabold text-[#ff4545] sm:text-lg">
+                                  <strong className="mt-1 block font-racing text-base font-extrabold text-[#cc0b05] sm:text-lg dark:text-[#ff4545]">
                                     {calcularCuentaRegresiva(
                                       sesion.inicio.getTime() - ahora,
                                     )}

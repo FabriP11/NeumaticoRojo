@@ -14,5 +14,13 @@ app.listen(puerto, '0.0.0.0', () => {
 if (process.env.RECORDATORIOS_HABILITADOS === 'true') {
   const { iniciarRecordatorios } = require('./services/recordatoriosWorker');
   iniciarRecordatorios();
-  console.log('Recordatorios por correo habilitados');
+  console.log('Recordatorios por correo y Telegram habilitados según preferencias');
+}
+
+// El bot escucha /start para vincular cuentas. No envía avisos si el
+// programador de recordatorios está deshabilitado.
+if (process.env.TELEGRAM_BOT_TOKEN?.trim()) {
+  const { iniciarBotTelegram } = require('./services/telegramBot');
+  iniciarBotTelegram();
+  console.log('Bot de Telegram habilitado (vinculación)');
 }

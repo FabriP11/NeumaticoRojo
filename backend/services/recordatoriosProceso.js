@@ -41,7 +41,7 @@ async function procesarRecordatorios ({
     `SELECT p.id_usuario, p.minutos_antes, p.sesiones, u.correo
        FROM preferencias_notificaciones p
        JOIN usuarios u ON u.id_usuario = p.id_usuario
-      WHERE p.activo = 1`
+      WHERE p.activo = 1 AND p.correo_activo = 1`
   )
   if (!usuarios.length) {
     informar('Recordatorios: no hay usuarios suscriptos')
@@ -106,12 +106,12 @@ async function procesarRecordatorios ({
         try {
           // Volver a comprobar consentimiento antes de enviar.
           const [consentimiento] = await conexion.execute(
-            `SELECT p.activo, p.minutos_antes, p.sesiones, u.correo
+            `SELECT p.activo, p.correo_activo, p.minutos_antes, p.sesiones, u.correo
                FROM preferencias_notificaciones p JOIN usuarios u ON u.id_usuario=p.id_usuario
               WHERE p.id_usuario=?`, [usuario.id_usuario]
           )
           const estado = consentimiento[0]
-          if (!estado?.activo || Number(estado.minutos_antes) !== minutos ||
+          if (!estado?.activo || Number(estado.correo_activo) === 0 || Number(estado.minutos_antes) !== minutos ||
               !leerSesiones(estado.sesiones).includes(sesion.tipo) ||
               !estado.correo || !permitido(estado.correo)) {
             await conexion.execute(
