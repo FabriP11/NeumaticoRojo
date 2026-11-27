@@ -674,7 +674,7 @@ function MiPerfil() {
           <div className="grid items-stretch gap-3 md:grid-cols-2 xl:grid-cols-3">
             {/* PILOTO FAVORITO: fondo idéntico al utilizado en Inicio */}
             <article
-              className={`${TARJETA} group relative isolate flex h-full min-h-48 min-w-0 flex-col overflow-hidden border-t-[3px] p-4 text-white`}
+              className={`${TARJETA} group relative isolate flex h-full min-h-48 min-w-0 flex-col overflow-hidden border-t-[3px] p-4 text-[#15151d] dark:text-white`}
               style={{
                 borderTopColor: pilotoFavorito
                   ? obtenerColorEscuderia(pilotoFavorito.id_escuderia)
@@ -682,6 +682,7 @@ function MiPerfil() {
               }}
             >
               <FondoTarjetaInicio
+                destacarFoto
                 src={fondoPiloto(
                   pilotoFavorito
                     ? {
@@ -691,16 +692,16 @@ function MiPerfil() {
                     : null,
                 )}
               />
-              <div className="pointer-events-none absolute inset-0 z-[1] bg-gradient-to-r from-[#101119]/80 via-[#101119]/55 to-[#101119]/30" />
+              <div className="pointer-events-none absolute inset-0 z-[1] bg-transparent dark:bg-gradient-to-r dark:from-[#101119]/80 dark:via-[#101119]/55 dark:to-[#101119]/30" />
               <div className="relative z-10 flex h-full flex-col">
-                <p className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.12em] text-white/85">
+                <p className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.12em] text-slate-700 dark:text-white/85">
                   <UserRound
-                    className="h-4 w-4 shrink-0 text-[#ff6660]"
+                    className="h-4 w-4 shrink-0 text-[#e10600] dark:text-[#ff6660]"
                     aria-hidden="true"
                   />
                   Piloto favorito
                 </p>
-                <h3 className="mt-3 break-words font-racing text-lg font-extrabold text-white drop-shadow-md">
+                <h3 className="mt-3 break-words font-racing text-lg font-extrabold text-[#15151d] dark:text-white dark:drop-shadow-md">
                   {pilotoFavorito
                     ? `${pilotoFavorito.nombre} ${pilotoFavorito.apellido}`
                     : usuario.id_piloto_favorito || "Sin seleccionar"}
@@ -708,7 +709,7 @@ function MiPerfil() {
                 {pilotoFavorito ? (
                   <Link
                     to={`/pilotos/${pilotoFavorito.id_piloto}?temporada=2026`}
-                    className="mt-auto inline-flex w-fit items-center gap-1.5 pt-4 text-xs font-bold text-[#ff9893] no-underline transition-colors hover:text-white"
+                    className="mt-auto inline-flex w-fit items-center gap-1.5 pt-4 text-xs font-bold text-[#bc2420] no-underline transition-colors hover:text-[#e10600] dark:text-[#ff9893] dark:hover:text-white"
                   >
                     Ver perfil del piloto
                     <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
@@ -716,7 +717,7 @@ function MiPerfil() {
                 ) : (
                   <a
                     href="#personalizar-favoritos"
-                    className="mt-auto inline-flex w-fit items-center gap-1.5 pt-4 text-xs font-bold text-[#ff9893] no-underline hover:text-white"
+                    className="mt-auto inline-flex w-fit items-center gap-1.5 pt-4 text-xs font-bold text-[#bc2420] no-underline hover:text-[#e10600] dark:text-[#ff9893] dark:hover:text-white"
                   >
                     Elegir piloto
                     <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
@@ -727,7 +728,7 @@ function MiPerfil() {
 
             {/* ESCUDERÍA FAVORITA: fondo idéntico al utilizado en Inicio */}
             <article
-              className={`${TARJETA} group relative isolate flex h-full min-h-48 min-w-0 flex-col overflow-hidden border-t-[3px] p-4 text-white`}
+              className={`${TARJETA} group relative isolate flex h-full min-h-48 min-w-0 flex-col overflow-hidden border-t-[3px] p-4 text-[#15151d] dark:text-white`}
               style={{
                 borderTopColor: escuderiaFavorita
                   ? obtenerColorEscuderia(escuderiaFavorita.id_escuderia)
@@ -735,6 +736,7 @@ function MiPerfil() {
               }}
             >
               <FondoTarjetaInicio
+                destacarFoto
                 src={fondoEscuderia(
                   escuderiaFavorita
                     ? {
@@ -744,16 +746,16 @@ function MiPerfil() {
                     : null,
                 )}
               />
-              <div className="pointer-events-none absolute inset-0 z-[1] bg-gradient-to-r from-[#101119]/80 via-[#101119]/55 to-[#101119]/30" />
+              <div className="pointer-events-none absolute inset-0 z-[1] bg-transparent dark:bg-gradient-to-r dark:from-[#101119]/80 dark:via-[#101119]/55 dark:to-[#101119]/30" />
               <div className="relative z-10 flex h-full flex-col">
-                <p className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.12em] text-white/85">
+                <p className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.12em] text-slate-700 dark:text-white/85">
                   <Flag
-                    className="h-4 w-4 shrink-0 text-[#ff6660]"
+                    className="h-4 w-4 shrink-0 text-[#e10600] dark:text-[#ff6660]"
                     aria-hidden="true"
                   />
                   Escudería favorita
                 </p>
-                <h3 className="mt-3 break-words font-racing text-lg font-extrabold text-white drop-shadow-md">
+                <h3 className="mt-3 break-words font-racing text-lg font-extrabold text-[#15151d] dark:text-white dark:drop-shadow-md">
                   {escuderiaFavorita
                     ? escuderiaFavorita.nombre
                     : usuario.id_escuderia_favorita || "Sin seleccionar"}
@@ -761,7 +763,7 @@ function MiPerfil() {
                 {escuderiaFavorita ? (
                   <Link
                     to={`/escuderias/${escuderiaFavorita.id_escuderia}?temporada=2026`}
-                    className="mt-auto inline-flex w-fit items-center gap-1.5 pt-4 text-xs font-bold text-[#ff9893] no-underline transition-colors hover:text-white"
+                    className="mt-auto inline-flex w-fit items-center gap-1.5 pt-4 text-xs font-bold text-[#bc2420] no-underline transition-colors hover:text-[#e10600] dark:text-[#ff9893] dark:hover:text-white"
                   >
                     Ver perfil de escudería
                     <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
@@ -769,7 +771,7 @@ function MiPerfil() {
                 ) : (
                   <a
                     href="#personalizar-favoritos"
-                    className="mt-auto inline-flex w-fit items-center gap-1.5 pt-4 text-xs font-bold text-[#ff9893] no-underline hover:text-white"
+                    className="mt-auto inline-flex w-fit items-center gap-1.5 pt-4 text-xs font-bold text-[#bc2420] no-underline hover:text-[#e10600] dark:text-[#ff9893] dark:hover:text-white"
                   >
                     Elegir escudería
                     <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
