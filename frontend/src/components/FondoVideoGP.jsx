@@ -1,36 +1,38 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
 
-// Fondo decorativo: se evita solicitar el vídeo en móvil, tablet y ahorro de datos.
+// Fondo decorativo de TODO el banner. En móvil no se monta ningún <video>.
 export default function FondoVideoGP({ esSemanaCarrera }) {
   const videoRef = useRef(null);
   const reducirMovimiento = useReducedMotion();
   const [mostrarVideo, setMostrarVideo] = useState(false);
+  // El tema se controla en App con la clase "dark" del elemento html.
+  const [esModoOscuro, setEsModoOscuro] = useState(() =>
+    typeof document !== "undefined" && document.documentElement.classList.contains("dark")
+  );
 
   useEffect(() => {
-    const escritorio = window.matchMedia("(min-width: 1024px)");
-    const ahorroDatos = window.matchMedia("(prefers-reduced-data: reduce)");
+    const raiz = document.documentElement;
+    const actualizarTema = () => setEsModoOscuro(raiz.classList.contains("dark"));
+    const observador = new MutationObserver(actualizarTema);
+    observador.observe(raiz, { attributes: true, attributeFilter: ["class"] });
+    actualizarTema();
+    return () => observador.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const escritorio = window.matchMedia("(min-width: 640px)");
     function actualizar() {
-      setMostrarVideo(
-        escritorio.matches &&
-        !ahorroDatos.matches &&
-        !navigator.connection?.saveData &&
-        !document.hidden &&
-        !reducirMovimiento,
-      );
+      setMostrarVideo(esModoOscuro && escritorio.matches && !document.hidden && !reducirMovimiento);
     }
     actualizar();
     escritorio.addEventListener("change", actualizar);
-    ahorroDatos.addEventListener("change", actualizar);
-    navigator.connection?.addEventListener?.("change", actualizar);
     document.addEventListener("visibilitychange", actualizar);
     return () => {
       escritorio.removeEventListener("change", actualizar);
-      ahorroDatos.removeEventListener("change", actualizar);
-      navigator.connection?.removeEventListener?.("change", actualizar);
       document.removeEventListener("visibilitychange", actualizar);
     };
-  }, [reducirMovimiento]);
+  }, [esModoOscuro, reducirMovimiento]);
 
   useEffect(() => {
     if (!mostrarVideo || !videoRef.current) return;
@@ -38,6 +40,9 @@ export default function FondoVideoGP({ esSemanaCarrera }) {
     video.play().catch(() => {}); // Rechazo normal si el navegador bloquea autoplay.
     return () => video.pause();
   }, [mostrarVideo]);
+
+  // En modo claro ni siquiera montamos la capa de video ni sus filtros.
+  if (!esModoOscuro) return null;
 
   return (
     <motion.div

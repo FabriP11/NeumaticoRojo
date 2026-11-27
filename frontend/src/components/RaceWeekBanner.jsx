@@ -497,13 +497,8 @@ function RaceWeekBanner({ onEstadoSemana }) {
     <section
       className={`relative isolate w-full min-w-0 overflow-hidden rounded-2xl border border-[#dde1e9] bg-[#f4f5f9] text-[#171923] shadow-[0_12px_30px_rgba(25,28,40,0.08)] dark:border-0 dark:bg-[#0c0e16] dark:text-white dark:shadow-none ${disenoCompacto ? "p-3 sm:p-3.5 xl:p-4" : "p-3 sm:p-4 xl:p-5"}`}
     >
-      {/* El video cubre todo el banner; el contenido queda por encima. */}
+      {/* Video decorativo solo en modo oscuro. En modo claro, fondo limpio. */}
       <FondoVideoGP esSemanaCarrera={esCarreraActual} />
-      {/* En modo claro, suavizar el video de fondo sin alterar el modo oscuro. */}
-      <div
-        className="pointer-events-none absolute inset-0 z-[1] bg-[#f4f5f9]/90 backdrop-blur-[3px] dark:hidden"
-        aria-hidden="true"
-      />
 
       {/* Navegar entre Grandes Premios sin salir de Inicio. */}
       <nav
