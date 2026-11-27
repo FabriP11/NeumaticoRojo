@@ -106,6 +106,7 @@ function TablaClasificacion({ titulo, Icono, datos, tipo }) {
     >
       <FondoTarjetaInicio
         adaptarTema
+        destacarFoto
         src={
           esPiloto
             ? "/images/inicio/clasificaciones/pilotos.jpg"

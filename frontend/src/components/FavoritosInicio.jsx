@@ -102,25 +102,25 @@ function FavoritosInicio() {
   const colorEscuderia = obtenerColorEscuderia(escuderia?.id);
 
   const claseTarjeta =
-    "group relative isolate flex min-w-0 flex-col overflow-hidden rounded-2xl border border-white/20 border-t-4 bg-[#171923] p-4 text-white shadow-[0_12px_30px_rgba(0,0,0,0.20)] sm:p-5";
+    "group relative isolate flex min-w-0 flex-col overflow-hidden rounded-2xl border border-slate-300/80 border-t-4 bg-white p-4 text-[#15151d] shadow-[0_12px_30px_rgba(0,0,0,0.12)] dark:border-white/20 dark:bg-[#171923] dark:text-white dark:shadow-[0_12px_30px_rgba(0,0,0,0.20)] sm:p-5";
 
   const claseEtiqueta =
-    "inline-flex flex-wrap items-center gap-2 font-nav text-xs font-bold uppercase tracking-[0.12em] text-white/85";
+    "inline-flex flex-wrap items-center gap-2 font-nav text-xs font-bold uppercase tracking-[0.12em] text-slate-700 dark:text-white/85";
 
   const claseEstadisticas =
-    "mt-5 grid grid-cols-3 gap-2 border-t border-white/20 pt-4";
+    "mt-5 grid grid-cols-3 gap-2 border-t border-slate-300/80 pt-4 dark:border-white/20";
 
   const claseEstadistica =
-    "min-w-0 rounded-lg border border-white/10 bg-black/35 px-2 py-3 backdrop-blur-[3px]";
+    "min-w-0 rounded-lg border border-slate-200/90 bg-white/85 px-2 py-3 shadow-sm backdrop-blur-[3px] dark:border-white/10 dark:bg-black/35 dark:shadow-none";
 
   const claseTituloEstadistica =
-    "block font-nav text-[10px] font-bold uppercase tracking-wide text-white/70";
+    "block font-nav text-[10px] font-bold uppercase tracking-wide text-slate-600 dark:text-white/70";
 
   const claseValorEstadistica =
-    "mt-1 block break-words font-racing text-xl font-bold tabular-nums text-white sm:text-2xl";
+    "mt-1 block break-words font-racing text-xl font-bold tabular-nums text-[#15151d] dark:text-white sm:text-2xl";
 
   const claseEnlace =
-    "group mt-auto inline-flex w-fit items-center gap-2 pt-5 font-nav text-sm font-bold text-[#ff8b86] no-underline transition-colors hover:text-white";
+    "group mt-auto inline-flex w-fit items-center gap-2 pt-5 font-nav text-sm font-bold text-[#ce1e19] no-underline transition-colors hover:text-[#a8110c] dark:text-[#ff8b86] dark:hover:text-white";
 
   return (
     <section className="@container w-full min-w-0">
@@ -192,7 +192,7 @@ function FavoritosInicio() {
             className={claseTarjeta}
             style={{ borderTopColor: colorPiloto }}
           >
-            <FondoTarjetaInicio src={fondoPiloto(piloto)} />
+            <FondoTarjetaInicio src={fondoPiloto(piloto)} destacarFoto />
             <div className="relative z-10 flex h-full flex-col">
               <span className={claseEtiqueta}>
                 <UserRound
@@ -207,12 +207,12 @@ function FavoritosInicio() {
                 PILOTO FAVORITO
               </span>
 
-              <h3 className="mt-5 flex min-h-12 flex-wrap items-center gap-3 font-racing text-lg font-bold leading-tight text-white">
+              <h3 className="mt-5 flex min-h-12 flex-wrap items-center gap-3 font-racing text-lg font-bold leading-tight text-[#15151d] dark:text-white">
                 {piloto ? (
                   <>
                     {piloto.numero != null && (
                       <span
-                        className="inline-flex shrink-0 items-center justify-center rounded-lg border bg-[#161820] px-2.5 py-1.5 font-racing text-base font-extrabold"
+                        className="inline-flex shrink-0 items-center justify-center rounded-lg border bg-white/90 px-2.5 py-1.5 font-racing text-base font-extrabold dark:bg-[#161820]"
                         style={{ color: colorPiloto, borderColor: colorPiloto }}
                       >
                         #{piloto.numero}
@@ -249,7 +249,7 @@ function FavoritosInicio() {
                   </div>
 
                   {piloto.posicion == null && (
-                    <p className="mt-3 font-nav text-xs text-white/70">
+                    <p className="mt-3 font-nav text-xs text-slate-600 dark:text-white/70">
                       Sin clasificación disponible en {TEMPORADA}.
                     </p>
                   )}
@@ -290,7 +290,7 @@ function FavoritosInicio() {
             className={claseTarjeta}
             style={{ borderTopColor: colorEscuderia }}
           >
-            <FondoTarjetaInicio src={fondoEscuderia(escuderia)} />
+            <FondoTarjetaInicio src={fondoEscuderia(escuderia)} destacarFoto />
             <div className="relative z-10 flex h-full flex-col">
               <span className={claseEtiqueta}>
                 <Flag
@@ -305,7 +305,7 @@ function FavoritosInicio() {
                 ESCUDERÍA FAVORITA
               </span>
 
-              <h3 className="mt-5 flex min-h-12 items-center font-racing text-lg font-bold leading-tight text-white">
+              <h3 className="mt-5 flex min-h-12 items-center font-racing text-lg font-bold leading-tight text-[#15151d] dark:text-white">
                 {escuderia
                   ? escuderia.nombre
                   : "Todavía no elegiste una escudería"}
@@ -335,7 +335,7 @@ function FavoritosInicio() {
                   </div>
 
                   {escuderia.posicion == null && (
-                    <p className="mt-3 font-nav text-xs text-white/70">
+                    <p className="mt-3 font-nav text-xs text-slate-600 dark:text-white/70">
                       Sin clasificación disponible en {TEMPORADA}.
                     </p>
                   )}

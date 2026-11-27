@@ -6,6 +6,7 @@ export default function FondoTarjetaInicio({
   src,
   alternativas = [],
   adaptarTema = false,
+  destacarFoto = false,
 }) {
   const [indice, setIndice] = useState(0);
 
@@ -29,21 +30,28 @@ export default function FondoTarjetaInicio({
           loading="lazy"
           decoding="async"
           onError={() => setIndice((anterior) => anterior + 1)}
-          className="h-full w-full scale-105 object-cover object-center blur-[0.8px]"
+          className={
+            destacarFoto
+              ? "h-full w-full scale-105 object-cover object-center brightness-110 saturate-110 blur-[1.2px] dark:brightness-100 dark:saturate-100 dark:blur-[0.8px]"
+              : "h-full w-full scale-105 object-cover object-center blur-[0.8px]"
+          }
         />
       )}
-      {/* En las tablas del Inicio, el modo claro utiliza el mismo velo blanco
-          del Calendario. Otros usos conservan sus fondos oscuros originales. */}
+      {/* Las tablas mantienen su velo blanco. En favoritos, el degradado
+          se aclara hacia el lado de la foto para destacar al piloto o auto.
+          En modo oscuro no cambian los filtros ni los fondos originales. */}
       <div
         className={
-          adaptarTema
-            ? "absolute inset-0 bg-white/75 dark:bg-[linear-gradient(105deg,rgba(9,11,20,0.90)_0%,rgba(9,11,20,0.72)_48%,rgba(9,11,20,0.72)_100%)]"
-            : "absolute inset-0 bg-[linear-gradient(105deg,rgba(9,11,20,0.90)_0%,rgba(9,11,20,0.72)_48%,rgba(9,11,20,0.72)_100%)]"
+          destacarFoto
+            ? "absolute inset-0 bg-[linear-gradient(105deg,rgba(255,255,255,0.80)_0%,rgba(255,255,255,0.55)_46%,rgba(255,255,255,0.18)_100%)] dark:bg-[linear-gradient(105deg,rgba(9,11,20,0.90)_0%,rgba(9,11,20,0.72)_48%,rgba(9,11,20,0.72)_100%)]"
+            : adaptarTema
+              ? "absolute inset-0 bg-white/75 dark:bg-[linear-gradient(105deg,rgba(9,11,20,0.90)_0%,rgba(9,11,20,0.72)_48%,rgba(9,11,20,0.72)_100%)]"
+              : "absolute inset-0 bg-[linear-gradient(105deg,rgba(9,11,20,0.90)_0%,rgba(9,11,20,0.72)_48%,rgba(9,11,20,0.72)_100%)]"
         }
       />
       <div
         className={
-          adaptarTema
+          adaptarTema || destacarFoto
             ? "absolute inset-0 bg-transparent dark:bg-[linear-gradient(0deg,rgba(9,11,20,0.47),transparent_65%)]"
             : "absolute inset-0 bg-[linear-gradient(0deg,rgba(9,11,20,0.47),transparent_65%)]"
         }
